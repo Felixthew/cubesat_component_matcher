@@ -4,7 +4,10 @@
 # edited and documented the code.
 import os
 import re
+from math import trunc
+
 import pandas as pd
+from attr.validators import max_len
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -12,10 +15,11 @@ from sqlalchemy.exc import SQLAlchemyError
 connection_string = "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway"
 
 
-def upload_excel(file_path):
+def upload_excel(file_path, schema="public"):
     """
     Uploads each sheet of an Excel spreadsheet file to the postgresql database as a table.
 
+    :param schema: The schema for the table to be added. Defaults to public, which is the default schema in SQL.
     :param file_path: the file path of the Excel file to upload.
     """
     try:
@@ -26,9 +30,14 @@ def upload_excel(file_path):
         # Connects to the server
         engine = create_engine(connection_string)
 
+        if schema != "public":
+            with engine.connect() as conn:
+                conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
+                conn.commit()
+
         for sheet_name in sheet_names:
             # The tabel name, this can be anything we want.
-            if len(sheet_name) == 0:
+            if len(sheet_names) == 1:
                 # If there's only one sheet the table name will just be the name of the file.
                 # Ignore any SyntaxWarning pycharm gives about this line.
                 table_name = filename.replace('.xlsx', '')
@@ -37,8 +46,8 @@ def upload_excel(file_path):
 
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             # Writing to the database
-            df.to_sql(table_name, engine, if_exists='replace')
-            print(f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {table_name}.")
+            df.to_sql(table_name, engine, schema=schema, if_exists='replace')
+            print(f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {'.'.join([schema, table_name])}.")
 
     except FileNotFoundError:
         print(f"Error: Could not find file '{file_path}'")
@@ -51,7 +60,7 @@ def remove_table(table_name):
     """
     Removes a table from the postgresql database.
 
-    :param table_name: the name of the table to remove.
+    :param table_name: the name of the table to remove i.e. "table" or "schema.table".
     """
     try:
         engine = create_engine(connection_string)
@@ -62,29 +71,49 @@ def remove_table(table_name):
         if table_name in existing_tables:
             # Drop the table
             with engine.connect() as conn:
-                print(table_name)
                 conn.execute(text(f'DROP TABLE "{table_name}"'))
                 conn.commit()
-            print(f"Successfully removed the table, {table_name}")
+            print(f"Successfully removed the table: {table_name}")
         else:
-            print(f"Could not find table {table_name}")
+            print(f'Could not find table "{table_name}"')
     except SQLAlchemyError as e:
         print(f"Database error: {e}")
     except Exception as e:
         print(f"Unexpected error: {e}")
 
-def upload_all(directory_path):
+def upload_all(directory_path, has_schema=False):
     """
     Uploads all xlsx files in a directory as tables to the postgresql database.
     
     :param directory_path: the directory path of the directory to upload.
+    :param has_schema: If true, will treat any subdirectory as schema.
     """
     # all Excel files must end with .xlsx
-    xlsx_files = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if f.endswith('.xlsx')]
+    xlsx_files = [os.path.join(root, file)
+                  for root, dirs, files in os.walk(".")
+                  for file in files
+                  if file.endswith('.xlsx')]
 
     for xlsx_file in xlsx_files:
-        upload_excel(xlsx_file)
+        if has_schema:
+            # A lot is happening here, but stay with me now
+
+            # Remove everything before and including directory provided
+            schema = (xlsx_file
+                            .removeprefix("./")
+                            .removeprefix(directory_path + "/"))
+            # Split by / or \ and remove the filename so that only the subdirectory is left
+            schema = re.split("[/\\\]", schema)[:-1]
+            if len(schema) > 1:  # in case of multiple sub directories
+                # This is a quirk of SQL
+                print(f"creation of schema {'.'.join(schema)} failed; schema may only be one layer deep. "
+                      f"file {xlsx_file} not uploaded")
+            else:
+                schema = schema[0] if schema else "public"
+                upload_excel(xlsx_file, schema=schema)
+        else:
+            upload_excel(xlsx_file)
     print(f"Successfully uploaded the xlsx files in {directory_path}.")
 
 # call whatever method you want to run here, below is an example:
-remove_table(input("Table to drop: "))
+upload_all("test_data", has_schema=True)

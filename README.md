@@ -14,8 +14,8 @@ py -m pip install pandas openpyxl sqlalchemy psycopg2-binary
 ```
 ## Running the program
 
-Open the **upload_table.py** file in your chosen ide (notepad works too) and add/edit what method calls you want at the end of the file, all that matters is it's on indentation level 0.
-Then run the file and all should work. If no errors are thrown then it has most likely worked, but the only way to know for sure is to check the database.
+Open the **upload_table.py** file in your chosen ide (notepad works too), look through the pydoc, and then add/edit what method calls you want at the end of the file, all that matters is it's on indentation level 0.
+Then run the file and all should work. If no errors are thrown then it has most likely worked, but the only way to know for sure is to check the database (**Note**: the database UI only shows the "public" schema).
 
 ### **Common Errors**
 A bit about how file/directory paths work. if the file/directory is in the same folder as the script you can omit the root and just pass in the name i.e. "spreadsheet.xlsx",
