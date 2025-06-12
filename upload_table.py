@@ -1,5 +1,6 @@
 # assisted by claude
 import os
+import re
 import pandas as pd
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
@@ -10,22 +11,31 @@ connection_string = "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@swit
 
 def upload_excel(file_path):
     """
-    Uploads an Excel file as a table to the postgresql database.
+    Uploads each sheet of an Excel spreadsheet file to the postgresql database as a table.
 
     :param file_path: the file path of the Excel file to upload.
     """
     try:
-        df = pd.read_excel(file_path)
+        excel_file = pd.ExcelFile(file_path)
+        filename = re.split("[/\\\]", file_path)[-1]
+        sheet_names = excel_file.sheet_names
 
         # Connects to the server
         engine = create_engine(connection_string)
 
-        # The tabel name, this can be anything we want
-        # configured for mac
-        table_name = file_path.split('/')[-1].replace('.xlsx', '')
+        for sheet_name in sheet_names:
+            # The tabel name, this can be anything we want.
+            if len(sheet_name) == 0:
+                # If there's only one sheet the table name will just be the name of the file.
+                # Ignore any SyntaxWarning pycharm gives about this line.
+                table_name = filename.replace('.xlsx', '')
+            else:
+                table_name = sheet_name
 
-        # Writing to the database
-        df.to_sql(table_name, engine, if_exists='replace')
+            df = pd.read_excel(excel_file, sheet_name=sheet_name)
+            # Writing to the database
+            df.to_sql(table_name, engine, if_exists='replace')
+            print(f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {table_name}.")
 
     except FileNotFoundError:
         print(f"Error: Could not find file '{file_path}'")
@@ -47,6 +57,7 @@ def remove_table(table_name):
         with engine.connect() as conn:
             conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
             conn.commit()
+        print("Successfully removed the table \"" + table_name + "\"")
     except SQLAlchemyError as e:
         print(f"Database error: {e}")
     except Exception as e:
@@ -63,6 +74,7 @@ def upload_all(directory_path):
 
     for xlsx_file in xlsx_files:
         upload_excel(xlsx_file)
+    print(f"Successfully uploaded the xlsx files in {directory_path}.")
 
 # call whatever method you want to run here, below is an example:
 upload_all(input("Enter the directory path: "))
