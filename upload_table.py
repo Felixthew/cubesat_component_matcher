@@ -1,8 +1,11 @@
-# assisted by claude
+# AI usage:
+# Claude Sonnet 4 was used to advise what to use and for writing
+# individual sections of code. I (Felix) the put everything together
+# edited and documented the code.
 import os
 import re
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 # The database public url for the railway server
@@ -40,9 +43,9 @@ def upload_excel(file_path):
     except FileNotFoundError:
         print(f"Error: Could not find file '{file_path}'")
     except SQLAlchemyError as e:
-        print(f"Database error: {e}")
+        print(f"Database error for file {file_path}: {e}")
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        print(f"Unexpected error for file {file_path}: {e}")
 
 def remove_table(table_name):
     """
@@ -53,11 +56,18 @@ def remove_table(table_name):
     try:
         engine = create_engine(connection_string)
 
-        # Drop the table
-        with engine.connect() as conn:
-            conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
-            conn.commit()
-        print("Successfully removed the table \"" + table_name + "\"")
+        inspector = inspect(engine)
+        existing_tables = inspector.get_table_names()
+
+        if table_name in existing_tables:
+            # Drop the table
+            with engine.connect() as conn:
+                print(table_name)
+                conn.execute(text(f'DROP TABLE "{table_name}"'))
+                conn.commit()
+            print(f"Successfully removed the table, {table_name}")
+        else:
+            print(f"Could not find table {table_name}")
     except SQLAlchemyError as e:
         print(f"Database error: {e}")
     except Exception as e:
@@ -77,4 +87,4 @@ def upload_all(directory_path):
     print(f"Successfully uploaded the xlsx files in {directory_path}.")
 
 # call whatever method you want to run here, below is an example:
-upload_all(input("Enter the directory path: "))
+remove_table(input("Table to drop: "))
