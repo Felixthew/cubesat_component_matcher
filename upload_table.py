@@ -4,10 +4,7 @@
 # edited and documented the code.
 import os
 import re
-from math import trunc
-
 import pandas as pd
-from attr.validators import max_len
 from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -19,8 +16,8 @@ def upload_excel(file_path, schema="public"):
     """
     Uploads each sheet of an Excel spreadsheet file to the postgresql database as a table.
 
-    :param schema: The schema for the table to be added. Defaults to public, which is the default schema in SQL.
     :param file_path: the file path of the Excel file to upload.
+    :param schema: The schema for the table to be added. Defaults to public, which is the default schema in SQL.
     """
     try:
         excel_file = pd.ExcelFile(file_path)
