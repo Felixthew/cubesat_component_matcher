@@ -45,7 +45,7 @@ install from the ide window with your project.
 ## Accessing the database
 
 Once you've uploaded your tables you wil probably want to view the database. The simplest way to do
-this is through the [server's webpage](https://railway.com/invite/7vsOAcYhq20). Form the project
+this is through the [server's webpage](https://railway.com/invite/7vsOAcYhq20). From the project
 window, you can select "Main Postgres Database" and then the "data" tab. This will let you see all
 the tables in the default "public" schema. As for viewing custom schema, I don't think the website
 will let you. If you want to be able to see a more comprehensive view with the custom schema and be
