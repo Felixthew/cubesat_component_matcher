@@ -101,7 +101,7 @@ def upload_all(directory_path, has_schema=False):
                             .removeprefix(directory_path + "/"))
             # Split by / or \ and remove the filename so that only the subdirectory is left
             schema = re.split("[/\\\]", schema)[:-1]
-            if len(schema) > 1:  # in case of multiple sub directories
+            if len(schema) > 1:  # in case of multiple subdirectories
                 # This is a quirk of SQL
                 print(f"creation of schema {'.'.join(schema)} failed; schema may only be one layer deep. "
                       f"file {xlsx_file} not uploaded")
@@ -110,7 +110,7 @@ def upload_all(directory_path, has_schema=False):
                 upload_excel(xlsx_file, schema=schema)
         else:
             upload_excel(xlsx_file)
-    print(f"Successfully uploaded the xlsx files in {directory_path}.")
+    print(f"Finished directory upload of {directory_path}.")
 
 # call whatever method you want to run here, below is an example:
 upload_all("test_data", has_schema=True)
