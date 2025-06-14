@@ -49,7 +49,11 @@ this is through the [server's webpage](https://railway.com/invite/7vsOAcYhq20). 
 window, you can select "Main Postgres Database" and then the "data" tab. This will let you see all
 the tables in the default "public" schema. As for viewing custom schema, I don't think the website
 will let you. If you want to be able to see a more comprehensive view with the custom schema and be
-able to write sql files,
+able to write sql files, open the repo in pycharm, go to the databases tab, and you should see a 
+postgres database there. After clicking on it, you will probably be prompted to download drivers
+and configure the credentials, where you will need to paste the pg password that can be found in
+the variables tab on the server webpage. If that doesn't work, or you want to configure it from the
+start (maybe in a new project),
 follow [this tutorial](https://drive.google.com/file/d/14kWCtERpuQngLhAijG-0SPWGUsqPhfTT/view?usp=sharing)
 which will show you how to connect a pycharm or datagrip project to the database.
 
