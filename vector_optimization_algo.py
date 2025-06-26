@@ -60,6 +60,26 @@ def create_test_input(n: int) -> Tuple[Dict[str, List[float]], List[float], List
     return vectors, query, weights
 
 
+def z_score(vectors_dict):
+    """Standardize each dimension across all vectors"""
+
+    # Convert to array for easier computation
+    labels = list(vectors_dict.keys())
+    vector_array = np.array(list(vectors_dict.values()))
+
+    # Standardize: (value - mean) / std for each dimension
+    means = np.mean(vector_array, axis=0)
+    stds = np.std(vector_array, axis=0)
+
+    # Avoid division by zero for constant dimensions
+    stds = np.where(stds == 0, 1, stds)
+
+    standardized_array = (vector_array - means) / stds
+
+    # Convert back to dict
+    return dict(zip(labels, standardized_array.tolist()))
+
+
 def main():
     # took my pc 6 seconds for 1_000_000
     vectors, query, weights = create_test_input(100)
