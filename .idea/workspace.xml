@@ -5,46 +5,62 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/aa669dc1-9a81-485c-8d82-b9628019ec08/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/postgres.edMnLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/railway.Hf4GOg.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/b383d602-e3ee-4018-ae10-14818020dfbb/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/postgres.edMnLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/e8d70b80-ba5e-471e-abff-67d1322baee2/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_files/scoring_engine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_files/scoring_procedures.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/cubesat_component_matcher.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/cubesat_component_matcher.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test_files/filter_algo_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_files/filter_algo_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/upload_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/upload_table.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vector_optimization_algo.py" beforeDir="false" afterPath="$PROJECT_DIR$/vector_optimization_algo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="HTML File" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;AidenPowell14&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Felixthew/cubesat_component_matcher.git&quot;,
+    &quot;accountId&quot;: &quot;a7668ed3-db54-4310-a74e-574241f5b195&quot;
+  }
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 6
 }</component>
@@ -55,17 +71,23 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.api_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test.executor&quot;: &quot;Run&quot;,
     &quot;Python.upload_table.executor&quot;: &quot;Run&quot;,
+    &quot;Python.vector_optimization_algo.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/felix/PycharmProjects/cubesat_component_matcher&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
   &quot;keyToStringList&quot;: {
@@ -78,12 +100,46 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\felix\PycharmProjects\cubesat_component_matcher" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\powel\PycharmProjects\cubesat_component_matcher\test_files" />
+      <recent name="C:\Users\powel\PycharmProjects\cubesat_component_matcher" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="api_test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="cubesat_component_matcher" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\powel\PycharmProjects\cubesat_component_matcher\test_files\api_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.api_test" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.122" />
-        <option value="bundled-python-sdk-880ecab49056-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.122" />
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159" />
+        <option value="bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159" />
       </set>
     </attachedChunks>
   </component>
@@ -97,6 +153,11 @@
       <workItem from="1749681913785" duration="8139000" />
       <workItem from="1749770831558" duration="1128000" />
       <workItem from="1749924521257" duration="6779000" />
+      <workItem from="1750093223838" duration="4098000" />
+      <workItem from="1750280248063" duration="10601000" />
+      <workItem from="1750702310978" duration="626000" />
+      <workItem from="1750702959948" duration="20752000" />
+      <workItem from="1751052934294" duration="306000" />
     </task>
     <servers />
   </component>
@@ -104,6 +165,9 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/cubesat_component_matcher$upload_table.coverage" NAME="upload_table Coverage Results" MODIFIED="1749769554877" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$test.coverage" NAME="test Coverage Results" MODIFIED="1750710457331" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test_files" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$api_test.coverage" NAME="api_test Coverage Results" MODIFIED="1750705107473" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$upload_table.coverage" NAME="upload_table Coverage Results" MODIFIED="1750301723423" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$vector_optimization_algo.coverage" NAME="vector_optimization_algo Coverage Results" MODIFIED="1750705134035" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

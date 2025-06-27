@@ -5,7 +5,8 @@
 import os
 import re
 import pandas as pd
-from sqlalchemy import create_engine, text, inspect
+from pandas.core.interchange.dataframe_protocol import DataFrame
+from sqlalchemy import create_engine, text, inspect, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 # The database public url for the railway server
@@ -21,12 +22,13 @@ def upload_excel(file_path, schema="public"):
     """
     try:
         excel_file = pd.ExcelFile(file_path)
-        filename = re.split("[/\\\]", file_path)[-1]
+        filename = re.split("[/\\\\]", file_path)[-1]
         sheet_names = excel_file.sheet_names
 
         # Connects to the server
         engine = create_engine(connection_string)
 
+        _create_metadata_table(engine)
         if schema != "public":
             with engine.connect() as conn:
                 conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
@@ -44,7 +46,9 @@ def upload_excel(file_path, schema="public"):
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             # Writing to the database
             df.to_sql(table_name, engine, schema=schema, if_exists='replace')
-            print(f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {'.'.join([schema, table_name])}.")
+            _upload_data(engine, df, schema, table_name)
+            print(
+                f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {'.'.join([schema, table_name])}.")
 
     except FileNotFoundError:
         print(f"Error: Could not find file '{file_path}'")
@@ -52,6 +56,7 @@ def upload_excel(file_path, schema="public"):
         print(f"Database error for file {file_path}: {e}")
     except Exception as e:
         print(f"Unexpected error for file {file_path}: {e}")
+
 
 def remove_table(table_name):
     """
@@ -78,6 +83,7 @@ def remove_table(table_name):
     except Exception as e:
         print(f"Unexpected error: {e}")
 
+
 def upload_all(directory_path, has_schema=False):
     """
     Uploads all xlsx files in a directory as tables to the postgresql database.
@@ -97,10 +103,10 @@ def upload_all(directory_path, has_schema=False):
 
             # Remove everything before and including directory provided
             schema = (xlsx_file
-                            .removeprefix("./")
-                            .removeprefix(directory_path + "/"))
+                      .removeprefix(".\\")
+                      .removeprefix(directory_path + "\\"))
             # Split by / or \ and remove the filename so that only the subdirectory is left
-            schema = re.split("[/\\\]", schema)[:-1]
+            schema = re.split("[/\\\\]", schema)[:-1]
             if len(schema) > 1:  # in case of multiple subdirectories
                 # This is a quirk of SQL
                 print(f"creation of schema {'.'.join(schema)} failed; schema may only be one layer deep. "
@@ -112,5 +118,41 @@ def upload_all(directory_path, has_schema=False):
             upload_excel(xlsx_file)
     print(f"Finished directory upload of {directory_path}.")
 
+
+def _create_metadata_table(engine: Engine):
+    query = f"""
+        CREATE SCHEMA IF NOT EXISTS "metadata";
+        CREATE TABLE IF NOT EXISTS metadata.data_types (
+        schema_name TEXT NOT NULL,
+        table_name TEXT NOT NULL,
+        column_name TEXT NOT NULL,
+        type TEXT NOT NULL
+        );
+    """
+
+    with engine.connect() as conn:
+        conn.execute(text(query))
+        conn.commit()
+
+
+def _upload_data(engine, df, schema_name: str, table_name: str):
+    df_data = df.drop(index=1).reset_index(drop=True) # remove metadata
+    df_data.to_sql(table_name, engine, schema=schema_name, index=False) # export clean data
+    metadata = df.iloc[1] # read metadata
+    metadata_entry = [ # parse metadata
+        {"schema_name": schema_name, "table_name": table_name, "column_name": col, "type": metadata[col]}
+        for col in df.columns
+    ]
+
+    # export metadata
+    query = """
+        INSERT INTO metadata.data_types (schema_name, table_name, column_name, type)
+        VALUES (:schema_name, :table_name, :column_name, :type);
+    """
+
+    with engine.begin() as conn:
+        conn.execute(text(query), metadata_entry)
+
+
 # call whatever method you want to run here, below is an example:
-upload_all("test_data", has_schema=True)
+upload_all("test_data_main_directory", has_schema=True)
