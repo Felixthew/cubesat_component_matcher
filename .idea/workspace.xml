@@ -5,21 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/test_files/scoring_engine.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_files/scoring_procedures.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/cubesat_component_matcher.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/cubesat_component_matcher.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/aiden_halfstack_solution/api.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/aiden_halfstack_solution/data_loader.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/aiden_halfstack_solution/database.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/aiden_halfstack_solution/engine.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/aiden_halfstack_solution/scorer.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/aiden_halfstack_solution/storage.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test_files/filter_algo_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test_files/filter_algo_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/upload_table.py" beforeDir="false" afterPath="$PROJECT_DIR$/upload_table.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vector_optimization_algo.py" beforeDir="false" afterPath="$PROJECT_DIR$/vector_optimization_algo.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,33 +62,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.api_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.upload_table.executor&quot;: &quot;Run&quot;,
-    &quot;Python.vector_optimization_algo.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/felix/PycharmProjects/cubesat_component_matcher&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.api_test.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.upload_table.executor": "Run",
+    "Python.vector_optimization_algo.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/felix/PycharmProjects/cubesat_component_matcher",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\felix\PycharmProjects\cubesat_component_matcher" />
@@ -157,12 +150,23 @@
       <workItem from="1750280248063" duration="10601000" />
       <workItem from="1750702310978" duration="626000" />
       <workItem from="1750702959948" duration="20752000" />
-      <workItem from="1751052934294" duration="306000" />
+      <workItem from="1751052934294" duration="25922000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$test.coverage" NAME="test Coverage Results" MODIFIED="1750710457331" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test_files" />

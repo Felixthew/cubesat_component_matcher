@@ -8,6 +8,7 @@ import pandas as pd
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from sqlalchemy import create_engine, text, inspect, Engine
 from sqlalchemy.exc import SQLAlchemyError
+from aiden_halfstack_solution.database import metadata_headers
 
 # The database public url for the railway server
 connection_string = "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway"
@@ -126,7 +127,7 @@ def _create_metadata_table(engine: Engine):
         schema_name TEXT NOT NULL,
         table_name TEXT NOT NULL,
         column_name TEXT NOT NULL,
-        type TEXT NOT NULL
+        dtype TEXT NOT NULL
         );
     """
 
