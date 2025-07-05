@@ -1,13 +1,6 @@
 import os
 from sqlalchemy import create_engine, text
 
-# metadata_headers = {
-#     "schema_name" : "schema_name",
-#     "table_name" : "table_name",
-#     "column_name" : "column_name",
-#     "column_type_name" : "dtype"
-# }
-
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway")
 db_engine = create_engine(DB_URL)
 

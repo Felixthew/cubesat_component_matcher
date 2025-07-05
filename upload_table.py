@@ -8,7 +8,6 @@ import pandas as pd
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from sqlalchemy import create_engine, text, inspect, Engine
 from sqlalchemy.exc import SQLAlchemyError
-from aiden_halfstack_solution.database import metadata_headers
 
 # The database public url for the railway server
 connection_string = "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway"
@@ -120,7 +119,7 @@ def upload_all(directory_path, has_schema=False):
     print(f"Finished directory upload of {directory_path}.")
 
 
-def _create_metadata_table(engine: Engine):
+def _create_metadata_schema(engine: Engine):
     query = f"""
         CREATE SCHEMA IF NOT EXISTS "metadata";
         CREATE TABLE IF NOT EXISTS metadata.data_types (
@@ -129,19 +128,24 @@ def _create_metadata_table(engine: Engine):
         column_name TEXT NOT NULL,
         dtype TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS metadata.session_data (
+        session_id VARCHAR(36) PRIMARY KEY,
+        request_data JSONB NOT NULL,
+        results_data JSONB,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        );
     """
 
     with engine.connect() as conn:
         conn.execute(text(query))
         conn.commit()
 
-
 def _upload_data(engine, df, schema_name: str, table_name: str):
     df_data = df.drop(index=1).reset_index(drop=True) # remove metadata
     df_data.to_sql(table_name, engine, schema=schema_name, index=False) # export clean data
     metadata = df.iloc[1] # read metadata
     metadata_entry = [ # parse metadata
-        {"schema_name": schema_name, "table_name": table_name, "column_name": col, "type": metadata[col]}
+        {"schema_name": schema_name, "table_name": table_name, "column_name": col, "dtype": metadata[col]}
         for col in df.columns
     ]
 
