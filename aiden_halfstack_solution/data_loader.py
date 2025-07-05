@@ -1,5 +1,4 @@
 from database import db
-#, metadata_headers as md)
 
 def load_dtypes(schema: str, table: str) -> dict[str, str]:
     result = db.execute(

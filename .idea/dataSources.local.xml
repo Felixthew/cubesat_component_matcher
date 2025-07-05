@@ -15,7 +15,7 @@
               <node kind="schema" qname="@" />
             </node>
             <node kind="database" qname="railway">
-              <node kind="schema" negative="1" />
+              <node kind="schema" qname="metadata" negative="1" />
             </node>
           </node>
         </introspection-scope>

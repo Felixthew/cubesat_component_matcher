@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
+from math import sqrt
 from rapidfuzz import fuzz
 
 # Additional config options must be added in
 # 1) the proper type method
-# 2) the cSCORING_REGISTRY
+# 2) the SCORING_REGISTRY
 # 3) the SCORING_CONFIG
 # Make sure the scoring config default is the same as the method default parameters
 
@@ -50,17 +51,36 @@ class TupleScorer(Scorer):
     def score(self, request_val, candidate_val, distance_mode="euclidean", tolerance=10.0, **_) -> float:
         """
         :param distance_mode: euclidean distance is more sensitive to large differences in a single dimension; manhattan difference treats all dimensions equally
-        :param tolerance:
+        :param tolerance: assures a perfect match within the tolerance, and gradually decays outside of it
         """
-        request_vals, candidate_vals = _parse(request_val), _parse(request_val)
+        request_val_list = _parse(request_val)
+        candidate_val_list = _parse(request_val), _parse(request_val)
 
+        # check they're actually numbers
         try:
-            request_vals = [float(x) for x in request_val]
-            candidate_vals = [float(x) for x in candidate_val]
+            request_val_list = [float(x) for x in request_val]
+            candidate_val_list = [float(x) for x in candidate_val]
         except (TypeError, ValueError):
             return 0.0
 
+        # return 0 for empty set
+        n = min(len(request_val_list), len(candidate_val_list))
+        if n == 0.0:
+            return 0.0
 
+        # distance calculation by mode
+        if distance_mode == "manhattan":
+            dist = sum(abs(request_val_list[i] - candidate_val_list[i]) for i in range(n))
+        else:
+            dist = sqrt(sum((request_val_list[i] - candidate_val_list[i])**2 for i in range(n)))
+
+        # return 1 if within tolerance threshold
+        if dist <= tolerance:
+            return 1.0
+
+        # decay score over distance
+        excess = dist - tolerance
+        return max(0.0, 1 - excess / tolerance)
 
 
 class ListScorer(Scorer):
@@ -90,6 +110,8 @@ def _clean_string(val: str):
 def _parse(vals: str):
     return _clean_string(vals).split(", ")
 
+
+# add new type methods here for engine iteration
 SCORING_REGISTRY = {
     "number": NumberScorer(),
     "string": StringScorer(),
@@ -98,6 +120,7 @@ SCORING_REGISTRY = {
     "boolean": BooleanScorer()
 }
 
+# add new default configs here
 SCORING_CONFIG = {
     "number": {"use_global_max": True},
     "string": {"threshold": 80},
