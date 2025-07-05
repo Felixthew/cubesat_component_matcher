@@ -2,22 +2,85 @@ import uuid
 import json
 from database import db
 
+# sessions stay cached for a week by default
+DEFAULT_EXPIRATION_TIME_HOURS = 168
+
 def generate_session_id() -> str:
+    """
+    Generates new session id to be cached and recalled during reslicing
+    :return: string uuid
+    """
     return str(uuid.uuid4())
 
 def save_request(session_id: str, request_data: dict):
-    pass
+    """
+    Saves request data in metadata.session_data table
+    :param session_id: previously-generated session id
+    :param request_data: dict of the request json, including schema/table, specs, weights, filters, sorts, and pages
+    """
+    db.execute(
+        """
+        INSERT INTO metadata.session_data (session_id, request_data)
+        VALUES (:sid, :data)
+        ON CONFLICT (session_id) DO UPDATE
+            SET request_data = EXCLUDED.request_data
+            created_at now()
+        """,
+        {
+            "sid": session_id,
+            "data": json.dumps(request_data)
+        }
+    )
 
 def save_results(session_id: str, results_data: dict):
-    pass
+    """
+    Saves returned data after a request in metadata.session_data table
+    :param session_id: previously-generated session id
+    :param results_data: dict of the results json as a DB retrieval
+    """
+    db.execute(
+        """
+        UPDATE metadata.session_data
+        SET results_data = :data
+            WHERE session_id = :sid
+        """,
+        {
+            "sid": session_id,
+            "data": results_data
+         }
+    )
 
 def load_request(session_id: str) -> dict:
-    pass
+    """
+    Retrieves request data from initial DB query given a session id
+    :param session_id: session id
+    :return: dict of request data, including schema/table, specs, weights, filters, sorts, and pages
+    """
+    return _load_data(session_id, "request_data")
 
 def load_results(session_id: str) -> dict:
-    pass
+    """
+    Retrieves results data from initial DB query given a session id
+    :param session_id: session id
+    :return: dict of all results data
+    """
+    return _load_data(session_id, "results_data")
 
-def prune_expired_sessions(lifetime_hours: int):
+def _load_data(session_id: str, data_name: str) -> dict:
+    result = db.execute(
+        """
+        SELECT :data
+        FROM metadata.session_data
+        WHERE session_id = :sid
+        """,
+        {
+            "sid": session_id,
+            "data": data_name
+        }
+    )
+    return result[0][f"{data_name}"] if result else None
+
+def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
     db.execute(
         """
         DELETE FROM metadata.session_data
