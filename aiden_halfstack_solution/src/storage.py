@@ -5,6 +5,9 @@ from database import db
 # sessions stay cached for a week by default
 DEFAULT_EXPIRATION_TIME_HOURS = 168
 
+# whitelisted columns to query from. MUST BE UPDATED IF TABLE CHANGES
+ALLOWED_DATA = {"request_data", "results_data"}
+
 def generate_session_id() -> str:
     """
     Generates new session id to be cached and recalled during reslicing
@@ -32,7 +35,7 @@ def save_request(session_id: str, request_data: dict):
         }
     )
 
-def save_results(session_id: str, results_data: dict):
+def save_results(session_id: str, results_data: list[dict]):
     """
     Saves returned data after a request in metadata.session_data table
     :param session_id: previously-generated session id
@@ -58,7 +61,7 @@ def load_request(session_id: str) -> dict:
     """
     return _load_data(session_id, "request_data")
 
-def load_results(session_id: str) -> dict:
+def load_results(session_id: str) -> list[dict]:
     """
     Retrieves results data from initial DB query given a session id
     :param session_id: session id
@@ -66,10 +69,15 @@ def load_results(session_id: str) -> dict:
     """
     return _load_data(session_id, "results_data")
 
-def _load_data(session_id: str, data_name: str) -> dict:
+def _load_data(session_id: str, data_name: str) -> dict | list[dict]:
+    if session_id is None:
+        raise ValueError("No session ID")
+
+    _validate_input(data_name)
+
     result = db.execute(
-        """
-        SELECT :data
+        f"""
+        SELECT {data_name}
         FROM metadata.session_data
         WHERE session_id = :sid
         """,
@@ -79,6 +87,10 @@ def _load_data(session_id: str, data_name: str) -> dict:
         }
     )
     return result[0][f"{data_name}"] if result else None
+
+def _validate_input(input: str):
+    if input not in ALLOWED_DATA:
+        raise ValueError("Invalid data input")
 
 def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
     db.execute(

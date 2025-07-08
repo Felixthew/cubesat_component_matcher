@@ -1,11 +1,10 @@
-
 import requests
 from flask import Flask, request, jsonify
 
 from aiden_halfstack_solution.src import database
 from engine import ScoringEngine
 import data_loader
-from database import Database
+from database import db
 import pandas as pd
 import storage
 
@@ -19,17 +18,20 @@ def search():
    table = data['table']
    req = data["request"]
    # where do they weights go?
+   #        up to you if you want to split it into all the little jsons this way -- i'd say its part of the request
    weights = data["weights"]
    formats = data["format"]
 
    # fetch schema.table from database as a df
    # is the engine supposed to by supplied by the api?
-   pd.read_sql(Database(None).execute(f"SELECT * FROM {table["schema"]}.{table['table']}"))
+   #        its instantiated in this handler method
+   pd.read_sql(db.execute(f"SELECT * FROM {table["schema"]}.{table['table']}"))
    # fetch corresponding dtypes of table
    dtypes = data_loader.load_dtypes(table["schema"], table["table"])
    # feed request, table df, and dtypes to score engine
    engine = ScoringEngine(req, table, dtypes)
    # What method is it supposed to call to access results?
+   #        engine.extended_df property, which calls _score_all at instantiation
    results = engine._score_all
    # create session id and cache the results with the id
    session_id = storage.generate_session_id()
@@ -56,6 +58,9 @@ def complete_request(session_id, results=None, formats=None):
    # Are we sure we want to be formatting the results? Sorting seems easy and like maye we should
    # do but page specifications seems like it should be in the view. I mean how would that even be
    # implemented here? Dict with numbers as keys?
+   #        maybe thats supposed to be a frontend thing but i was under the impression that they would basically make a
+   #        new GET request each time they paged over that would request e.g. top results 1 through 10, 11 through 20,
+   #        etc. That seems to be a DB-retrieval oriented task.
 
 
    # formatting is applied

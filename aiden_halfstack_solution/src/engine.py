@@ -6,22 +6,23 @@ class ScoringEngine:
                  request: dict,
                  candidates_df: pd.DataFrame,
                  dtypes: dict[str, str],
-                 scoring_config: dict = SCORING_CONFIG):
-        self.specs = {
-            col["name"]: {
-                "value": col["value"],
-                "weight": col.get("weight", 1.0)
-            }
-            for col in request["columns"]
-        }
+                 scoring_config: dict | None):
+        self.specs = request
+        #     {
+        #     col["name"]: {
+        #         "value": col["value"],
+        #         "weight": col.get("weight", 1.0)
+        #     }
+        #     for col in request["columns"]
+        # }
         self.dtypes = dtypes
-        self.config = scoring_config
+        self.config = scoring_config or SCORING_CONFIG
         self.global_maxes = {
             col: candidates_df[col].max()
             for col in dtypes
             if dtypes[col] == "number"
         }
-        self.extended_df = self._score_all(candidates_df)
+        self.extended_df: pd.DataFrame = self._score_all(candidates_df)
 
     def _score_single(self, column_name, request_val, candidate_val):
         dtype = self.dtypes[column_name]
@@ -48,9 +49,11 @@ class ScoringEngine:
             # parse columnwise data in request
             request_val = data["value"]
             request_weight = data["weight"]
+
             # compute single column score and store in unique score_summary entry
             raw_score = self._score_single(col, request_val, row[col])
             score_summary[f"{col}_score"] = raw_score
+
             # weight score and add to aggregate score
             if raw_score is not None:
                 weighted_sum += raw_score * request_weight

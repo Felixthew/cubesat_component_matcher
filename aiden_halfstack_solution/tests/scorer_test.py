@@ -10,7 +10,7 @@ from abc import ABC
 #         return {"args": args, "config": config, "raises": raises}
 
 
-def _case(args: tuple, config: dict, expected) -> dict:
+def _case(args: tuple, config: dict, expected: float | Exception ) -> dict:
     # produces test case based on if it's supposed to return (expected is a score) or raise an exception
     if isinstance(expected, float):
         return {"args": args, "config": config, "returns": expected}
