@@ -32,7 +32,7 @@ def search():
    engine = ScoringEngine(req, table, dtypes)
    # What method is it supposed to call to access results?
    #        engine.extended_df property, which calls _score_all at instantiation
-   results = engine._score_all
+   results = engine.extended_df
    # create session id and cache the results with the id
    session_id = storage.generate_session_id()
    storage.save_request(session_id, req)

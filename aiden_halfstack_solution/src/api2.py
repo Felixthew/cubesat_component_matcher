@@ -7,50 +7,13 @@ import storage
 
 app = FastAPI(title="Component Matcher")
 
-class Location(BaseModel):
-    schema: str
-    table: str
-
-class ColumnSpec(BaseModel):
-    name: str
-    value: str | int | float
-    weight: float = Field(..., gt=0)
-
-class Filter(BaseModel):
-    name: str
-    min_val: float | int | None = None
-    max_val: float | int | None = None
-
-class Sort(BaseModel):
-    by: str = Field("overall_score")
-    asc: bool = Field(True)
-
-class Pagination(BaseModel):
-    page: int = Field(1, ge=1)
-    per_page: int = Field(10, ge=1, le=100)
-
-class SearchRequest(BaseModel):
-    location: Location
-    specs: list[ColumnSpec]
-    session_id: str | None = None
-
-class SearchResponse(BaseModel):
-    session_id = str
-    results = list[dict]
-
-class RetrieveRequest(BaseModel):
-    session_id: str
-    filters: list[Filter]
-    sort: Sort
-    pagination: Pagination
-
 @app.post("/search", response_model=SearchResponse, summary="Retrieve scored results given new spec requests")
 def search(query: SearchRequest) -> SearchResponse:
 
     # prepare engine parameters
-    engine_request = _load_request(query.specs)
-    engine_candidates_df = _load_candidates(query.location)
-    engine_dtypes = _load_dtypes(query.location)
+    engine_request = load_request(query.specs)
+    engine_candidates_df = load_candidates(query.location)
+    engine_dtypes = load_dtypes(query.location)
     engine_scoring_config = None
     # ^configs need more infrastructure established -- left to defaults for now
 
@@ -91,30 +54,9 @@ def retrieve(query: RetrieveRequest) -> SearchResponse:
     result = df_inter.to_dict(orient="records")
     return SearchResponse(session_id=sid, results=result)
 
-def _load_candidates(location: Location):
-    return pd.read_sql_table(table_name=location.table, con=db.db_engine, schema=location.schema)
 
 
-def _load_request(specs: list[ColumnSpec]):
-    return {
-        col.name: {"value": col.value, "weight": col.weight}
-        for col in specs
-    }
 
-def _load_dtypes(location: Location):
-    dtype_rows = db.execute(
-        """
-        SELECT column_name, dtype
-        FROM metadata.data_types
-        WHERE schema_name = :schema
-          AND table_name = :table
-        """,
-        {"schema": location.schema, "table": location.table}
-    )
-    return {
-        col: dtype
-        for col, dtype in dtype_rows.items()
-    }
 
 def _filter(filters: list[Filter], df: pd.DataFrame) -> pd.DataFrame:
     for f in filters:

@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from math import sqrt
+import numpy as np
 from rapidfuzz import fuzz
-
 from upload_table import remove_table
-
 
 # Additional config options must be added in
 # 1) the proper type method
@@ -60,11 +59,7 @@ class StringScorer(Scorer):
 
 
 class TupleScorer(Scorer):
-    def score(self, request_val, candidate_val, distance_mode="euclidean", tolerance=10.0, **_) -> float:
-        """
-        :param distance_mode: euclidean distance is more sensitive to large differences in a single dimension; manhattan difference treats all dimensions equally
-        :param tolerance: assures a perfect match within the tolerance, and gradually decays outside of it. Higher tolerance recommended for manhattan searches
-        """
+    def score(self, request_val, candidate_val, **_) -> float:
 
         if request_val is None or candidate_val is None:
             return 0.0
@@ -84,25 +79,49 @@ class TupleScorer(Scorer):
         except (TypeError, ValueError):
             return 0.0
 
-        # fail for unmatched dimensions
-        n = len(request_val_list)
-        if n != len(candidate_val_list):
-            raise ValueError("Improper input")
+        # score numbers dimensionwise and average the results
+        results = []
+        for req_val, cand_val in request_val_list.sort(), candidate_val_list.sort():
+            results.append(NumberScorer().score(req_val, cand_val, False))
+
+        return np.mean(results)
 
 
-        # distance calculation by mode
-        if distance_mode == "manhattan":
-            dist = sum(abs(request_val_list[i] - candidate_val_list[i]) for i in range(n))
-        else:
-            dist = sqrt(sum((request_val_list[i] - candidate_val_list[i])**2 for i in range(n)))
 
-        # return 1 if within tolerance threshold
-        if dist <= tolerance:
-            return 1.0
-
-        # decay score over distance
-        excess = dist - tolerance
-        return max(0.0, 1 - excess / tolerance)
+        # request_val = _parse(request_val)
+        # candidate_val = _parse(candidate_val)
+        #
+        # # fail if input aren't numbers
+        # try:
+        #     request_val_list = [float(x) for x in request_val]
+        # except (TypeError, ValueError):
+        #     raise ValueError("Improper input")
+        #
+        # # return 0 if candidates aren't numbers
+        # try:
+        #     candidate_val_list = [float(x) for x in candidate_val]
+        # except (TypeError, ValueError):
+        #     return 0.0
+        #
+        # # fail for unmatched dimensions
+        # n = len(request_val_list)
+        # if n != len(candidate_val_list):
+        #     raise ValueError("Improper input")
+        #
+        #
+        # # distance calculation by mode
+        # if distance_mode == "manhattan":
+        #     dist = sum(abs(request_val_list[i] - candidate_val_list[i]) for i in range(n))
+        # else:
+        #     dist = sqrt(sum((request_val_list[i] - candidate_val_list[i])**2 for i in range(n)))
+        #
+        # # return 1 if within tolerance threshold
+        # if dist <= tolerance:
+        #     return 1.0
+        #
+        # # decay score over distance
+        # excess = dist - tolerance
+        # return max(0.0, 1 - excess / tolerance)
 
 
 class ListScorer(Scorer):

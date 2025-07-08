@@ -35,13 +35,7 @@ def upload_excel(file_path, schema="public"):
                 conn.commit()
 
         for sheet_name in sheet_names:
-            # The tabel name, this can be anything we want.
-            if len(sheet_names) == 1:
-                # If there's only one sheet the table name will just be the name of the file.
-                # Ignore any SyntaxWarning pycharm gives about this line.
-                table_name = filename.replace('.xlsx', '')
-            else:
-                table_name = sheet_name
+            table_name = sheet_name
 
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             # Writing to the database

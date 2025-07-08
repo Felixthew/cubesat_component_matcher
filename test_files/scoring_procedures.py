@@ -32,11 +32,14 @@ def score_string(user_val, product_val, config=None):
 
 
 def score_tuple(user_val, product_val, config=None):
+    pass
 
 
 def score_list(user_val, product_val, config=None):
+    pass
 
 def score_boolean(user_val, product_val):
+    pass
 
 
 
