@@ -1,5 +1,6 @@
-from aiden_halfstack_solution.src.json_types import Location
+from aiden_halfstack_solution.src.json_types import Location, ColumnSpec
 from database import db
+import pandas as pd
 import json_types
 
 def load_dtypes(location: Location) -> dict[str, str]:
