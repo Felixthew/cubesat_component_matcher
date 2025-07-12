@@ -1,6 +1,4 @@
 import os
-import pandas as pd
-from pandas.io.sql import execute
 from sqlalchemy import create_engine, text
 
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway")
