@@ -1,7 +1,7 @@
 import requests
 from flask import Flask, request, jsonify
 
-from aiden_halfstack_solution.src import database
+from complete_backend_solution.src import database
 from engine import ScoringEngine
 import data_loader
 from database import db

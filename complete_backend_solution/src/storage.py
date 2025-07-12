@@ -92,11 +92,13 @@ def _validate_input(input: str):
     if input not in ALLOWED_DATA:
         raise ValueError("Invalid data input")
 
+
+# TODO add background task in api to call this for purging
 def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
     db.execute(
         """
         DELETE FROM metadata.session_data
-            WHERE created_at < now() - interval ':hours hours'
+         WHERE created_at < now() - interval ':hours hours'
         """,
         {"hours": lifetime_hours}
     )

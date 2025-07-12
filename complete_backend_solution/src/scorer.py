@@ -1,0 +1,197 @@
+from math import prod
+from abc import ABC, abstractmethod
+import numpy as np
+from rapidfuzz import fuzz
+
+# Additional config options must be added in
+# 1) the proper type method
+# 2) the SCORING_CONFIG
+# Make sure the scoring config default is the same as the method default parameters
+
+class Scorer(ABC):
+    @abstractmethod
+    def score(self, request_val, candidate_val, **kwargs) -> float:
+        """
+        Computes compatibility score between the user request value and the candidate value
+        :param request_val: user value
+        :param candidate_val: value to be compared to
+        :param kwargs: space to add type-specific configs, changing computation behavior
+        :return: compatibility score for request_val and candidate_val
+        """
+        pass
+
+
+class NumberScorer(Scorer):
+    def score(self, request_val, candidate_val, use_global_max=True, max_val=None, **_) -> float:
+        """
+        :param use_global_max: normalize values against the max value in the dataset, otherwise against each other
+        :param max_val: global max value used in above config
+        """
+
+        if request_val is None or candidate_val is None:
+            return 0.0
+
+        max_val = max_val if use_global_max and max_val else max(request_val, candidate_val)
+        request_val, candidate_val, max_val = _normalize_negatives(request_val, candidate_val, max_val)
+
+        diff = abs(request_val - candidate_val)
+
+        if max_val == 0.0:
+            max_val = 1.0
+
+        return max(0.0, 1.0 - diff / max_val)
+
+
+class StringScorer(Scorer):
+    def score(self, request_val, candidate_val, threshold=80, exact_match=False) -> float:
+        """
+        :param threshold: minimum fuzz ratio [0..100] for scoring;
+            ratios above the threshold are linearly mapped onto [0..1]
+        :param exact_match: toggle for only succeeding the string match if they are identical.
+            Equivalent to threshold=100
+        """
+
+        if request_val is None or candidate_val is None:
+            return 0.0
+
+        request_val = _clean_string(request_val)
+        candidate_val = _clean_string(candidate_val)
+
+        if exact_match or threshold == 100:
+            return request_val == candidate_val
+
+        raw_ratio = fuzz.ratio(request_val, candidate_val)
+        if raw_ratio < threshold:
+            return 0.0
+        return (raw_ratio - threshold) / (100 - threshold)
+
+
+class TupleScorer(Scorer):
+    def score(self, request_val, candidate_val, product_scoring=False, normalize_to_max=True, **_) -> float:
+        """
+        :param product_scoring: combines tuple components multiplicatively and computes single representative values,
+            otherwise computes piecewise and averages. Useful when product is significant, e.g. volume
+        :param normalize_to_max: scoring models frame themselves using the input data's maximum value to normalize,
+            useful when all values are near each other/on the same scale. Has no effect on product_scoring mode
+        """
+
+        if request_val is None or candidate_val is None:
+            return 0.0
+
+        request_val = _parse(request_val)
+        candidate_val = _parse(candidate_val)
+
+        # fail if input aren't numbers
+        try:
+            request_val_list = [float(x) for x in request_val]
+        except (TypeError, ValueError):
+            raise ValueError("Improper input")
+
+        # return 0 if candidates aren't numbers
+        try:
+            candidate_val_list = [float(x) for x in candidate_val]
+        except (TypeError, ValueError):
+            return 0.0
+
+        # score numbers singly as combined products
+        if product_scoring:
+            req_product = prod(request_val_list)
+            cand_product = prod(candidate_val_list)
+            return NumberScorer().score(
+                req_product,
+                cand_product,
+                normalize_to_max,
+                max(req_product, cand_product)
+                # ^technically redundant
+            )
+
+        # score numbers dimensionwise and average the results
+        results = []
+        for req_val, cand_val in zip(sorted(request_val_list), sorted(candidate_val_list)):
+            results.append(NumberScorer().score(
+                req_val,
+                cand_val,
+                normalize_to_max,
+                _union_max(request_val_list, candidate_val_list)
+            ))
+
+        return float(np.mean(results))
+
+
+class ListScorer(Scorer):
+    def score(self, request_val, candidate_val, match_mode="overlap", jaccard_softener=1, **_) -> float:
+        """
+        :param match_mode: "jaccard" more heavily penalizes differences between sets,
+            while "overlap" mode is based only on the inclusion in the requested set.
+            "contains" returns a true/false for inclusion of ANY element, good for multiselect preferences
+        :param jaccard_softener: slightly increases jaccard scores for fairness. NOT EXPOSED AS A CONFIG OPTION
+        """
+
+        # return 0 for empty inputs
+        if request_val is None or candidate_val is None:
+            return 0.0
+
+        req_set, cand_set = set(_parse(request_val)), set(_parse(candidate_val))
+
+        # checks for inclusion anywhere once
+        if match_mode == "contains":
+            for val in req_set:
+                if val in cand_set:
+                    return 1.0
+            return 0.0
+
+        intersect = req_set & cand_set
+
+        # disjunct sets gets full penalty
+        if len(intersect) == 0:
+            return 0.0
+
+        # use overlap or jaccard arithmetic
+        if match_mode == "overlap":
+            return len(intersect) / min(len(req_set), len(cand_set))
+        return (len(intersect) + jaccard_softener) / (len(req_set | cand_set) + jaccard_softener)
+
+
+class BooleanScorer(Scorer):
+    def score(self, request_val, candidate_val, **_) -> float:
+        return 1.0 if bool(request_val) == bool(candidate_val) else 0.0
+
+
+def _clean_string(val: str) -> str:
+    return val.strip().lower()
+
+def _parse(vals: str) -> list[str]:
+    return _clean_string(vals).split(", ")
+
+def _union_max(vals1: list[float | int], vals2: list[float | int]) -> float | int:
+    return max(max(vals1), max(vals2))
+
+def _normalize_negatives(
+        val1: int | float,
+        val2: int | float,
+        max: int | float
+) -> tuple[int | float, int | float, int | float]:
+    if val1 < 0 or val2 < 0:
+        delta = abs(min(val1, val2))
+        val1 += 2*delta
+        val2 += 2*delta
+        max += 2*delta
+    return val1, val2, max
+
+# add new type methods here for engine iteration
+SCORING_REGISTRY = {
+    "number": NumberScorer(),
+    "string": StringScorer(),
+    "tuple": TupleScorer(),
+    "list": ListScorer(),
+    "boolean": BooleanScorer()
+}
+
+# add new default configs here
+SCORING_CONFIG = {
+    "number": {"use_global_max": True},
+    "string": {"threshold": 80, "exact_match": False},
+    "tuple": {"product_scoring": False, "normalize_to_max": True},
+    "list": {"match_mode": "overlap"},
+    "boolean": {}
+}

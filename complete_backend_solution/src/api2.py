@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 import pandas as pd
 import json_types as jt
-from aiden_halfstack_solution.src.json_types import SchemaList
+from complete_backend_solution.src.json_types import SchemaList
 from engine import ScoringEngine
 import storage
 import data_loader as dl
@@ -24,17 +24,20 @@ def get_systems(solution: str) -> jt.TableList:
 @app.get("/solutions/{solution}/systems/{system}/parameters", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
 def get_params(solution: str, system: str) -> jt.ColumnList:
+
+    # retrieves cached dtype data
     location = jt.Location(schema=solution, table=system)
     dtype_rows = dl.get_dtypes(location)
 
+    # except if null result
     if dtype_rows is None:
         raise HTTPException(404, f"{system} in {solution} not found")
 
+    # construct list of json-friendly col-dtype entries and return
     param_list = [
         jt.ColumnProfile(name=name, dtype=dtype)
         for name, dtype in dtype_rows.items()
     ]
-
     return jt.ColumnList(schema=solution, table=system, columns=param_list)
 
 

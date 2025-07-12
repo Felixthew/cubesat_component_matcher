@@ -1,0 +1,115 @@
+Index: aiden_halfstack_solution/src/data_loader.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from functools import lru_cache\r\nfrom aiden_halfstack_solution.src.json_types import Location\r\nfrom database import db\r\nimport json_types as jt\r\nimport pandas as pd\r\n\r\n@lru_cache(maxsize=16)\r\ndef get_dtypes(location: Location) -> dict[str, str]:\r\n    \"\"\"\r\n    Retrieves and caches the dtypes by column given a schema and table. {maxsize} retrievals will be cached before auto-eviction begins\r\n    :param location: the schema and table to query to\r\n    :return: dict of col -> dtype\r\n    \"\"\"\r\n    return _load_dtypes(location)\r\n\r\ndef _load_dtypes(location: Location) -> dict[str, str]:\r\n    result = db.execute(\r\n        \"\"\"\r\n        SELECT column_name, dtype\r\n        FROM metadata.data_types\r\n        WHERE schema_name = :target_schema\r\n        AND table_name = :target_table\r\n        \"\"\",\r\n        {\"target_schema\": location.schema, \"target_table\": location.table}\r\n    )\r\n\r\n    return {\r\n        col: dtype\r\n        for col, dtype in result.items()\r\n    }\r\n\r\ndef load_candidates(location: Location) -> pd.DataFrame:\r\n    return pd.read_sql_table(table_name=location.table, con=db.db_engine, schema=location.schema)\r\n\r\ndef load_request(specs: list[jt.ColumnSpec]) -> dict[str, dict[str | int | float, float]]:\r\n    return {\r\n        col.name: {\"value\": col.value, \"weight\": col.weight}\r\n        for col in specs\r\n    }\r\n\r\ndef list_schema():\r\n    return db.execute(\r\n        \"\"\"\r\n        SELECT schema_name\r\n        FROM information_schema.schemata\r\n        WHERE schema_name NOT IN :blacklist_schema\r\n        ORDER BY schema_name;  \r\n        \"\"\",\r\n        {\"blacklist_schema\": \", \".join(db.BLACKLIST_SCHEMA)}\r\n    ).scalars().all()\r\n\r\ndef list_tables(schema: str):\r\n    return db.execute(\r\n        \"\"\"\r\n        SELECT table_name\r\n        FROM information_schema.tables\r\n        WHERE table_schema = :schema\r\n        ORDER BY table_name\r\n        \"\"\",\r\n        {\"schema\": schema}\r\n    ).scalars.all()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/aiden_halfstack_solution/src/data_loader.py b/aiden_halfstack_solution/src/data_loader.py
+--- a/aiden_halfstack_solution/src/data_loader.py	(revision a7232bc7a5297972070d31dc43ee8ff355160efb)
++++ b/aiden_halfstack_solution/src/data_loader.py	(date 1752345233296)
+@@ -1,25 +1,14 @@
+-from functools import lru_cache
+ from aiden_halfstack_solution.src.json_types import Location
+ from database import db
+-import json_types as jt
+-import pandas as pd
++import json_types
+ 
+-@lru_cache(maxsize=16)
+-def get_dtypes(location: Location) -> dict[str, str]:
+-    """
+-    Retrieves and caches the dtypes by column given a schema and table. {maxsize} retrievals will be cached before auto-eviction begins
+-    :param location: the schema and table to query to
+-    :return: dict of col -> dtype
+-    """
+-    return _load_dtypes(location)
+-
+-def _load_dtypes(location: Location) -> dict[str, str]:
++def load_dtypes(location: Location) -> dict[str, str]:
+     result = db.execute(
+         """
+         SELECT column_name, dtype
+         FROM metadata.data_types
+         WHERE schema_name = :target_schema
+-        AND table_name = :target_table
++            AND table_name = :target_table
+         """,
+         {"target_schema": location.schema, "target_table": location.table}
+     )
+@@ -32,30 +21,8 @@
+ def load_candidates(location: Location) -> pd.DataFrame:
+     return pd.read_sql_table(table_name=location.table, con=db.db_engine, schema=location.schema)
+ 
+-def load_request(specs: list[jt.ColumnSpec]) -> dict[str, dict[str | int | float, float]]:
++def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str | int | float, float]]:
+     return {
+         col.name: {"value": col.value, "weight": col.weight}
+         for col in specs
+-    }
+-
+-def list_schema():
+-    return db.execute(
+-        """
+-        SELECT schema_name
+-        FROM information_schema.schemata
+-        WHERE schema_name NOT IN :blacklist_schema
+-        ORDER BY schema_name;  
+-        """,
+-        {"blacklist_schema": ", ".join(db.BLACKLIST_SCHEMA)}
+-    ).scalars().all()
+-
+-def list_tables(schema: str):
+-    return db.execute(
+-        """
+-        SELECT table_name
+-        FROM information_schema.tables
+-        WHERE table_schema = :schema
+-        ORDER BY table_name
+-        """,
+-        {"schema": schema}
+-    ).scalars.all()
+\ No newline at end of file
++    }
+\ No newline at end of file
+Index: aiden_halfstack_solution/src/database.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import os\r\nimport pandas as pd\r\nfrom pandas.io.sql import execute\r\nfrom sqlalchemy import create_engine, text\r\n\r\nDB_URL = os.getenv(\"DB_URL\", \"postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway\")\r\ndb_engine = create_engine(DB_URL)\r\n\r\nclass Database:\r\n    def __init__(self, engine):\r\n        self.db_engine = engine\r\n\r\n    BLACKLIST_SCHEMA = {\r\n        \"information_schema\",\r\n        \"pg_catalog\",\r\n        \"public\"\r\n    }\r\n\r\n    def execute(self, sql_str: str, params: dict = None):\r\n        \"\"\"\r\n        Executes Core SQL queries with the given database\r\n        :param sql_str: string query\r\n        :param params: SQL parameters to inject\r\n        :return: Result object if the query returns a table, otherwise just the row count after performing the operation\r\n        \"\"\"\r\n        params = params or {}\r\n        with self.db_engine.begin() as conn:\r\n            result = conn.execute(text(sql_str), params)\r\n\r\n            if result.returns_rows:\r\n                return result.fetchall()\r\n            else:\r\n                return result.rowcount\r\n\r\n    # def df_table(self, schema: str, table: str) -> pd.DataFrame:\r\n    #     \"\"\"\r\n    #     Loads a requested table as a pandas Dataframe\r\n    #     :param schema: requested schema\r\n    #     :param table: requested table\r\n    #     :return: dataframe of table\r\n    #     \"\"\"\r\n    #     return pd.read_sql_table(table_name=table, con=self.db_engine, schema=schema)\r\n\r\ndb = Database(db_engine)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/aiden_halfstack_solution/src/database.py b/aiden_halfstack_solution/src/database.py
+--- a/aiden_halfstack_solution/src/database.py	(revision a7232bc7a5297972070d31dc43ee8ff355160efb)
++++ b/aiden_halfstack_solution/src/database.py	(date 1752345163669)
+@@ -1,6 +1,4 @@
+ import os
+-import pandas as pd
+-from pandas.io.sql import execute
+ from sqlalchemy import create_engine, text
+ 
+ DB_URL = os.getenv("DB_URL", "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway")
+Index: aiden_halfstack_solution/tests/data_loader_test.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/aiden_halfstack_solution/tests/data_loader_test.py b/aiden_halfstack_solution/tests/data_loader_test.py
+--- a/aiden_halfstack_solution/tests/data_loader_test.py	(revision a7232bc7a5297972070d31dc43ee8ff355160efb)
++++ b/aiden_halfstack_solution/tests/data_loader_test.py	(date 1752345163670)
+@@ -1,0 +1,14 @@
++import pytest
++
++def correct_dtypes():
++    pass
++
++def invalid_request():
++    # maybe consider what error should be thrown
++    pass
++
++def candidates():
++    pass
++
++def request():
++    pass
+\ No newline at end of file

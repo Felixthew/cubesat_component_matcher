@@ -1,5 +1,5 @@
 from functools import lru_cache
-from aiden_halfstack_solution.src.json_types import Location
+from complete_backend_solution.src.json_types import Location
 from database import db
 import json_types as jt
 import pandas as pd
