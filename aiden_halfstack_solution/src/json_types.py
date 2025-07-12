@@ -1,5 +1,21 @@
 from pydantic import BaseModel, Field
 
+class SchemaList(BaseModel):
+    schemas: list[str]
+
+class TableList(BaseModel):
+    schema: str
+    tables: list[str]
+
+class ColumnProfile(BaseModel):
+    name: str
+    dtype: str
+
+class ColumnList(BaseModel):
+    schema: str
+    table: str
+    columns: list[ColumnProfile]
+
 class Location(BaseModel):
     schema: str
     table: str
@@ -28,8 +44,8 @@ class SearchRequest(BaseModel):
     session_id: str | None = None
 
 class SearchResponse(BaseModel):
-    session_id = str
-    results = list[dict]
+    session_id: str
+    results: list[dict]
 
 class RetrieveRequest(BaseModel):
     session_id: str

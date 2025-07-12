@@ -10,7 +10,7 @@ from abc import ABC
 #         return {"args": args, "config": config, "raises": raises}
 
 
-def _case(args: tuple, config: dict, expected: float | Exception ) -> dict:
+def _case(args: tuple, config: dict, expected) -> dict:
     # produces test case based on if it's supposed to return (expected is a score) or raise an exception
     if isinstance(expected, float):
         return {"args": args, "config": config, "returns": expected}
@@ -84,7 +84,7 @@ class TestStringScorer(GenericScorerTester):
     def test_score(self, case):
         self.run_scorer(case)
 
-
+# TODO: alter tuple tolerance scoring to be percentage based
 class TestTupleScorer(GenericScorerTester):
     SCORER = sc.TupleScorer
 
@@ -113,7 +113,9 @@ class TestListScorer(GenericScorerTester):
     SCORER = sc.ListScorer
 
     CASES = [
-
+        _case((0, 0), {}, 1.0),
+        _case((0, 1), {}, 0.0),
+        _case((1, 1), {}, 1.0)
     ]
 
     @pytest.mark.parametrize("case", CASES)

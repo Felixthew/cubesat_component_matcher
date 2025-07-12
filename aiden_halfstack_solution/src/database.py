@@ -10,6 +10,12 @@ class Database:
     def __init__(self, engine):
         self.db_engine = engine
 
+    BLACKLIST_SCHEMA = {
+        "information_schema",
+        "pg_catalog",
+        "public"
+    }
+
     def execute(self, sql_str: str, params: dict = None):
         """
         Executes Core SQL queries with the given database
