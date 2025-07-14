@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, text, inspect, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 # The database public url for the railway server
-connection_string = "postgresql://postgres:PzcglEfINUtMgDzqZAtEhvVexsfWIrZT@switchyard.proxy.rlwy.net:12039/railway"
+connection_string = "postgresql://postgres:vWhRGCabfMySJMDkrrmZQhxiUNFDuYyn@tramway.proxy.rlwy.net:31947/railway"
 
 
 def upload_excel(file_path, schema="public"):
@@ -28,7 +28,7 @@ def upload_excel(file_path, schema="public"):
         # Connects to the server
         engine = create_engine(connection_string)
 
-        _create_metadata_table(engine)
+        _create_metadata_schema(engine)
         if schema != "public":
             with engine.connect() as conn:
                 conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
@@ -39,7 +39,6 @@ def upload_excel(file_path, schema="public"):
 
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             # Writing to the database
-            df.to_sql(table_name, engine, schema=schema, if_exists='replace')
             _upload_data(engine, df, schema, table_name)
             print(
                 f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {'.'.join([schema, table_name])}.")
@@ -87,7 +86,7 @@ def upload_all(directory_path, has_schema=False):
     """
     # all Excel files must end with .xlsx
     xlsx_files = [os.path.join(root, file)
-                  for root, dirs, files in os.walk(".")
+                  for root, dirs, files in os.walk(directory_path)
                   for file in files
                   if file.endswith('.xlsx')]
 
@@ -98,7 +97,9 @@ def upload_all(directory_path, has_schema=False):
             # Remove everything before and including directory provided
             schema = (xlsx_file
                       .removeprefix(".\\")
-                      .removeprefix(directory_path + "\\"))
+                      .removeprefix("./")
+                      .removeprefix(directory_path + "\\")
+                      .removeprefix(directory_path + "/"))
             # Split by / or \ and remove the filename so that only the subdirectory is left
             schema = re.split("[/\\\\]", schema)[:-1]
             if len(schema) > 1:  # in case of multiple subdirectories
@@ -136,7 +137,7 @@ def _create_metadata_schema(engine: Engine):
 
 def _upload_data(engine, df, schema_name: str, table_name: str):
     df_data = df.drop(index=1).reset_index(drop=True) # remove metadata
-    df_data.to_sql(table_name, engine, schema=schema_name, index=False) # export clean data
+    df_data.to_sql(table_name, engine, schema=schema_name, index=False, if_exists='replace') # export clean data
     metadata = df.iloc[1] # read metadata
     metadata_entry = [ # parse metadata
         {"schema_name": schema_name, "table_name": table_name, "column_name": col, "dtype": metadata[col]}
@@ -145,8 +146,8 @@ def _upload_data(engine, df, schema_name: str, table_name: str):
 
     # export metadata
     query = """
-        INSERT INTO metadata.data_types (schema_name, table_name, column_name, type)
-        VALUES (:schema_name, :table_name, :column_name, :type);
+        INSERT INTO metadata.data_types (schema_name, table_name, column_name, dtype)
+        VALUES (:schema_name, :table_name, :column_name, :dtype);
     """
 
     with engine.begin() as conn:
@@ -154,4 +155,4 @@ def _upload_data(engine, df, schema_name: str, table_name: str):
 
 
 # call whatever method you want to run here, below is an example:
-upload_all("test_data_main_directory", has_schema=True)
+upload_all("test_data", has_schema=True)

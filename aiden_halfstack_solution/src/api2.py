@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Query
 import pandas as pd
 from pydantic import BaseModel, Field
+
+import aiden_halfstack_solution.src.json_types
 from engine import ScoringEngine
 from database import db
 import storage
