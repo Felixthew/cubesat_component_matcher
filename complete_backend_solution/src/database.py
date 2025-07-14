@@ -1,6 +1,4 @@
 import os
-import pandas as pd
-from pandas.io.sql import execute
 from sqlalchemy import create_engine, text
 
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:vWhRGCabfMySJMDkrrmZQhxiUNFDuYyn@tramway.proxy.rlwy.net:31947/railway")
@@ -9,6 +7,12 @@ db_engine = create_engine(DB_URL)
 class Database:
     def __init__(self, engine):
         self.db_engine = engine
+
+    BLACKLIST_SCHEMA = {
+        "information_schema",
+        "pg_catalog",
+        "public"
+    }
 
     def execute(self, sql_str: str, params: dict = None):
         """
