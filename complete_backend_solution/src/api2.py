@@ -90,11 +90,11 @@ def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
 
 
 def _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:
-    for f in filters:
-        if f.min_val is not None:
-            df = df[df[f.name] >= f.min_val]
-        if f.max_val is not None:
-            df = df[df[f.name] <= f.max_val]
+    for filter in filters:
+        if filter.min_val is not None:
+            df = df[df[filter.name] >= filter.min_val]
+        if filter.max_val is not None:
+            df = df[df[filter.name] <= filter.max_val]
     return df
 
 def _sort(sort: jt.Sort, df: pd.DataFrame) -> pd.DataFrame:

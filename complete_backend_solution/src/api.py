@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from complete_backend_solution.src import database
 from engine import ScoringEngine
 import data_loader
-from database import db
+from database import DB
 import pandas as pd
 import storage
 
@@ -25,7 +25,7 @@ def search():
    # fetch schema.table from database as a df
    # is the engine supposed to by supplied by the api?
    #        its instantiated in this handler method
-   pd.read_sql(db.execute(f"SELECT * FROM {table["schema"]}.{table['table']}"))
+   pd.read_sql(DB.execute(f"SELECT * FROM {table["schema"]}.{table['table']}"))
    # fetch corresponding dtypes of table
    dtypes = data_loader.load_dtypes(table["schema"], table["table"])
    # feed request, table df, and dtypes to score engine

@@ -30,13 +30,4 @@ class Database:
             else:
                 return result.rowcount
 
-    # def df_table(self, schema: str, table: str) -> pd.DataFrame:
-    #     """
-    #     Loads a requested table as a pandas Dataframe
-    #     :param schema: requested schema
-    #     :param table: requested table
-    #     :return: dataframe of table
-    #     """
-    #     return pd.read_sql_table(table_name=table, con=self.db_engine, schema=schema)
-
 db = Database(db_engine)

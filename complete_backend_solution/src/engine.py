@@ -8,13 +8,6 @@ class ScoringEngine:
                  dtypes: dict[str, str],
                  scoring_config: dict | None):
         self.specs = request
-        #     {
-        #     col["name"]: {
-        #         "value": col["value"],
-        #         "weight": col.get("weight", 1.0)
-        #     }
-        #     for col in request["columns"]
-        # }
         self.dtypes = dtypes
         self.config = scoring_config or SCORING_CONFIG
         self.global_maxes = {
@@ -75,34 +68,34 @@ class ScoringEngine:
         extended_df = candidates_df.join(score_df)
         return extended_df
 
-    def filter(self, filters: dict[str, dict[str, float]]) -> pd.DataFrame:
-        """
-        Filters the extended dataframe by upper and lower numerical bounds.
-        :param filters: {column_name: {"min": x, "max": y}, ...}
-        :return: copy of extended dataframe with applied bounds
-        """
-
-        # limits filtering to data typed as "number"
-        for col in filters.keys():
-            if self.dtypes[col] != "number":
-                raise ValueError("Attempting to filter by min/max on non-number")
-
-        # copies extended df for easy + safe return
-        df_copy = self.extended_df.copy()
-
-        # if a min and/or max was passed in the filters, redefines the copy df to only include values above/below the min/max
-        for col, bounds in filters.items():
-            if "min" in bounds:
-                df_copy = df_copy[df_copy[col] >= bounds["min"]]
-            if "max" in bounds:
-                df_copy = df_copy[df_copy[col] <= bounds["max"]]
-        return df_copy
-
-    def sort(self, by: str, ascending: bool = True):
-        """
-        Sorts the extended dataframe by certain score parameters, and by ascending or descending order.
-        :param by: "overall" or by explicit column name, including {col} and {col_score}
-        :param ascending: determines direction of sort
-        :return: copy of extended dataframe with applied ordering
-        """
-        return self.extended_df.sort_values(by=by, ascending=ascending)
+    # def filter(self, filters: dict[str, dict[str, float]]) -> pd.DataFrame:
+    #     """
+    #     Filters the extended dataframe by upper and lower numerical bounds.
+    #     :param filters: {column_name: {"min": x, "max": y}, ...}
+    #     :return: copy of extended dataframe with applied bounds
+    #     """
+    #
+    #     # limits filtering to data typed as "number"
+    #     for col in filters.keys():
+    #         if self.dtypes[col] != "number":
+    #             raise ValueError("Attempting to filter by min/max on non-number")
+    #
+    #     # copies extended df for easy + safe return
+    #     df_copy = self.extended_df.copy()
+    #
+    #     # if a min and/or max was passed in the filters, redefines the copy df to only include values above/below the min/max
+    #     for col, bounds in filters.items():
+    #         if "min" in bounds:
+    #             df_copy = df_copy[df_copy[col] >= bounds["min"]]
+    #         if "max" in bounds:
+    #             df_copy = df_copy[df_copy[col] <= bounds["max"]]
+    #     return df_copy
+    #
+    # def sort(self, by: str, ascending: bool = True):
+    #     """
+    #     Sorts the extended dataframe by certain score parameters, and by ascending or descending order.
+    #     :param by: "overall" or by explicit column name, including {col} and {col_score}
+    #     :param ascending: determines direction of sort
+    #     :return: copy of extended dataframe with applied ordering
+    #     """
+    #     return self.extended_df.sort_values(by=by, ascending=ascending)

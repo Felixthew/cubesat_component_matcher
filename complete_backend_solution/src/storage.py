@@ -1,6 +1,6 @@
 import uuid
 import json
-from database import db
+from complete_backend_solution.src.database import db
 
 # sessions stay cached for a week by default
 DEFAULT_EXPIRATION_TIME_HOURS = 168
