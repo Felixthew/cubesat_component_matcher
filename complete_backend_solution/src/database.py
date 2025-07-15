@@ -1,7 +1,7 @@
 import os
 from sqlalchemy import create_engine, text
 
-DB_URL = os.getenv("DB_URL", "postgresql://postgres:vWhRGCabfMySJMDkrrmZQhxiUNFDuYyn@tramway.proxy.rlwy.net:31947/railway")
+DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
 db_engine = create_engine(DB_URL)
 
 class Database:
