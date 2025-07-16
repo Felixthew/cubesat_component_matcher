@@ -138,7 +138,7 @@ def _create_metadata_schema(engine: Engine):
 def _upload_data(engine, df, schema_name: str, table_name: str):
     df_data = df.drop(index=1).reset_index(drop=True) # remove metadata
     df_data.to_sql(table_name, engine, schema=schema_name, index=False, if_exists='replace') # export clean data
-    metadata = df.iloc[1] # read metadata
+    metadata = df.iloc[0] # read metadata
     metadata_entry = [ # parse metadata
         {"schema_name": schema_name, "table_name": table_name, "column_name": col, "dtype": metadata[col]}
         for col in df.columns
