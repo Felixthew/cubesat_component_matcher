@@ -1,7 +1,7 @@
 from functools import lru_cache
 from complete_backend_solution.src.json_types import Location
-from database import DB
-import json_types as jt
+from src.database import Database as DB
+import src.json_types as jt
 import pandas as pd
 
 @lru_cache(maxsize=16)

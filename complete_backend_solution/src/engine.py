@@ -1,5 +1,5 @@
 import pandas as pd
-from scorer import SCORING_REGISTRY, SCORING_CONFIG
+from src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 
 class ScoringEngine:
     def __init__(self,
