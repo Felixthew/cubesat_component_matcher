@@ -1,11 +1,11 @@
 import os
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Engine
 
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
 db_engine = create_engine(DB_URL)
 
 class Database:
-    def __init__(self, engine):
+    def __init__(self, engine: Engine):
         self.db_engine = engine
 
     BLACKLIST_SCHEMA = {
@@ -14,7 +14,7 @@ class Database:
         "public"
     }
 
-    def execute(self, sql_str: str, params: dict = None):
+    def execute(self, sql_str: str, params: dict = None) -> list[tuple] | int:
         """
         Executes Core SQL queries with the given database
         :param sql_str: string query
@@ -26,7 +26,13 @@ class Database:
             result = conn.execute(text(sql_str), params)
 
             if result.returns_rows:
-                return result.fetchall()
+
+                return result.mappings().fetchall()
+
+
+
+
+                # return result.all()
             else:
                 return result.rowcount
 

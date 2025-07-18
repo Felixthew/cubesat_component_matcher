@@ -135,8 +135,8 @@ def _create_metadata_schema(engine: Engine):
         conn.execute(text(query))
         conn.commit()
 
-def _upload_data(engine, df, schema_name: str, table_name: str):
-    df_data = df.drop(index=1).reset_index(drop=True) # remove metadata
+def _upload_data(engine: Engine, df: pd.DataFrame, schema_name: str, table_name: str):
+    df_data = df.drop(index=0).reset_index(drop=True) # remove metadata
     df_data.to_sql(table_name, engine, schema=schema_name, index=False, if_exists='replace') # export clean data
     metadata = df.iloc[0] # read metadata
     metadata_entry = [ # parse metadata
@@ -155,4 +155,4 @@ def _upload_data(engine, df, schema_name: str, table_name: str):
 
 
 # call whatever method you want to run here, below is an example:
-upload_all("test_data", has_schema=True)
+upload_all("complete_backend_solution/tests/component_data_TEST", has_schema=True)

@@ -1,25 +1,26 @@
 import pytest
+
 import complete_backend_solution.src.storage as st
-from complete_backend_solution.src.database import db
-from sqlalchemy import create_engine
-from testcontainers.postgres import PostgresContainer
 
-@pytest.fixture(autouse=True)
-def storage_db(test_db):
-    db.execute("""
-    CREATE SCHEMA IF NOT EXISTS "metadata"
-    CREATE TABLE IF NOT EXISTS metadata.session_data (
-    schema_name TEXT NOT NULL,
-    table_name TEXT NOT NULL,
-    column_name TEXT NOT NULL,
-    dtype TEXT NOT NULL
-    );
-    """
-    )
-    yield
-
-
-def test_save_load_all(test_db):
+def test_roundtrip_caching():
     sid = st.generate_session_id()
-    st.save_request(sid, {"a": {"b": "c"}, "d": "e"})
-    assert st.load_request(sid) == {"a": {"b": "c"}, "d": "e"}
+
+    request = {"a": {"b": "c"}, "d": "e"}
+    st.save_request(sid, request)
+    assert st.load_request(sid) == request
+
+    result = [{"f": 1, "g": {"h": {"i": False}}}, {"j": 10}]
+    st.save_results(sid, result)
+    assert st.load_results(sid) == result
+
+def test_caching_curveballs():
+    with pytest.raises(ValueError):
+        st.save_request(None, {"a":"b"})
+        st.load_request(None)
+        st.save_request("", {"c": "d"})
+        st.load_request("")
+
+
+
+def test_purge():
+    pass

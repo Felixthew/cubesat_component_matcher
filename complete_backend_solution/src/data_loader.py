@@ -1,7 +1,6 @@
 from functools import lru_cache
-from complete_backend_solution.src.json_types import Location
-from src.database import Database as DB
-import src.json_types as jt
+from complete_backend_solution.src.json_types import Location, ColumnSpec
+from complete_backend_solution.src.database import db
 import pandas as pd
 
 @lru_cache(maxsize=16)
@@ -14,7 +13,7 @@ def get_dtypes(location: Location) -> dict[str, str]:
     return _load_dtypes(location)
 
 def _load_dtypes(location: Location) -> dict[str, str]:
-    result = DB.execute(
+    result = db.execute(
         """
         SELECT column_name, dtype
         FROM metadata.data_types
@@ -30,27 +29,27 @@ def _load_dtypes(location: Location) -> dict[str, str]:
     }
 
 def load_candidates(location: Location) -> pd.DataFrame:
-    return pd.read_sql_table(table_name=location.table, con=DB.db_engine, schema=location.schema)
+    return pd.read_sql_table(table_name=location.table, con=db.db_engine, schema=location.schema)
 
-def load_request(specs: list[jt.ColumnSpec]) -> dict[str, dict[str | int | float, float]]:
+def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str | int | float, float]]:
     return {
         col.name: {"value": col.value, "weight": col.weight}
         for col in specs
     }
 
 def list_schema():
-    return DB.execute(
+    return db.execute(
         """
         SELECT schema_name
         FROM information_schema.schemata
         WHERE schema_name NOT IN :blacklist_schema
         ORDER BY schema_name;  
         """,
-        {"blacklist_schema": ", ".join(DB.BLACKLIST_SCHEMA)}
+        {"blacklist_schema": ", ".join(db.BLACKLIST_SCHEMA)}
     ).scalars().all()
 
 def list_tables(schema: str):
-    return DB.execute(
+    return db.execute(
         """
         SELECT table_name
         FROM information_schema.tables

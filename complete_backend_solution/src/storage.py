@@ -1,6 +1,6 @@
 import uuid
 import json
-from src.database import db
+from complete_backend_solution.src.database import db
 
 # sessions stay cached for a week by default
 DEFAULT_EXPIRATION_TIME_HOURS = 168
@@ -23,11 +23,10 @@ def save_request(session_id: str, request_data: dict):
     """
     db.execute(
         """
-        INSERT INTO metadata.session_data (session_id, request_data)
-        VALUES (:sid, :data)
+        INSERT INTO metadata.session_data (session_id, request_data, created_at)
+        VALUES (:sid, :data::jsonb, now())
         ON CONFLICT (session_id) DO UPDATE
-            SET request_data = EXCLUDED.request_data
-            created_at now()
+        SET request_data = :data, created_at = now()
         """,
         {
             "sid": session_id,
@@ -44,7 +43,7 @@ def save_results(session_id: str, results_data: list[dict]):
     db.execute(
         """
         UPDATE metadata.session_data
-        SET results_data = :data
+        SET results_data = :data::jsonb
             WHERE session_id = :sid
         """,
         {
