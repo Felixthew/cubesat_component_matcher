@@ -1,6 +1,6 @@
 from functools import lru_cache
 from complete_backend_solution.src.json_types import Location
-from src.database import Database as DB
+from src.database import db as DB
 import src.json_types as jt
 import pandas as pd
 
@@ -43,6 +43,8 @@ def list_schema():
         """
         SELECT schema_name
         FROM information_schema.schemata
+            -- I have to go to bed but this following line is causing problems currently
+            -- Seemingly it's calling blacklisted schema when it shouldn't
         WHERE schema_name NOT IN :blacklist_schema
         ORDER BY schema_name;  
         """,
