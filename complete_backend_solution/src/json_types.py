@@ -10,6 +10,7 @@ class TableList(BaseModel):
 class ColumnProfile(BaseModel):
     name: str
     dtype: str
+    options: list[str] | None = None
 
 class ColumnList(BaseModel):
     schema: str

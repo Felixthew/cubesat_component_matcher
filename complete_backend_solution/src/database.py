@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, text, Engine
+from sqlalchemy import create_engine, text, Engine, Row, MetaData, Table, select
 
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
 db_engine = create_engine(DB_URL)
@@ -14,7 +14,7 @@ class Database:
         "public"
     }
 
-    def execute(self, sql_str: str, params: dict = None) -> list[tuple] | int:
+    def execute(self, sql_str: str, params: dict = None) -> list[Row] | int:
         """
         Executes Core SQL queries with the given database
         :param sql_str: string query
@@ -24,15 +24,8 @@ class Database:
         params = params or {}
         with self.db_engine.begin() as conn:
             result = conn.execute(text(sql_str), params)
-
             if result.returns_rows:
-
-                return result.mappings().fetchall()
-
-
-
-
-                # return result.all()
+                return result.all()
             else:
                 return result.rowcount
 

@@ -58,3 +58,25 @@ def list_tables(schema: str):
         """,
         {"schema": schema}
     ).scalars.all()
+
+def get_options(location: Location, dtype_profile: dict[str, str]) -> dict[str, list[str]]:
+    options = {}
+    for col, dtype in dtype_profile.items():
+        if dtype == "string":
+            result = db.execute(
+                """
+                SELECT {col}
+                FROM {location.schema}.{location.table}
+                """
+            )
+            options = {
+                result[col]
+                for _ in result
+            }
+
+        elif dtype == "list":
+
+
+        else:
+            options[name] = None
+

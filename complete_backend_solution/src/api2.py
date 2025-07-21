@@ -1,17 +1,16 @@
 from fastapi import FastAPI, HTTPException
 import pandas as pd
-import src.json_types as jt
-from src.json_types import SchemaList
-from src.engine import ScoringEngine
-import src.storage as storage
-import src.data_loader as dl
+import complete_backend_solution.src.json_types as jt
+from complete_backend_solution.src.engine import ScoringEngine
+import complete_backend_solution.src.storage as storage
+import complete_backend_solution.src.data_loader as dl
 
 app = FastAPI(title="Component Matcher")
 
 @app.get("/solutions", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
 def get_solutions() -> jt.SchemaList:
-    return SchemaList(schemas=dl.list_schema())
+    return jt.SchemaList(schemas=dl.list_schema())
 
 @app.get("/solutions/{solution}/systems", response_model=jt.TableList,
          summary="Lists all system types to choose from, e.g. chemical propulsion")
@@ -33,10 +32,20 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
     if dtype_rows is None:
         raise HTTPException(404, f"{system} in {solution} not found")
 
+    for name, dtype in dtype_rows.items():
+        options =
+
+
+        if dtype == "string":
+            dl.get_options
+
+        elif dtype == "list":
+            pass
+
     # construct list of json-friendly col-dtype entries and return
     param_list = [
-        jt.ColumnProfile(name=name, dtype=dtype)
-        for name, dtype in dtype_rows.items()
+        jt.ColumnProfile(name=name, dtype=dtype, options="")
+        for name, dtype, options in zip(dtype_rows.items(), dl.get_options(location, dtype_rows).keys() or None)
     ]
     return jt.ColumnList(schema=solution, table=system, columns=param_list)
 
