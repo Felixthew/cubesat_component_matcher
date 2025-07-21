@@ -1,4 +1,6 @@
 import pandas as pd
+from numpy.conftest import dtype
+
 from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 
 class ScoringEngine:
@@ -18,6 +20,7 @@ class ScoringEngine:
         self.extended_df: pd.DataFrame = self._score_all(candidates_df)
 
     def _score_single(self, column_name, request_val, candidate_val):
+        print(self.dtypes)
         dtype = self.dtypes[column_name]
         scorer = SCORING_REGISTRY[dtype]
 

@@ -24,8 +24,8 @@ def _load_dtypes(location: Location) -> dict[str, str]:
     )
 
     return {
-        col: dtype
-        for col, dtype in result.items()
+        dict['column_name']: dict['dtype']
+        for dict in result
     }
 
 def load_candidates(location: Location) -> pd.DataFrame:

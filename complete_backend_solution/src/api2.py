@@ -56,7 +56,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     # prepare engine parameters
     engine_request = dl.load_request(query.specs)
     engine_candidates_df = dl.load_candidates(query.location)
-    engine_dtypes = dl.get_dtypes(query.location)
+    engine_dtypes = dl._load_dtypes(query.location)
     engine_scoring_config = None
     # ^configs need more infrastructure established -- left to defaults for now
 
