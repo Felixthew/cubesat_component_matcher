@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from src.api2 import app
+from complete_backend_solution.src.api2 import app
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ def reset_db():
 
 class TestUserAPI:
 
-    def test_get_all_users(self, client):
+    def test_get_solutions(self, client):
         """Test retrieving all users"""
         response = client.get("/solutions")
         print(response.json())
@@ -34,3 +34,6 @@ class TestUserAPI:
         # assert users[0]["id"] == 1
         # assert users[0]["name"] == "John Doe"
         # assert users[0]["email"] == "john@example.com"
+
+    def test_get_scores(self, client):
+        pass

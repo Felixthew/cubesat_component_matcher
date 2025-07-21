@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException
 import pandas as pd
-import src.json_types as jt
-from src.json_types import SchemaList
-from src.engine import ScoringEngine
-import src.storage as storage
-import src.data_loader as dl
+import complete_backend_solution.src.json_types as jt
+from complete_backend_solution.src.json_types import SchemaList
+from complete_backend_solution.src.engine import ScoringEngine
+import complete_backend_solution.src.storage as storage
+import complete_backend_solution.src.data_loader as dl
 
 app = FastAPI(title="Component Matcher")
 

@@ -38,15 +38,17 @@ def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str | int | float, f
     }
 
 def list_schema():
-    return db.execute(
+    schemas =  db.execute(
         """
         SELECT schema_name
         FROM information_schema.schemata
         WHERE schema_name NOT IN :blacklist_schema
         ORDER BY schema_name;  
         """,
-        {"blacklist_schema": ", ".join(db.BLACKLIST_SCHEMA)}
-    ).scalars().all()
+        {"blacklist_schema": tuple(db.BLACKLIST_SCHEMA)}
+    )
+    print([s["schema_name"] for s in schemas])
+    return [s["schema_name"] for s in schemas]
 
 def list_tables(schema: str):
     return db.execute(
