@@ -3,6 +3,9 @@ from fastapi.testclient import TestClient
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from complete_backend_solution.src.api2 import app
+import json
+
+
 
 
 @pytest.fixture
@@ -36,4 +39,8 @@ class TestUserAPI:
         # assert users[0]["email"] == "john@example.com"
 
     def test_get_scores(self, client):
-        pass
+        # Load the JSON data from a file
+        with open('component_data_TEST/test.json', 'r') as f:
+            search_request = json.load(f)
+        response = client.post("/search", json=search_request)
+        print(response.json())

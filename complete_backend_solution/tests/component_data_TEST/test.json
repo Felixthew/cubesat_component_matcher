@@ -1,0 +1,19 @@
+{
+  "location": {
+    "schema": "power_TEST",
+    "table": "solar_arrays"
+  },
+  "specs": [
+    {
+      "name": "Company",
+      "value": "DHV Technologies",
+      "weight": 1.5
+    },
+    {
+      "name": "price",
+      "value": 68,
+      "weight": 2.0
+    }
+  ],
+  "session_id": null
+}
