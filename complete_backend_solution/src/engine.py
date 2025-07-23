@@ -1,5 +1,4 @@
 import pandas as pd
-from numpy.conftest import dtype
 
 from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 

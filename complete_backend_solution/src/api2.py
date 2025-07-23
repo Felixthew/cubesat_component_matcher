@@ -5,6 +5,7 @@ from complete_backend_solution.src.json_types import SchemaList
 from complete_backend_solution.src.engine import ScoringEngine
 import complete_backend_solution.src.storage as storage
 import complete_backend_solution.src.data_loader as dl
+import json
 
 app = FastAPI(title="Component Matcher")
 
@@ -53,7 +54,9 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
 
     # create and run the engine. let it do the heavy lifting on computing extended_df
     engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)
-    scored_table = engine.extended_df.to_dict(orient="records") # BOOM
+    # I changed thi to Json to get rid of the NaNs, hopefully that is all good
+    json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
+    scored_table = json.loads(json_str)# BOOM
 
     # identify/generate session id for the recall then cache session data
     sid = query.session_id or storage.generate_session_id()

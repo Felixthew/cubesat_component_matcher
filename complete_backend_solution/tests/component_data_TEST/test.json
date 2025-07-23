@@ -10,9 +10,9 @@
       "weight": 1.5
     },
     {
-      "name": "price",
+      "name": "Specific Power (W/kg)",
       "value": 68,
-      "weight": 2.0
+      "weight": 200.0
     }
   ],
   "session_id": null

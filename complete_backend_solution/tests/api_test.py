@@ -43,4 +43,7 @@ class TestUserAPI:
         with open('component_data_TEST/test.json', 'r') as f:
             search_request = json.load(f)
         response = client.post("/search", json=search_request)
+        response_json = response.json()
+        with open("results.json", "w", encoding="utf-8") as f:
+            json.dump(response_json, f, ensure_ascii=False, indent=2)
         print(response.json())
