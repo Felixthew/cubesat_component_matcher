@@ -1,3 +1,5 @@
+from http.client import responses
+
 import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI, HTTPException
@@ -24,19 +26,16 @@ class TestUserAPI:
 
     def test_get_solutions(self, client):
         """Test retrieving all users"""
-        response = client.get("/solutions")
+        response = client.get("/options")
         print(response.json())
 
-        # assert response.status_code == 200
-        #
-        # users = response.json()
-        # assert isinstance(users, list)
-        # assert len(users) == 2
-        #
-        # # Check first user structure
-        # assert users[0]["id"] == 1
-        # assert users[0]["name"] == "John Doe"
-        # assert users[0]["email"] == "john@example.com"
+        assert response.status_code == 200
+
+    def test_get_systems(self, client):
+        response = client.get("/options/power_TEST")
+        print(response.json())
+
+        assert response.status_code == 200
 
     def test_get_scores(self, client):
         # Load the JSON data from a file

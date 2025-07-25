@@ -9,20 +9,20 @@ import json
 
 app = FastAPI(title="Component Matcher")
 
-@app.get("/solutions", response_model=jt.SchemaList,
+@app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
 def get_solutions() -> jt.SchemaList:
     return SchemaList(schemas=dl.list_schema())
 
-@app.get("/solutions/{solution}/systems", response_model=jt.TableList,
+@app.get("/options/{solution}", response_model=jt.TableList,
          summary="Lists all system types to choose from, e.g. chemical propulsion")
 def get_systems(solution: str) -> jt.TableList:
     tables = dl.list_tables(solution)
     if not tables:
         raise HTTPException(404, "No existing systems in request solution category")
-    return jt.TableList(schema=solution, tables=tables)
+    return jt.TableList(schema=solution, tables=[item["table_name"] for item in tables])
 
-@app.get("/solutions/{solution}/systems/{system}/parameters", response_model=jt.ColumnList,
+@app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
 def get_params(solution: str, system: str) -> jt.ColumnList:
 

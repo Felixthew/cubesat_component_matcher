@@ -59,4 +59,4 @@ def list_tables(schema: str):
         ORDER BY table_name
         """,
         {"schema": schema}
-    ).scalars.all()
+    )
