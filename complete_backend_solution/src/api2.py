@@ -66,7 +66,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     return jt.SearchResponse(session_id=sid, results=scored_table)
 
 
-@app.get("/search/{session_id}", response_model=jt.SearchResponse,
+@app.post("/search/{session_id}", response_model=jt.SearchResponse,
          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
 def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
     sid = query.session_id
