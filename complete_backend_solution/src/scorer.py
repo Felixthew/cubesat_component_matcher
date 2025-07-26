@@ -1,12 +1,22 @@
+import math
 from math import prod
 from abc import ABC, abstractmethod
 import numpy as np
 from rapidfuzz import fuzz
+from sqlalchemy.sql.base import elements
+
 
 # Additional config options must be added in
-# 1) the proper type method
-# 2) the SCORING_CONFIG
+# - the proper type method
+# - the SCORING_CONFIG
 # Make sure the scoring config default is the same as the method default parameters
+
+# Additional datatypes must:
+# - add a new subclass of Scorer
+# - update SCORING_REGISTRY
+# - update default configs in SCORING_CONFIG
+# Then double check for type properties that may require attention in engine.py or data_loader.py
+# (Add test cases in test/scorer_test)
 
 class Scorer(ABC):
     @abstractmethod
@@ -78,8 +88,8 @@ class TupleScorer(Scorer):
         if request_val is None or candidate_val is None:
             return 0.0
 
-        request_val = _parse(request_val)
-        candidate_val = _parse(candidate_val)
+        request_val = _parse_collection(request_val)
+        candidate_val = _parse_collection(candidate_val)
 
         # fail if input aren't numbers
         try:
@@ -131,7 +141,7 @@ class ListScorer(Scorer):
         if request_val is None or candidate_val is None:
             return 0.0
 
-        req_set, cand_set = set(_parse(request_val)), set(_parse(candidate_val))
+        req_set, cand_set = set(_parse_collection(request_val)), set(_parse_collection(candidate_val))
 
         # checks for inclusion anywhere once
         if match_mode == "contains":
@@ -157,11 +167,56 @@ class BooleanScorer(Scorer):
         return 1.0 if bool(request_val) == bool(candidate_val) else 0.0
 
 
+class RangeScorer(Scorer):
+    def score(self, request_val, candidate_val, decay_factor=1.0, **kwargs) -> float:
+        """
+        NOTE: request_val is a SINGLE NUMBER (int, float), not a range itself
+        :param decay_factor: values between 0 and 1 make the decay more rapid, values over 1 slow it down
+        """
+
+        # negative decay factor will result in scores larger than 1.0 outside of the bounds
+        if decay_factor < 0:
+            raise ValueError("Decay Factor cannot be negative")
+
+        if request_val is None or candidate_val is None:
+            return 0.0
+
+        low, high = _parse_range(candidate_val)
+
+        # if the request is contained in the range, return 1.0
+        if low <= request_val <= high:
+            return 1.0
+
+        # else exponentially decay score
+        diff = low - request_val if request_val < low else request_val - high
+        return math.exp(-diff / (10 * decay_factor))
+
+
 def _clean_string(val: str) -> str:
     return val.strip().lower()
 
-def _parse(vals: str) -> list[str]:
+def _parse_collection(vals: str) -> list[str]:
     return _clean_string(vals).split(", ")
+
+def _parse_range(val: str) -> tuple[float, float]:
+    range_elements = val.split("-")
+
+    # handle bad formatting
+    if len(range_elements) != 2:
+        raise ValueError("Improper range format")
+    try:
+        min, max = float(range_elements[0]), float(range_elements[1])
+    except TypeError:
+        raise ValueError("Not a number range")
+    except IndexError:
+        raise ValueError("Improper range format")
+
+    # order
+    if min > max:
+        min, max = max, min
+
+    return min, max
+
 
 def _union_max(vals1: list[float | int], vals2: list[float | int]) -> float | int:
     return max(max(vals1), max(vals2))
@@ -184,7 +239,8 @@ SCORING_REGISTRY = {
     "string": StringScorer(),
     "tuple": TupleScorer(),
     "list": ListScorer(),
-    "boolean": BooleanScorer()
+    "boolean": BooleanScorer(),
+    "range": RangeScorer()
 }
 
 # add new default configs here
@@ -193,5 +249,6 @@ SCORING_CONFIG = {
     "string": {"threshold": 80, "exact_match": False},
     "tuple": {"product_scoring": False, "normalize_to_max": True},
     "list": {"match_mode": "overlap"},
-    "boolean": {}
+    "boolean": {},
+    "range": {"decay_factor": 1.0}
 }

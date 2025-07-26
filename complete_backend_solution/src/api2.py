@@ -19,7 +19,8 @@ def get_systems(solution: str) -> jt.TableList:
     tables = dl.list_tables(solution)
     if not tables:
         raise HTTPException(404, "No existing systems in request solution category")
-    return jt.TableList(schema=solution, tables=[item["table_name"] for item in tables])
+    return jt.TableList(schema=solution, tables=tables)
+    # [item["table_name"] for item in tables])
 
 @app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
@@ -33,20 +34,13 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
     if dtype_rows is None:
         raise HTTPException(404, f"{system} in {solution} not found")
 
-    for name, dtype in dtype_rows.items():
-        options =
-
-
-        if dtype == "string":
-            dl.get_options
-
-        elif dtype == "list":
-            pass
-
     # construct list of json-friendly col-dtype entries and return
     param_list = [
-        jt.ColumnProfile(name=name, dtype=dtype, options="")
-        for name, dtype, options in zip(dtype_rows.items(), dl.get_options(location, dtype_rows).keys() or None)
+        jt.ColumnProfile(name=name, dtype=dtype, options=options)
+        # from column-dtype pairs
+        for name, dtype in dtype_rows.items()
+        # and from options for eligible, exposable types (think dropdown values)
+        for options in dl.list_options(location, name, dtype)
     ]
     return jt.ColumnList(schema=solution, table=system, columns=param_list)
 

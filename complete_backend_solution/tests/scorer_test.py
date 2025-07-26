@@ -182,3 +182,49 @@ class TestBooleanScorer(GenericScorerTester):
     @pytest.mark.parametrize("case", CASES)
     def test_score(self, case):
         self.run_scorer(case)
+
+
+class TestRangeScorer(GenericScorerTester):
+    SCORER = sc.RangeScorer
+
+    CASES = [
+        # null returns 0
+        _case((None, "0-10"), {}, 0.0),
+        _case((5, None), {}, 0.0),
+
+        # format and input errors raised
+        _case((5, "0-10-20"), {}, ValueError),
+        _case((5, "A-B"), {}, ValueError),
+        _case((5, "A, B"), {}, ValueError),
+        _case((5, "0-10"), {"decay_factor": -1.0}, ValueError),
+
+        # containment returns 1
+        _case((5, "0-10"), {}, 1.0),
+        _case((5, "10-0"), {}, 1.0),
+
+        # decays outside
+        # low positive
+        _case((48, "50-60"), {"decay_factor": 1.0}, 0.82),
+        _case((48, "50-60"), {"decay_factor": 5.0}, 0.96),
+        _case((48, "50-60"), {"decay_factor": 0.2}, 0.37),
+
+        # high positive
+        _case((30, "0-10"), {"decay_factor": 1.0}, 0.14),
+        _case((30, "0-10"), {"decay_factor": 5.0}, 0.67),
+        _case((30, "0-10"), {"decay_factor": 0.2}, 4.5e-5),
+
+        # low negative
+        _case((-2, "0-10"), {"decay_factor": 1.0}, 0.82),
+        _case((-2, "0-10"), {"decay_factor": 5.0}, 0.96),
+        _case((-2, "0-10"), {"decay_factor": 0.2}, 0.37),
+
+        # reasonable check
+        _case((48, "50-60"), {"decay_factor": 2.0}, 0.90),
+        _case((48, "50-60"), {"decay_factor": 3.0}, 0.94),
+        _case((48, "50-60"), {"decay_factor": 4.0}, 0.95),
+        _case((48, "50-60"), {"decay_factor": 10.0}, 0.98)
+    ]
+
+    @pytest.mark.parametrize("case", CASES)
+    def test_score(self, case):
+        self.run_scorer(case)
