@@ -13,7 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 connection_string = "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway"
 
 
-def upload_excel(file_path, schema="public"):
+def upload_excel(file_path, schema="public", verbose=False):
     """
     Uploads each sheet of an Excel spreadsheet file to the postgresql database as a table.
 
@@ -36,11 +36,14 @@ def upload_excel(file_path, schema="public"):
 
         for sheet_name in sheet_names:
             table_name = sheet_name
+            if verbose:
+                print(f"\nUploading {filename}#{table_name}...")
 
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             # Writing to the database
-            _upload_data(engine, df, schema, table_name)
-            print(
+            _upload_data(engine, df, schema, table_name, verbose=verbose)
+            if verbose:
+                print(
                 f"Successfully uploaded the Excel sheet {filename}#{sheet_name} as table {'.'.join([schema, table_name])}.")
 
     except FileNotFoundError:
@@ -77,10 +80,10 @@ def remove_table(table_name):
         print(f"Unexpected error: {e}")
 
 
-def upload_all(directory_path, has_schema=False):
+def upload_all(directory_path, has_schema=False, verbose=False):
     """
     Uploads all xlsx files in a directory as tables to the postgresql database.
-    
+
     :param directory_path: the directory path of the directory to upload.
     :param has_schema: If true, will treat any subdirectory as schema.
     """
@@ -108,10 +111,11 @@ def upload_all(directory_path, has_schema=False):
                       f"file {xlsx_file} not uploaded")
             else:
                 schema = schema[0] if schema else "public"
-                upload_excel(xlsx_file, schema=schema)
+                upload_excel(xlsx_file, schema=schema, verbose=verbose)
         else:
-            upload_excel(xlsx_file)
-    print(f"Finished directory upload of {directory_path}.")
+            upload_excel(xlsx_file, verbose=verbose)
+    if verbose:
+        print(f"Finished directory upload of {directory_path}.")
 
 
 def _create_metadata_schema(engine: Engine):
@@ -135,8 +139,11 @@ def _create_metadata_schema(engine: Engine):
         conn.execute(text(query))
         conn.commit()
 
-def _upload_data(engine: Engine, df: pd.DataFrame, schema_name: str, table_name: str):
+
+def _upload_data(engine: Engine, df: pd.DataFrame, schema_name: str, table_name: str, verbose=False):
     df_data = df.drop(index=0).reset_index(drop=True) # remove metadata
+    # force columns with int and floats to float
+    df_data = _convert_numeric(df_data, verbose=verbose)
     df_data.to_sql(table_name, engine, schema=schema_name, index=False, if_exists='replace') # export clean data
     metadata = df.iloc[0] # read metadata
     metadata_entry = [ # parse metadata
@@ -153,6 +160,23 @@ def _upload_data(engine: Engine, df: pd.DataFrame, schema_name: str, table_name:
     with engine.begin() as conn:
         conn.execute(text(query), metadata_entry)
 
+def _convert_numeric(df, verbose=False):
+    # Step 2: Loop over object columns and check if they contain only numbers (ignoring NaNs)
+    for col in df.select_dtypes(include='object').columns:
+        # Try converting to numeric
+        try:
+            df[col] = pd.to_numeric(df[col], errors='raise')
+            if verbose:
+                print(f" -- Successfully converted {col} to numeric.")
+        except ValueError:
+            if verbose:
+                print(f" -- Could not convert column {col} to numeric.")
+    if verbose:
+        print(f"Dataframe dtypes: ")
+        for col, dtype in df.dtypes.items():
+            print(f"\t{col}: {dtype}")
+    return df
+
 
 # call whatever method you want to run here, below is an example:
-upload_all("complete_backend_solution/tests/component_data_TEST", has_schema=True)
+upload_all("complete_backend_solution/tests/component_data_TEST", has_schema=True, verbose=True)

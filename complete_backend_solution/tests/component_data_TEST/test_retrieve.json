@@ -1,0 +1,23 @@
+{
+  "session_id": "3ffc8d0d-f9fb-489b-90dc-eaf4bbe2d485",
+  "filters": [
+    {
+      "name": "Specific Power (W/kg)",
+      "min_val": 50,
+      "max_val": 100
+    },
+    {
+      "name": "Peak BOL Solar Array Power (W)",
+      "min_val": 4.0,
+      "max_val": null
+    }
+  ],
+  "sort": {
+    "by": "Specific Power (W/kg)",
+    "asc": true
+  },
+  "pagination": {
+    "page": 1,
+    "per_page": 20
+  }
+}

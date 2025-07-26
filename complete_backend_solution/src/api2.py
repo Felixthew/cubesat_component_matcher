@@ -4,23 +4,24 @@ import complete_backend_solution.src.json_types as jt
 from complete_backend_solution.src.engine import ScoringEngine
 import complete_backend_solution.src.storage as storage
 import complete_backend_solution.src.data_loader as dl
+import json
 
 app = FastAPI(title="Component Matcher")
 
-@app.get("/solutions", response_model=jt.SchemaList,
+@app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
 def get_solutions() -> jt.SchemaList:
     return jt.SchemaList(schemas=dl.list_schema())
 
-@app.get("/solutions/{solution}/systems", response_model=jt.TableList,
+@app.get("/options/{solution}", response_model=jt.TableList,
          summary="Lists all system types to choose from, e.g. chemical propulsion")
 def get_systems(solution: str) -> jt.TableList:
     tables = dl.list_tables(solution)
     if not tables:
         raise HTTPException(404, "No existing systems in request solution category")
-    return jt.TableList(schema=solution, tables=tables)
+    return jt.TableList(schema=solution, tables=[item["table_name"] for item in tables])
 
-@app.get("/solutions/{solution}/systems/{system}/parameters", response_model=jt.ColumnList,
+@app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
 def get_params(solution: str, system: str) -> jt.ColumnList:
 
@@ -62,7 +63,9 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
 
     # create and run the engine. let it do the heavy lifting on computing extended_df
     engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)
-    scored_table = engine.extended_df.to_dict(orient="records") # BOOM
+    # I changed thi to Json to get rid of the NaNs, hopefully that is all good
+    json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
+    scored_table = json.loads(json_str)# BOOM
 
     # identify/generate session id for the recall then cache session data
     sid = query.session_id or storage.generate_session_id()
@@ -72,7 +75,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     return jt.SearchResponse(session_id=sid, results=scored_table)
 
 
-@app.get("/search/{session_id}", response_model=jt.SearchResponse,
+@app.post("/search/{session_id}", response_model=jt.SearchResponse,
          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
 def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
     sid = query.session_id

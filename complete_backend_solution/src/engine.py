@@ -1,5 +1,4 @@
 import pandas as pd
-from numpy.conftest import dtype
 
 from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 
@@ -26,9 +25,11 @@ class ScoringEngine:
 
         # can lead the way for column-specific kwargs, forced or user-specified
         type_kwargs = self.config[dtype]
-        all_kwargs = {**type_kwargs, "max_val": self.global_maxes[column_name]}
+        all_kwargs = {**type_kwargs}
+        if dtype == "number":
+            all_kwargs["max_val"] = self.global_maxes[column_name]
 
-        return scorer.score(request_val, candidate_val, all_kwargs)
+        return scorer.score(request_val, candidate_val, **all_kwargs)
 
     def _score_row(self, row: pd.Series) -> dict:
         # safety against passing a df

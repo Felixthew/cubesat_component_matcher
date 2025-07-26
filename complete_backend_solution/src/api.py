@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from complete_backend_solution.src import database
 from engine import ScoringEngine
 import data_loader
-from database import DB
+from database import db as DB
 import pandas as pd
 import storage
 
