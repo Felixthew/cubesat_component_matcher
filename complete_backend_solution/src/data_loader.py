@@ -10,13 +10,15 @@ EXPOSABLE_DTYPES = {
     "list"
 }
 
+# can't use location cause it has to be hashable
 @lru_cache(maxsize=16)
-def get_dtypes(location: Location) -> dict[str, str]:
+def get_dtypes(schema: str, table: str) -> dict[str, str]:
     """
     Retrieves and caches the dtypes by column given a schema and table. {maxsize} retrievals will be cached before auto-eviction begins
     :param location: the schema and table to query to
     :return: dict of col -> dtype
     """
+    location = Location(schema=schema, table=table)
     return _load_dtypes(location)
 
 def _load_dtypes(location: Location) -> dict[str, str]:
@@ -112,7 +114,7 @@ def list_options(location: Location, col_name: str, dtype: str) -> list[str] | N
 
             # retrieve all unique scalars for the column
             col = table.c[col_name]
-            query = select(distinct(col))
+            query = select(distinct(col)).where(col.isnot(None))
             result = conn.execute(query).scalars().all()
 
             # if string, just return the scalars

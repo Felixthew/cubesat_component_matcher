@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="railway@tramway.proxy.rlwy.net" uuid="6c622e08-ba72-4f62-a1b2-7b48d93b2d93">
+    <data-source source="LOCAL" name="railway@turntable.proxy.rlwy.net" uuid="6c622e08-ba72-4f62-a1b2-7b48d93b2d93">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.postgresql.Driver</jdbc-driver>
-      <jdbc-url>jdbc:postgresql://tramway.proxy.rlwy.net:31947/railway</jdbc-url>
+      <jdbc-url>jdbc:postgresql://turntable.proxy.rlwy.net:46609/railway</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
     <data-source source="LOCAL" name="TEST" uuid="29a1736b-38e5-4533-b231-93a02f5f7048">

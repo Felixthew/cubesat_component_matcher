@@ -1,0 +1,24 @@
+{
+  "location": {
+    "schema": "platforms_TEST",
+    "table": "hosted_payloads"
+  },
+  "specs": [
+    {
+      "name": "Organization",
+      "value": "Creotech",
+      "weight": 1.5
+    },
+    {
+      "name": "Intended Destination",
+      "value": "LEO, GEO, MEO",
+      "weight": 200.0
+    },
+    {
+      "name": "US Office",
+      "value": false,
+      "weight": 200.0
+    }
+  ],
+  "session_id": null
+}

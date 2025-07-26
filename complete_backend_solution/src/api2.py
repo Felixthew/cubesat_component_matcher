@@ -27,8 +27,8 @@ def get_systems(solution: str) -> jt.TableList:
 def get_params(solution: str, system: str) -> jt.ColumnList:
 
     # retrieves cached dtype data
+    dtype_rows = dl.get_dtypes(solution, system)
     location = jt.Location(schema=solution, table=system)
-    dtype_rows = dl.get_dtypes(location)
 
     # except if null result
     if dtype_rows is None:
@@ -36,11 +36,10 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
 
     # construct list of json-friendly col-dtype entries and return
     param_list = [
-        jt.ColumnProfile(name=name, dtype=dtype, options=options)
+        jt.ColumnProfile(name=name, dtype=dtype, options=dl.list_options(location, name, dtype))
         # from column-dtype pairs
         for name, dtype in dtype_rows.items()
         # and from options for eligible, exposable types (think dropdown values)
-        for options in dl.list_options(location, name, dtype)
     ]
     return jt.ColumnList(schema=solution, table=system, columns=param_list)
 

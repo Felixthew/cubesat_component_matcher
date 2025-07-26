@@ -23,24 +23,31 @@ def reset_db():
 class TestUserAPI:
 
     def test_get_solutions(self, client):
-        """Test retrieving all users"""
+        """Test retrieving options"""
         response = client.get("/solutions")
         print(response.json())
 
-        # assert response.status_code == 200
-        #
-        # users = response.json()
-        # assert isinstance(users, list)
-        # assert len(users) == 2
-        #
-        # # Check first user structure
-        # assert users[0]["id"] == 1
-        # assert users[0]["name"] == "John Doe"
-        # assert users[0]["email"] == "john@example.com"
+
+    def test_get_params(self, client):
+        response = client.get("/options/power_TEST/solar_arrays")
+        print(response.json())
+
+        assert response.status_code == 200
 
     def test_get_scores(self, client):
         # Load the JSON data from a file
-        with open('component_data_TEST/test.json', 'r') as f:
+        with open('component_data_TEST/test_request.json', 'r') as f:
             search_request = json.load(f)
         response = client.post("/search", json=search_request)
         print(response.json())
+        with open("results.json", "w") as json_file:
+            json.dump(response.json(), json_file, indent=4)
+
+    def test_get_scores_list(self, client):
+        # Load the JSON data from a file
+        with open('component_data_TEST/test_req2.json', 'r') as f:
+            search_request = json.load(f)
+        response = client.post("/search", json=search_request)
+        print(response.json())
+        with open("list_results.json", "w") as json_file:
+            json.dump(response.json(), json_file, indent=4)

@@ -95,19 +95,6 @@
     {
       "Company": "DHV Technologies",
       "Product": "Solar Panels for CubeSats Set",
-      "Panel Mount": "Body",
-      "Company_score": 1.0,
-      "overall_score": 0.9939845101,
-      "Panel Material": "Polyimide",
-      "Panel Deployment": "Rigid",
-      "Panel Deployability": "Double",
-      "Specific Power (W/kg)": 69.0,
-      "Specific Power (W/kg)_score": 0.9939393939,
-      "Peak BOL Solar Array Power (W)": 57.0
-    },
-    {
-      "Company": "DHV Technologies",
-      "Product": "Solar Panels for CubeSats Set",
       "Panel Mount": null,
       "Company_score": 1.0,
       "overall_score": 0.9939845101,
@@ -117,6 +104,19 @@
       "Specific Power (W/kg)": 69.0,
       "Specific Power (W/kg)_score": 0.9939393939,
       "Peak BOL Solar Array Power (W)": 68.0
+    },
+    {
+      "Company": "DHV Technologies",
+      "Product": "Solar Panels for CubeSats Set",
+      "Panel Mount": "Body",
+      "Company_score": 1.0,
+      "overall_score": 0.9939845101,
+      "Panel Material": "Polyimide",
+      "Panel Deployment": "Rigid",
+      "Panel Deployability": "Double",
+      "Specific Power (W/kg)": 69.0,
+      "Specific Power (W/kg)_score": 0.9939393939,
+      "Peak BOL Solar Array Power (W)": 57.0
     },
     {
       "Company": "DHV Technologies",
