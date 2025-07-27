@@ -5,33 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/cubesat_component_matcher.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/cubesat_component_matcher.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/metadata.L3st5Q.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/metadata.L3st5Q.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/platforms_TEST.EUsbAw.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/platforms_TEST.EUsbAw.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/power_TEST.jEc5Gg.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/power_TEST.jEc5Gg.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/6c622e08-ba72-4f62-a1b2-7b48d93b2d93/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/6c622e08-ba72-4f62-a1b2-7b48d93b2d93/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/comms.5zKnBQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/metadata.L3st5Q.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/propulsion.7xbG4w.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/schema_1_test.PtRkdA.meta" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/c1966b64-eea9-4377-bb95-7a39828e7e2d/storage_v2/_src_/database/railway.Hf4GOg/schema/schema_2_test.3awZdg.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/6c622e08-ba72-4f62-a1b2-7b48d93b2d93/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/6c622e08-ba72-4f62-a1b2-7b48d93b2d93/storage_v2/_src_/database/railway.Hf4GOg/schema/pg_catalog.0S1ZNQ.zip" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/__innit__.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/api2.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/api2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/data_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/engine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/json_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/json_types.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/scorer.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/scorer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/conftest.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/pytest.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/list_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/list_results.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/results.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,51 +70,52 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python tests.Python tests for complete_backend_solution.tests.scorer_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for conftest.test_db.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for scorer_test.GenericScorerTest.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for scorer_test.NumberScorerTest.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for scorer_test.TestListScorer.test_score.executor&quot;: &quot;Debug&quot;,
-    &quot;Python tests.Python tests for scorer_test.TestNumberScorer.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for scorer_test.TestTupleScorer.executor&quot;: &quot;Debug&quot;,
-    &quot;Python tests.Python tests for setup_for_all_database_test.test_db.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for storage_test.test_caching_curveballs.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for storage_test.test_roundtrip_caching.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for storage_test.test_save_load_all.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in conftest.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in scorer_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in storage_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python.api_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.data_loader.executor&quot;: &quot;Run&quot;,
-    &quot;Python.scorer.executor&quot;: &quot;Debug&quot;,
-    &quot;Python.storage.executor&quot;: &quot;Run&quot;,
-    &quot;Python.storage_test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.test.executor&quot;: &quot;Run&quot;,
-    &quot;Python.upload_table.executor&quot;: &quot;Run&quot;,
-    &quot;Python.vector_optimization_algo.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/felix/PycharmProjects/cubesat_component_matcher&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "DefaultHtmlFileTemplate": "HTML File",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python tests.Python tests for api_test.TestUserAPI.executor": "Run",
+    "Python tests.Python tests for complete_backend_solution.tests.scorer_test.executor": "Run",
+    "Python tests.Python tests for conftest.test_db.executor": "Run",
+    "Python tests.Python tests for scorer_test.GenericScorerTest.executor": "Run",
+    "Python tests.Python tests for scorer_test.NumberScorerTest.executor": "Run",
+    "Python tests.Python tests for scorer_test.TestListScorer.test_score.executor": "Debug",
+    "Python tests.Python tests for scorer_test.TestNumberScorer.executor": "Run",
+    "Python tests.Python tests for scorer_test.TestTupleScorer.executor": "Debug",
+    "Python tests.Python tests for setup_for_all_database_test.test_db.executor": "Run",
+    "Python tests.Python tests for storage_test.test_caching_curveballs.executor": "Run",
+    "Python tests.Python tests for storage_test.test_roundtrip_caching.executor": "Run",
+    "Python tests.Python tests for storage_test.test_save_load_all.executor": "Run",
+    "Python tests.Python tests in conftest.py.executor": "Run",
+    "Python tests.Python tests in scorer_test.py.executor": "Run",
+    "Python tests.Python tests in storage_test.py.executor": "Run",
+    "Python.api_test.executor": "Run",
+    "Python.data_loader.executor": "Run",
+    "Python.scorer.executor": "Debug",
+    "Python.storage.executor": "Run",
+    "Python.storage_test.executor": "Run",
+    "Python.test.executor": "Run",
+    "Python.upload_table.executor": "Run",
+    "Python.vector_optimization_algo.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/felix/PycharmProjects/cubesat_component_matcher",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;postgresql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\felix\PycharmProjects\cubesat_component_matcher" />
@@ -136,8 +127,8 @@
       <recent name="C:\Users\powel\PycharmProjects\cubesat_component_matcher" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Python tests for complete_backend_solution.tests.scorer_test">
-    <configuration name="Python tests for complete_backend_solution.tests.conftest.test_db" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python tests.Python tests for api_test.TestUserAPI">
+    <configuration name="Python tests for api_test.TestUserAPI" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="cubesat_component_matcher" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -149,23 +140,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;complete_backend_solution.tests.conftest.test_db&quot;" />
-      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
-      <method v="2" />
-    </configuration>
-    <configuration name="Python tests for complete_backend_solution.tests.scorer_test" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
-      <module name="cubesat_component_matcher" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/complete_backend_solution/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;complete_backend_solution.tests.scorer_test&quot;" />
+      <option name="_new_target" value="&quot;api_test.TestUserAPI&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method v="2" />
     </configuration>
@@ -234,8 +209,7 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python tests.Python tests for complete_backend_solution.tests.conftest.test_db" />
-      <item itemvalue="Python tests.Python tests for complete_backend_solution.tests.scorer_test" />
+      <item itemvalue="Python tests.Python tests for api_test.TestUserAPI" />
       <item itemvalue="Python tests.Python tests for conftest.test_db" />
       <item itemvalue="Python tests.Python tests for storage_test.test_caching_curveballs" />
       <item itemvalue="Python tests.Python tests for storage_test.test_roundtrip_caching" />
@@ -243,11 +217,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python tests.Python tests for api_test.TestUserAPI" />
         <item itemvalue="Python tests.Python tests for storage_test.test_roundtrip_caching" />
         <item itemvalue="Python tests.Python tests for storage_test.test_caching_curveballs" />
         <item itemvalue="Python tests.Python tests for storage_test.test_save_load_all" />
         <item itemvalue="Python tests.Python tests for conftest.test_db" />
-        <item itemvalue="Python tests.Python tests for complete_backend_solution.tests.conftest.test_db" />
       </list>
     </recent_temporary>
   </component>
@@ -282,7 +256,8 @@
       <workItem from="1752542945134" duration="1255000" />
       <workItem from="1752544371240" duration="841000" />
       <workItem from="1752545229119" duration="17696000" />
-      <workItem from="1753490316075" duration="7192000" />
+      <workItem from="1753490316075" duration="11272000" />
+      <workItem from="1753657672700" duration="2508000" />
     </task>
     <task id="LOCAL-00001">
       <option name="closed" value="true" />
@@ -313,7 +288,7 @@
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$data_loader.coverage" NAME="data_loader Coverage Results" MODIFIED="1752344403311" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/aiden_halfstack_solution/src" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$test.coverage" NAME="test Coverage Results" MODIFIED="1750710457331" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test_files" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$storage_test.coverage" NAME="storage_test Coverage Results" MODIFIED="1752515003148" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/tests" />
-    <SUITE FILE_PATH="coverage/cubesat_component_matcher$.coverage" NAME=" Coverage Results" MODIFIED="1752803938352" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/tests" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$.coverage" NAME=" Coverage Results" MODIFIED="1753658009296" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/tests" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$api_test.coverage" NAME="api_test Coverage Results" MODIFIED="1750705107473" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$upload_table.coverage" NAME="upload_table Coverage Results" MODIFIED="1752788309430" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$storage.coverage" NAME="storage Coverage Results" MODIFIED="1752436552447" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/src" />

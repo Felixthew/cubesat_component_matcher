@@ -50,7 +50,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     # prepare engine parameters
     engine_request = dl.load_request(query.specs)
     engine_candidates_df = dl.load_candidates(query.location)
-    engine_dtypes = dl._load_dtypes(query.location)
+    engine_dtypes = dl.get_dtypes(query.location.schema, query.location.table)
     engine_scoring_config = None
     # ^configs need more infrastructure established -- left to defaults for now
 
@@ -89,17 +89,20 @@ def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
     df_inter = _sort(query.sort, df_inter)
     df_inter = _paginate(query.pagination, df_inter)
 
+    # prune old session data
+    storage.prune_expired_sessions()
+
     # package and return
     result = df_inter.to_dict(orient="records")
     return jt.SearchResponse(session_id=sid, results=result)
 
 
 def _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:
-    for filter in filters:
-        if filter.min_val is not None:
-            df = df[df[filter.name] >= filter.min_val]
-        if filter.max_val is not None:
-            df = df[df[filter.name] <= filter.max_val]
+    for f in filters:
+        if f.min_val is not None:
+            df = df[df[f.name] >= f.min_val]
+        if f.max_val is not None:
+            df = df[df[f.name] <= f.max_val]
     return df
 
 def _sort(sort: jt.Sort, df: pd.DataFrame) -> pd.DataFrame:

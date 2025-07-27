@@ -2,7 +2,6 @@ import uuid
 import json
 from psycopg2.extras import Json
 
-
 from complete_backend_solution.src.database import db
 
 # sessions stay cached for a week by default
@@ -96,8 +95,6 @@ def _validate_input(input: str):
     if input not in ALLOWED_DATA:
         raise ValueError("Invalid data input")
 
-
-# TODO add background task in api to call this for purging
 def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
     db.execute(
         """

@@ -1,5 +1,7 @@
 from pydantic import BaseModel, Field
 
+# Utility module to keep track of json-relevant objects used in the API
+
 class SchemaList(BaseModel):
     schemas: list[str]
 

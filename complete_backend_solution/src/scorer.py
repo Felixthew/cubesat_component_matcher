@@ -3,8 +3,6 @@ from math import prod
 from abc import ABC, abstractmethod
 import numpy as np
 from rapidfuzz import fuzz
-from sqlalchemy.sql.base import elements
-
 
 # Additional config options must be added in
 # - the proper type method

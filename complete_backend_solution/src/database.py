@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, text, Engine, Row, MetaData, Table, select
+from sqlalchemy import create_engine, text, Engine, Row
 
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
 db_engine = create_engine(DB_URL)
@@ -16,7 +16,7 @@ class Database:
 
     def execute(self, sql_str: str, params: dict = None) -> list[Row] | int:
         """
-        Executes Core SQL queries with the given database
+        Executes raw SQL queries with the given database
         :param sql_str: string query
         :param params: SQL parameters to inject
         :return: Result object if the query returns a table, otherwise just the row count after performing the operation
