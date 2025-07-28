@@ -1,0 +1,29 @@
+{
+    "session_id": "73bf7977-8246-4c89-9336-6ca567b424d4",
+    "results": [
+        {
+            "Board": "board 1",
+            "Dimensions": "10, 2, 5",
+            "TRL": 1,
+            "Dimensions_score": 1.0,
+            "TRL_score": 0.2,
+            "overall_score": 0.7333333333
+        },
+        {
+            "Board": "board 2",
+            "Dimensions": "5,1,5",
+            "TRL": 4,
+            "Dimensions_score": 0.8,
+            "TRL_score": 0.8,
+            "overall_score": 0.8
+        },
+        {
+            "Board": "board 3",
+            "Dimensions": "13,7,4",
+            "TRL": 5,
+            "Dimensions_score": 0.8205128205,
+            "TRL_score": 1.0,
+            "overall_score": 0.8803418803
+        }
+    ]
+}

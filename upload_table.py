@@ -17,6 +17,7 @@ def upload_excel(file_path, schema="public", verbose=False):
     """
     Uploads each sheet of an Excel spreadsheet file to the postgresql database as a table.
 
+    :param verbose: will print progress messages and useful info to the console if true.
     :param file_path: the file path of the Excel file to upload.
     :param schema: The schema for the table to be added. Defaults to public, which is the default schema in SQL.
     """

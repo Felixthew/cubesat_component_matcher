@@ -1,0 +1,14 @@
+{
+  "location": {
+    "schema": "avionics_TEST",
+    "table": "sat_computer"
+  },
+  "specs": [
+    {
+      "name": "Voltage",
+      "value": 45,
+      "weight": 10.0
+    }
+  ],
+  "session_id": null
+}
