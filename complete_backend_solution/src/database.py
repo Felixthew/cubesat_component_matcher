@@ -1,5 +1,5 @@
 import os
-from sqlalchemy import create_engine, text, Engine, Row
+from sqlalchemy import create_engine, text, Engine, Row, Sequence
 
 DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
 db_engine = create_engine(DB_URL)
@@ -14,7 +14,7 @@ class Database:
         "public"
     }
 
-    def execute(self, sql_str: str, params: dict = None) -> list[Row] | int:
+    def execute(self, sql_str: str, params: dict = None):
         """
         Executes raw SQL queries with the given database
         :param sql_str: string query

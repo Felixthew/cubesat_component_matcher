@@ -71,7 +71,9 @@ def list_schema() -> list[str]:
         """,
         {"blacklist_schema": tuple(db.BLACKLIST_SCHEMA)}
     )
-    return [s["schema_name"] for s in schema]
+    return [s[0] for s in schema]
+
+    # return [s["schema_name"] for s in schema]
 
 def list_tables(schema: str) -> list[str]:
     """
@@ -90,7 +92,7 @@ def list_tables(schema: str) -> list[str]:
     )
     return [t["table_name"] for t in tables]
 
-def list_options(location: Location, col_name: str, dtype: str) -> list[str] | None:
+def list_choices(location: Location, col_name: str, dtype: str) -> list[str] | None:
     """
     Retrieves all possible single values from a column of an eligible type (as seen in EXPOSABLE_TYPES). This is
     intended to be a way to create efficient options for an end-user via dropdown menus. Example:

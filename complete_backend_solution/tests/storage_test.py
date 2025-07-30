@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 import complete_backend_solution.src.storage as st
@@ -10,7 +12,7 @@ def test_roundtrip_caching():
     assert st.load_request(sid) == request
 
     result = [{"f": 1, "g": {"h": {"i": False}}}, {"j": 10}]
-    st.save_results(sid, result)
+    st.save_results(sid, json.dump(result))
     assert st.load_results(sid) == result
 
 def test_caching_curveballs():

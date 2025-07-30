@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from complete_backend_solution.src.api2 import app
+from complete_backend_solution.src.api import app
 import json
 
 @pytest.fixture

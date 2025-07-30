@@ -157,7 +157,7 @@ class ListScorer(Scorer):
 
         # use overlap or jaccard arithmetic
         if match_mode == "overlap":
-            return len(intersect) / min(len(req_set), len(cand_set))
+            return len(intersect) / len(req_set)
         return (len(intersect) + jaccard_softener) / (len(req_set | cand_set) + jaccard_softener)
 
 

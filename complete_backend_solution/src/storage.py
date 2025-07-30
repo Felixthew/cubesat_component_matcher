@@ -26,7 +26,6 @@ def save_request(session_id: str, request_data: dict):
     db.execute(
         """
         INSERT INTO metadata.session_data (session_id, request_data, created_at)
-        -- VALUES (:sid, :data::jsonb, now())
         VALUES (:sid, :data, now())
         ON CONFLICT (session_id) DO UPDATE
         SET request_data = :data, created_at = now()
@@ -46,7 +45,6 @@ def save_results(session_id: str, results_data: Json):
     db.execute(
         """
         UPDATE metadata.session_data
-        -- SET results_data = :data::jsonb
         SET results_data = :data
         WHERE session_id = :sid
         """,

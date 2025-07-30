@@ -1,5 +1,5 @@
 {
-    "session_id": "8bf654df-2430-4756-8748-33d7aa2d6c28",
+    "session_id": "eceafd7f-9b39-42a7-ba28-129c08a1613c",
     "results": [
         {
             "Organization": "Aerospacelab",
@@ -42,9 +42,9 @@
             "Intended Destination": "GEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.0,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.0
         },
         {
             "Organization": "Astro Digital",
@@ -627,9 +627,9 @@
             "Intended Destination": "VLEO, LEO, Cislunar",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 0.3333333333,
+            "Intended Destination_score": 0.0,
             "US Office_score": 0.0,
-            "overall_score": 0.1660440017
+            "overall_score": 0.0
         },
         {
             "Organization": "York Space Systems",
