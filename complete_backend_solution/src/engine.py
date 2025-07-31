@@ -16,6 +16,11 @@ class ScoringEngine:
             for col in dtypes
             if dtypes[col] == "number"
         }
+        self.global_mins = {
+            col: candidates_df[col].min()
+            for col in dtypes
+            if dtypes[col] == "number"
+        }
         self.extended_df: pd.DataFrame = self._score_all(candidates_df)
 
     # score a single cell against the respective requested value
@@ -29,6 +34,7 @@ class ScoringEngine:
         all_kwargs = {**type_kwargs}
         if dtype == "number":
             all_kwargs["max_val"] = self.global_maxes[column_name]
+            all_kwargs["min_val"] = self.global_mins[column_name]
 
         return scorer.score(request_val, candidate_val, **all_kwargs)
 

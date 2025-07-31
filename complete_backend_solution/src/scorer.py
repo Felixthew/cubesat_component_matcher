@@ -30,17 +30,19 @@ class Scorer(ABC):
 
 
 class NumberScorer(Scorer):
-    def score(self, request_val, candidate_val, use_global_max=True, max_val=None, **_) -> float:
+    def score(self, request_val, candidate_val, use_global_max=True, max_val=None, min_val=None, **_) -> float:
         """
-        :param use_global_max: normalize values against the max value in the dataset, otherwise against each other
+        :param use_global_max: normalize values against the max and min value in the dataset, otherwise against each other
         :param max_val: global max value used in above config
+        :param min_val: global min value used in above config
         """
 
         if request_val is None or candidate_val is None:
             return 0.0
 
         max_val = max_val if use_global_max and max_val else max(request_val, candidate_val)
-        request_val, candidate_val, max_val = _normalize_negatives(request_val, candidate_val, max_val)
+        min_val = min_val if use_global_max and min_val else min(request_val, candidate_val)
+        request_val, candidate_val, max_val = _normalize_negatives(request_val, candidate_val, max_val, min_val)
 
         diff = abs(request_val - candidate_val)
 
@@ -120,7 +122,8 @@ class TupleScorer(Scorer):
                 req_val,
                 cand_val,
                 normalize_to_max,
-                _union_max(request_val_list, candidate_val_list)
+                _union_max(request_val_list, candidate_val_list),
+                _union_min(request_val_list, candidate_val_list)
             ))
 
         return float(np.mean(results))
@@ -220,13 +223,18 @@ def _parse_range(val: str) -> tuple[float, float]:
 def _union_max(vals1: list[float | int], vals2: list[float | int]) -> float | int:
     return max(max(vals1), max(vals2))
 
+def _union_min(vals1: list[float | int], vals2: list[float | int]) -> float | int:
+    return min(min(vals1), min(vals2))
+
 def _normalize_negatives(
         val1: int | float,
         val2: int | float,
-        max: int | float
+        max: int | float,
+        min: int | float
 ) -> tuple[int | float, int | float, int | float]:
-    if val1 < 0 or val2 < 0:
-        delta = abs(min(val1, val2))
+    # why 2x and not normalize so min becomes 0?
+    if min < 0:
+        delta = abs(min)
         val1 += 2*delta
         val2 += 2*delta
         max += 2*delta
