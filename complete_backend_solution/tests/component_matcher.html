@@ -1,4 +1,3 @@
-<!-- Made by Claude -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -141,13 +140,68 @@
             margin-top: 2rem;
         }
 
+        .score-cell {
+            font-weight: bold;
+            color: #059669;
+            background-color: #ecfdf5;
+        }
+
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .loading-indicator.show {
+            display: block;
+        }
+
+        .spec-value-container {
+            position: relative;
+        }
+
+        .spec-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            font-size: 0.75rem;
+            color: #6b7280;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            padding: 0.5rem;
+            max-height: 80px;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .spec-options strong {
+            color: #374151;
+        }
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: end;
+        }
+
+        .results-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            background: white;
+        }
+
         .results-table {
             width: 100%;
+            min-width: 600px;
             border-collapse: collapse;
             background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
         .results-table th,
@@ -205,11 +259,11 @@
             .spec-item {
                 grid-template-columns: 1fr;
             }
-
+            
             .header h1 {
                 font-size: 2rem;
             }
-
+            
             .content {
                 padding: 1rem;
             }
@@ -238,6 +292,7 @@
             <!-- Step 2: Select System -->
             <div class="section hidden" id="systemSection">
                 <h2>2. Select System Type</h2>
+                <div class="loading-indicator" id="systemLoadingIndicator">Loading systems...</div>
                 <div class="form-group">
                     <label for="systemSelect">Choose a system:</label>
                     <select id="systemSelect">
@@ -249,6 +304,7 @@
             <!-- Step 3: Configure Specifications -->
             <div class="section hidden" id="specsSection">
                 <h2>3. Configure Specifications</h2>
+                <div class="loading-indicator" id="specsLoadingIndicator">Loading parameters...</div>
                 <div class="specs-container">
                     <div id="specsContainer">
                         <!-- Specs will be added here dynamically -->
@@ -261,7 +317,55 @@
             <!-- Results Section -->
             <div class="section hidden" id="resultsSection">
                 <h2>Results</h2>
-                <div id="resultsContainer">
+                
+                <!-- Filters and Sorting Controls -->
+                <div class="hidden" id="resultControls">
+                    <div class="grid" style="margin-bottom: 1rem;">
+                        <div>
+                            <h3>Filter Results</h3>
+                            <div id="filtersContainer">
+                                <!-- Filters will be added here -->
+                            </div>
+                            <button type="button" class="add-btn" id="addFilterBtn">Add Filter</button>
+                        </div>
+                        
+                        <div>
+                            <h3>Sort Results</h3>
+                            <div class="form-group">
+                                <label for="sortBySelect">Sort by:</label>
+                                <select id="sortBySelect">
+                                    <option value="overall_score">Overall Score</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="sortAscCheckbox"> Ascending order
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3>Pagination</h3>
+                            <div class="form-group">
+                                <label for="pageInput">Page:</label>
+                                <input type="number" id="pageInput" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="perPageSelect">Results per page:</label>
+                                <select id="perPageSelect">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" id="applyFiltersBtn">Apply Filters & Sorting</button>
+                </div>
+                
+                <div class="results-container" id="resultsContainer">
                     <!-- Results will be displayed here -->
                 </div>
             </div>
@@ -270,11 +374,12 @@
 
     <script>
         const API_BASE = 'http://localhost:8000'; // Change this to your API URL
-
+        
         let currentSolution = '';
         let currentSystem = '';
         let availableColumns = [];
         let currentSessionId = '';
+        let allResultColumns = [];
 
         // Initialize the application
         async function init() {
@@ -286,10 +391,10 @@
             try {
                 const response = await fetch(`${API_BASE}/options`);
                 const data = await response.json();
-
+                
                 const select = document.getElementById('solutionSelect');
                 select.innerHTML = '<option value="">Select a solution...</option>';
-
+                
                 data.schemas.forEach(schema => {
                     const option = document.createElement('option');
                     option.value = schema;
@@ -304,12 +409,19 @@
         // Load systems for selected solution
         async function loadSystems(solution) {
             try {
+                // Reset subsequent sections when solution changes
+                resetSystemAndBelow();
+                
+                // Show loading indicator
+                document.getElementById('systemSection').classList.remove('hidden');
+                document.getElementById('systemLoadingIndicator').classList.add('show');
+                
                 const response = await fetch(`${API_BASE}/options/${solution}`);
                 const data = await response.json();
-
+                
                 const select = document.getElementById('systemSelect');
                 select.innerHTML = '<option value="">Select a system...</option>';
-
+                
                 data.tables.forEach(table => {
                     const option = document.createElement('option');
                     option.value = table;
@@ -317,28 +429,62 @@
                     select.appendChild(option);
                 });
 
-                document.getElementById('systemSection').classList.remove('hidden');
+                // Hide loading indicator
+                document.getElementById('systemLoadingIndicator').classList.remove('show');
+                
             } catch (error) {
+                document.getElementById('systemLoadingIndicator').classList.remove('show');
                 showError('Failed to load systems: ' + error.message);
             }
+        }
+
+        // Reset system selection and everything below it
+        function resetSystemAndBelow() {
+            document.getElementById('systemSelect').innerHTML = '<option value="">Select a system...</option>';
+            document.getElementById('specsSection').classList.add('hidden');
+            resetResultsAndBelow();
+            currentSystem = '';
+            availableColumns = [];
         }
 
         // Load parameters for selected system
         async function loadParameters(solution, system) {
             try {
+                // Reset everything below this level
+                resetResultsAndBelow();
+                
+                // Show loading indicator
+                document.getElementById('specsSection').classList.remove('hidden');
+                document.getElementById('specsLoadingIndicator').classList.add('show');
+                
                 const response = await fetch(`${API_BASE}/options/${solution}/${system}`);
                 const data = await response.json();
-
+                
                 availableColumns = data.columns;
                 setupSpecsSection();
-                document.getElementById('specsSection').classList.remove('hidden');
+                
+                // Hide loading indicator
+                document.getElementById('specsLoadingIndicator').classList.remove('show');
+                
             } catch (error) {
+                document.getElementById('specsLoadingIndicator').classList.remove('show');
                 showError('Failed to load parameters: ' + error.message);
             }
         }
 
+        // Reset results and everything below
+        function resetResultsAndBelow() {
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('resultControls').classList.add('hidden');
+            currentSessionId = '';
+            allResultColumns = [];
+        }
+
         // Setup specifications section
         function setupSpecsSection() {
+            // Reset results when specs change
+            resetResultsAndBelow();
+            
             const container = document.getElementById('specsContainer');
             container.innerHTML = '';
             addSpecificationRow();
@@ -349,7 +495,7 @@
             const container = document.getElementById('specsContainer');
             const specItem = document.createElement('div');
             specItem.className = 'spec-item';
-
+            
             const paramSelect = document.createElement('select');
             paramSelect.innerHTML = '<option value="">Select parameter...</option>';
             availableColumns.forEach(col => {
@@ -359,9 +505,42 @@
                 paramSelect.appendChild(option);
             });
 
+            const valueContainer = document.createElement('div');
+            valueContainer.className = 'spec-value-container';
+            
             const valueInput = document.createElement('input');
             valueInput.type = 'text';
             valueInput.placeholder = 'Value';
+
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'spec-options';
+            optionsDiv.style.display = 'none';
+
+            valueContainer.appendChild(valueInput);
+            valueContainer.appendChild(optionsDiv);
+
+            // Update options when parameter changes
+            paramSelect.addEventListener('change', function() {
+                const selectedParam = availableColumns.find(col => col.name === this.value);
+                if (selectedParam && selectedParam.options && selectedParam.options.length > 0) {
+                    optionsDiv.innerHTML = `<strong>Options:</strong> ${selectedParam.options.join(', ')}`;
+                    optionsDiv.style.display = 'block';
+                } else {
+                    optionsDiv.style.display = 'none';
+                }
+            });
+
+            // Hide options when clicking outside
+            valueInput.addEventListener('blur', function() {
+                setTimeout(() => optionsDiv.style.display = 'none', 200);
+            });
+
+            valueInput.addEventListener('focus', function() {
+                const selectedParam = availableColumns.find(col => col.name === paramSelect.value);
+                if (selectedParam && selectedParam.options && selectedParam.options.length > 0) {
+                    optionsDiv.style.display = 'block';
+                }
+            });
 
             const weightInput = document.createElement('input');
             weightInput.type = 'number';
@@ -376,10 +555,10 @@
             removeBtn.onclick = () => specItem.remove();
 
             specItem.appendChild(paramSelect);
-            specItem.appendChild(valueInput);
+            specItem.appendChild(valueContainer);
             specItem.appendChild(weightInput);
             specItem.appendChild(removeBtn);
-
+            
             container.appendChild(specItem);
         }
 
@@ -387,19 +566,19 @@
         async function performSearch() {
             const specs = [];
             const specItems = document.querySelectorAll('.spec-item');
-
+            
             for (let item of specItems) {
                 const param = item.children[0].value;
-                const value = item.children[1].value;
+                const value = item.children[1].querySelector('input').value; // Updated to get input from container
                 const weight = parseFloat(item.children[2].value);
-
+                
                 if (param && value && weight) {
                     // Try to parse value as number if possible
                     let parsedValue = value;
                     if (!isNaN(value) && !isNaN(parseFloat(value))) {
                         parsedValue = parseFloat(value);
                     }
-
+                    
                     specs.push({
                         name: param,
                         value: parsedValue,
@@ -424,7 +603,7 @@
             try {
                 document.getElementById('searchBtn').disabled = true;
                 document.getElementById('searchBtn').textContent = 'Searching...';
-
+                
                 const response = await fetch(`${API_BASE}/search`, {
                     method: 'POST',
                     headers: {
@@ -436,7 +615,7 @@
                 const data = await response.json();
                 currentSessionId = data.session_id;
                 displayResults(data.results);
-
+                
             } catch (error) {
                 showError('Search failed: ' + error.message);
             } finally {
@@ -448,74 +627,209 @@
         // Display search results
         function displayResults(results) {
             const container = document.getElementById('resultsContainer');
-
+            
             if (!results || results.length === 0) {
                 container.innerHTML = '<p>No results found.</p>';
                 document.getElementById('resultsSection').classList.remove('hidden');
                 return;
             }
 
+            // Store all available columns for filtering/sorting
+            allResultColumns = Object.keys(results[0]);
+            setupResultControls();
+
             const table = document.createElement('table');
             table.className = 'results-table';
-
+            
             // Create header
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
-
-            Object.keys(results[0]).forEach(key => {
+            
+            allResultColumns.forEach(key => {
                 const th = document.createElement('th');
                 th.textContent = key.replace('_', ' ').toUpperCase();
                 headerRow.appendChild(th);
             });
-
+            
             thead.appendChild(headerRow);
             table.appendChild(thead);
-
+            
             // Create body
             const tbody = document.createElement('tbody');
-
+            
             results.forEach(result => {
                 const row = document.createElement('tr');
-
-                Object.values(result).forEach(value => {
+                
+                allResultColumns.forEach(key => {
                     const td = document.createElement('td');
-                    td.textContent = value !== null ? value : 'N/A';
+                    const value = result[key];
+                    td.textContent = value !== null && value !== undefined ? value : 'N/A';
+                    
+                    // Highlight score columns
+                    if (key.toLowerCase().includes('score')) {
+                        td.className = 'score-cell';
+                    }
+                    
                     row.appendChild(td);
                 });
-
+                
                 tbody.appendChild(row);
             });
-
+            
             table.appendChild(tbody);
             container.innerHTML = '';
             container.appendChild(table);
-
+            
             document.getElementById('resultsSection').classList.remove('hidden');
+            document.getElementById('resultControls').classList.remove('hidden');
             showSuccess(`Found ${results.length} results (Session ID: ${currentSessionId})`);
+        }
+
+        // Setup result controls (filters, sorting, pagination)
+        function setupResultControls() {
+            // Populate sort dropdown
+            const sortSelect = document.getElementById('sortBySelect');
+            sortSelect.innerHTML = '';
+            allResultColumns.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col;
+                option.textContent = col.replace('_', ' ').toUpperCase();
+                if (col === 'overall_score') option.selected = true;
+                sortSelect.appendChild(option);
+            });
+
+            // Clear existing filters and reset controls when new results come in
+            document.getElementById('filtersContainer').innerHTML = '';
+            document.getElementById('sortAscCheckbox').checked = true;
+            document.getElementById('pageInput').value = '1';
+            document.getElementById('perPageSelect').value = '10';
+        }
+
+        // Add a filter row
+        function addFilterRow() {
+            const container = document.getElementById('filtersContainer');
+            const filterItem = document.createElement('div');
+            filterItem.className = 'filter-item';
+            
+            const paramSelect = document.createElement('select');
+            paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+            allResultColumns.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col;
+                option.textContent = col.replace('_', ' ').toUpperCase();
+                paramSelect.appendChild(option);
+            });
+
+            const minInput = document.createElement('input');
+            minInput.type = 'number';
+            minInput.placeholder = 'Min value';
+
+            const maxInput = document.createElement('input');
+            maxInput.type = 'number';
+            maxInput.placeholder = 'Max value';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.onclick = () => filterItem.remove();
+
+            filterItem.appendChild(paramSelect);
+            filterItem.appendChild(minInput);
+            filterItem.appendChild(maxInput);
+            filterItem.appendChild(removeBtn);
+            
+            container.appendChild(filterItem);
+        }
+
+        // Apply filters, sorting, and pagination
+        async function applyFilters() {
+            if (!currentSessionId) {
+                showError('No search session found. Please perform a search first.');
+                return;
+            }
+
+            // Collect filters
+            const filters = [];
+            const filterItems = document.querySelectorAll('.filter-item');
+            
+            filterItems.forEach(item => {
+                const param = item.children[0].value;
+                const minVal = item.children[1].value;
+                const maxVal = item.children[2].value;
+                
+                if (param && (minVal || maxVal)) {
+                    const filter = { name: param };
+                    if (minVal) filter.min_val = parseFloat(minVal);
+                    if (maxVal) filter.max_val = parseFloat(maxVal);
+                    filters.push(filter);
+                }
+            });
+
+            // Collect sorting
+            const sortBy = document.getElementById('sortBySelect').value;
+            const sortAsc = document.getElementById('sortAscCheckbox').checked;
+
+            // Collect pagination
+            const page = parseInt(document.getElementById('pageInput').value) || 1;
+            const perPage = parseInt(document.getElementById('perPageSelect').value) || 10;
+
+            const retrieveRequest = {
+                session_id: currentSessionId,
+                filters: filters,
+                sort: {
+                    by: sortBy,
+                    asc: sortAsc
+                },
+                pagination: {
+                    page: page,
+                    per_page: perPage
+                }
+            };
+
+            try {
+                document.getElementById('applyFiltersBtn').disabled = true;
+                document.getElementById('applyFiltersBtn').textContent = 'Applying...';
+                
+                const response = await fetch(`${API_BASE}/search/${currentSessionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(retrieveRequest)
+                });
+
+                const data = await response.json();
+                displayResults(data.results);
+                
+            } catch (error) {
+                showError('Failed to apply filters: ' + error.message);
+            } finally {
+                document.getElementById('applyFiltersBtn').disabled = false;
+                document.getElementById('applyFiltersBtn').textContent = 'Apply Filters & Sorting';
+            }
         }
 
         // Utility functions
         function showError(message) {
             const existing = document.querySelector('.error');
             if (existing) existing.remove();
-
+            
             const error = document.createElement('div');
             error.className = 'error';
             error.textContent = message;
             document.querySelector('.content').prepend(error);
-
+            
             setTimeout(() => error.remove(), 5000);
         }
 
         function showSuccess(message) {
             const existing = document.querySelector('.success');
             if (existing) existing.remove();
-
+            
             const success = document.createElement('div');
             success.className = 'success';
             success.textContent = message;
             document.querySelector('.content').prepend(success);
-
+            
             setTimeout(() => success.remove(), 5000);
         }
 
@@ -524,6 +838,8 @@
             currentSolution = e.target.value;
             if (currentSolution) {
                 loadSystems(currentSolution);
+            } else {
+                resetSystemAndBelow();
             }
         });
 
@@ -531,11 +847,15 @@
             currentSystem = e.target.value;
             if (currentSystem) {
                 loadParameters(currentSolution, currentSystem);
+            } else {
+                resetResultsAndBelow();
             }
         });
 
         document.getElementById('addSpecBtn').addEventListener('click', addSpecificationRow);
         document.getElementById('searchBtn').addEventListener('click', performSearch);
+        document.getElementById('addFilterBtn').addEventListener('click', addFilterRow);
+        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
 
         // Initialize the app
         init();

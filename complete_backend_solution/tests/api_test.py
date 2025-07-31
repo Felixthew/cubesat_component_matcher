@@ -71,3 +71,12 @@ class TestUserAPI:
         print(response.json())
         with open("test_results/range_results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)
+
+    def test_filter(self, client):
+        # Load the JSON data from a file
+        with open('component_data_TEST/test_requests/test_retrieve.json', 'r') as f:
+            search_request = json.load(f)
+        response = client.post("/search/57b4da64-8cef-4d95-ae0c-272569119b38", json=search_request)
+        print(response.json())
+        with open("test_results/filtered_results.json", "w") as json_file:
+            json.dump(response.json(), json_file, indent=4)

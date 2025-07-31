@@ -51,7 +51,6 @@ class SearchResponse(BaseModel):
     results: list[dict]
 
 class RetrieveRequest(BaseModel):
-    session_id: str
     filters: list[Filter]
     sort: Sort
     pagination: Pagination

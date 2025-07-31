@@ -87,7 +87,7 @@ def _load_data(session_id: str, data_name: str) -> dict | list[dict]:
             "data": data_name
         }
     )
-    return result[0][f"{data_name}"] if result else None
+    return result[0][0] if result else None
 
 def _validate_input(input: str):
     if input not in ALLOWED_DATA:

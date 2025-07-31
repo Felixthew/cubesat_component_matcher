@@ -13,7 +13,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -78,8 +78,8 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
-def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
-    sid = query.session_id
+def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
+    sid = session_id
 
     # check for faulty inputs or storage
     try:
