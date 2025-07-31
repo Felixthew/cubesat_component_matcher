@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import complete_backend_solution.src.json_types as jt
 from complete_backend_solution.src.engine import ScoringEngine
@@ -7,6 +8,15 @@ import complete_backend_solution.src.data_loader as dl
 import json
 
 app = FastAPI(title="Component Matcher")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
@@ -110,3 +120,7 @@ def _paginate(paging: jt.Pagination, df: pd.DataFrame) -> pd.DataFrame:
     first = paging.per_page * (paging.page - 1)
     last = first + paging.per_page
     return df.iloc[first:last]
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

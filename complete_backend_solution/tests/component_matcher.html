@@ -1,0 +1,544 @@
+<!-- Made by Claude -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Matcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            background: #f9fafb;
+        }
+
+        .section h2 {
+            color: #1f2937;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        select, input, button {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transform: translateY(0);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .specs-container {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 1rem;
+            background: white;
+        }
+
+        .spec-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: end;
+        }
+
+        .remove-btn {
+            width: auto;
+            padding: 0.5rem;
+            background: #ef4444;
+            font-size: 0.8rem;
+        }
+
+        .add-btn {
+            background: #10b981;
+            margin-top: 0.5rem;
+        }
+
+        .results {
+            margin-top: 2rem;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .results-table th {
+            background: #f3f4f6;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .results-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #6b7280;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .spec-item {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Component Matcher</h1>
+            <p>Find and score components based on your specifications</p>
+        </div>
+
+        <div class="content">
+            <!-- Step 1: Select Solution -->
+            <div class="section">
+                <h2>1. Select Solution Type</h2>
+                <div class="form-group">
+                    <label for="solutionSelect">Choose a solution category:</label>
+                    <select id="solutionSelect">
+                        <option value="">Loading solutions...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Step 2: Select System -->
+            <div class="section hidden" id="systemSection">
+                <h2>2. Select System Type</h2>
+                <div class="form-group">
+                    <label for="systemSelect">Choose a system:</label>
+                    <select id="systemSelect">
+                        <option value="">Select a solution first</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Step 3: Configure Specifications -->
+            <div class="section hidden" id="specsSection">
+                <h2>3. Configure Specifications</h2>
+                <div class="specs-container">
+                    <div id="specsContainer">
+                        <!-- Specs will be added here dynamically -->
+                    </div>
+                    <button type="button" class="add-btn" id="addSpecBtn">Add Specification</button>
+                </div>
+                <button type="button" id="searchBtn" style="margin-top: 1rem;">Search Components</button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="section hidden" id="resultsSection">
+                <h2>Results</h2>
+                <div id="resultsContainer">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000'; // Change this to your API URL
+
+        let currentSolution = '';
+        let currentSystem = '';
+        let availableColumns = [];
+        let currentSessionId = '';
+
+        // Initialize the application
+        async function init() {
+            await loadSolutions();
+        }
+
+        // Load available solutions
+        async function loadSolutions() {
+            try {
+                const response = await fetch(`${API_BASE}/options`);
+                const data = await response.json();
+
+                const select = document.getElementById('solutionSelect');
+                select.innerHTML = '<option value="">Select a solution...</option>';
+
+                data.schemas.forEach(schema => {
+                    const option = document.createElement('option');
+                    option.value = schema;
+                    option.textContent = schema;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                showError('Failed to load solutions: ' + error.message);
+            }
+        }
+
+        // Load systems for selected solution
+        async function loadSystems(solution) {
+            try {
+                const response = await fetch(`${API_BASE}/options/${solution}`);
+                const data = await response.json();
+
+                const select = document.getElementById('systemSelect');
+                select.innerHTML = '<option value="">Select a system...</option>';
+
+                data.tables.forEach(table => {
+                    const option = document.createElement('option');
+                    option.value = table;
+                    option.textContent = table;
+                    select.appendChild(option);
+                });
+
+                document.getElementById('systemSection').classList.remove('hidden');
+            } catch (error) {
+                showError('Failed to load systems: ' + error.message);
+            }
+        }
+
+        // Load parameters for selected system
+        async function loadParameters(solution, system) {
+            try {
+                const response = await fetch(`${API_BASE}/options/${solution}/${system}`);
+                const data = await response.json();
+
+                availableColumns = data.columns;
+                setupSpecsSection();
+                document.getElementById('specsSection').classList.remove('hidden');
+            } catch (error) {
+                showError('Failed to load parameters: ' + error.message);
+            }
+        }
+
+        // Setup specifications section
+        function setupSpecsSection() {
+            const container = document.getElementById('specsContainer');
+            container.innerHTML = '';
+            addSpecificationRow();
+        }
+
+        // Add a specification row
+        function addSpecificationRow() {
+            const container = document.getElementById('specsContainer');
+            const specItem = document.createElement('div');
+            specItem.className = 'spec-item';
+
+            const paramSelect = document.createElement('select');
+            paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+            availableColumns.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col.name;
+                option.textContent = `${col.name} (${col.dtype})`;
+                paramSelect.appendChild(option);
+            });
+
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.placeholder = 'Value';
+
+            const weightInput = document.createElement('input');
+            weightInput.type = 'number';
+            weightInput.placeholder = 'Weight';
+            weightInput.value = '1';
+            weightInput.step = '0.1';
+            weightInput.min = '0.1';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'remove-btn';
+            removeBtn.onclick = () => specItem.remove();
+
+            specItem.appendChild(paramSelect);
+            specItem.appendChild(valueInput);
+            specItem.appendChild(weightInput);
+            specItem.appendChild(removeBtn);
+
+            container.appendChild(specItem);
+        }
+
+        // Perform search
+        async function performSearch() {
+            const specs = [];
+            const specItems = document.querySelectorAll('.spec-item');
+
+            for (let item of specItems) {
+                const param = item.children[0].value;
+                const value = item.children[1].value;
+                const weight = parseFloat(item.children[2].value);
+
+                if (param && value && weight) {
+                    // Try to parse value as number if possible
+                    let parsedValue = value;
+                    if (!isNaN(value) && !isNaN(parseFloat(value))) {
+                        parsedValue = parseFloat(value);
+                    }
+
+                    specs.push({
+                        name: param,
+                        value: parsedValue,
+                        weight: weight
+                    });
+                }
+            }
+
+            if (specs.length === 0) {
+                showError('Please add at least one specification');
+                return;
+            }
+
+            const searchRequest = {
+                location: {
+                    schema: currentSolution,
+                    table: currentSystem
+                },
+                specs: specs
+            };
+
+            try {
+                document.getElementById('searchBtn').disabled = true;
+                document.getElementById('searchBtn').textContent = 'Searching...';
+
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(searchRequest)
+                });
+
+                const data = await response.json();
+                currentSessionId = data.session_id;
+                displayResults(data.results);
+
+            } catch (error) {
+                showError('Search failed: ' + error.message);
+            } finally {
+                document.getElementById('searchBtn').disabled = false;
+                document.getElementById('searchBtn').textContent = 'Search Components';
+            }
+        }
+
+        // Display search results
+        function displayResults(results) {
+            const container = document.getElementById('resultsContainer');
+
+            if (!results || results.length === 0) {
+                container.innerHTML = '<p>No results found.</p>';
+                document.getElementById('resultsSection').classList.remove('hidden');
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'results-table';
+
+            // Create header
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+
+            Object.keys(results[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key.replace('_', ' ').toUpperCase();
+                headerRow.appendChild(th);
+            });
+
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create body
+            const tbody = document.createElement('tbody');
+
+            results.forEach(result => {
+                const row = document.createElement('tr');
+
+                Object.values(result).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value !== null ? value : 'N/A';
+                    row.appendChild(td);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            container.innerHTML = '';
+            container.appendChild(table);
+
+            document.getElementById('resultsSection').classList.remove('hidden');
+            showSuccess(`Found ${results.length} results (Session ID: ${currentSessionId})`);
+        }
+
+        // Utility functions
+        function showError(message) {
+            const existing = document.querySelector('.error');
+            if (existing) existing.remove();
+
+            const error = document.createElement('div');
+            error.className = 'error';
+            error.textContent = message;
+            document.querySelector('.content').prepend(error);
+
+            setTimeout(() => error.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const existing = document.querySelector('.success');
+            if (existing) existing.remove();
+
+            const success = document.createElement('div');
+            success.className = 'success';
+            success.textContent = message;
+            document.querySelector('.content').prepend(success);
+
+            setTimeout(() => success.remove(), 5000);
+        }
+
+        // Event listeners
+        document.getElementById('solutionSelect').addEventListener('change', function(e) {
+            currentSolution = e.target.value;
+            if (currentSolution) {
+                loadSystems(currentSolution);
+            }
+        });
+
+        document.getElementById('systemSelect').addEventListener('change', function(e) {
+            currentSystem = e.target.value;
+            if (currentSystem) {
+                loadParameters(currentSolution, currentSystem);
+            }
+        });
+
+        document.getElementById('addSpecBtn').addEventListener('click', addSpecificationRow);
+        document.getElementById('searchBtn').addEventListener('click', performSearch);
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>

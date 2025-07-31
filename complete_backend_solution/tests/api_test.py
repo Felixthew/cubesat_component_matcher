@@ -24,6 +24,11 @@ class TestUserAPI:
         response = client.get("/options")
         print(response.json())
 
+    def test_get_tables(self, client):
+        """Test retrieving options"""
+        response = client.get("/options/avionics_TEST")
+        print(response.json())
+
 
     def test_get_params(self, client):
         response = client.get("/options/power_TEST/solar_arrays")
@@ -33,36 +38,36 @@ class TestUserAPI:
 
     def test_get_scores(self, client):
         # Load the JSON data from a file
-        with open('component_data_TEST/test_request.json', 'r') as f:
+        with open('component_data_TEST/test_requests/test_request.json', 'r') as f:
             search_request = json.load(f)
         response = client.post("/search", json=search_request)
         print(response.json())
-        with open("results.json", "w") as json_file:
+        with open("test_results/results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)
 
     def test_get_scores_list(self, client):
         # Load the JSON data from a file
-        with open('component_data_TEST/test_req2.json', 'r') as f:
+        with open('component_data_TEST/test_requests/test_req2.json', 'r') as f:
             search_request = json.load(f)
         response = client.post("/search", json=search_request)
         print(response.json())
-        with open("list_results.json", "w") as json_file:
+        with open("test_results/list_results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)
 
     def test_get_scores_tuple(self, client):
         # Load the JSON data from a file
-        with open('component_data_TEST/test_req3.json', 'r') as f:
+        with open('component_data_TEST/test_requests/test_req3.json', 'r') as f:
             search_request = json.load(f)
         response = client.post("/search", json=search_request)
         print(response.json())
-        with open("tuple_results.json", "w") as json_file:
+        with open("test_results/tuple_results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)
 
     def test_get_scores_range(self, client):
         # Load the JSON data from a file
-        with open('component_data_TEST/test_req4.json', 'r') as f:
+        with open('component_data_TEST/test_requests/test_req4.json', 'r') as f:
             search_request = json.load(f)
         response = client.post("/search", json=search_request)
         print(response.json())
-        with open("range_results.json", "w") as json_file:
+        with open("test_results/range_results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)
