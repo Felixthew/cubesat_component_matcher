@@ -176,7 +176,7 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
         }
 
-        .spec-suggestions {
+        .spec-multi-select {
             position: absolute;
             top: 100%;
             left: 0;
@@ -192,22 +192,54 @@
             display: none;
         }
 
-        .spec-suggestion-item {
-            padding: 0.75rem;
+        .spec-multi-option {
+            padding: 0.5rem;
             cursor: pointer;
             border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .spec-suggestion-item:hover {
+        .spec-multi-option:hover {
             background: #f3f4f6;
         }
 
-        .spec-suggestion-item:last-child {
+        .spec-multi-option:last-child {
             border-bottom: none;
         }
 
-        .spec-suggestion-item.highlighted {
+        .spec-multi-option input[type="checkbox"] {
+            width: auto;
+            height: auto;
+            padding: 0;
+            margin: 0;
+        }
+
+        .spec-selected-items {
+            display: none;
+        }
+
+        .spec-selected-tag {
             background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .spec-selected-tag button {
+            background: none;
+            border: none;
+            color: #3730a3;
+            cursor: pointer;
+            padding: 0;
+            width: auto;
+            font-size: 0.7rem;
+            line-height: 1;
         }
 
         .results-table-container {
@@ -549,13 +581,19 @@
             const specItem = document.createElement('div');
             specItem.className = 'spec-item';
 
+            // Get already used parameters to prevent duplicates
+            const usedParams = Array.from(container.querySelectorAll('.spec-item select')).map(select => select.value).filter(val => val);
+
             const paramSelect = document.createElement('select');
             paramSelect.innerHTML = '<option value="">Select parameter...</option>';
             availableColumns.forEach(col => {
-                const option = document.createElement('option');
-                option.value = col.name;
-                option.textContent = `${col.name} (${col.dtype})`;
-                paramSelect.appendChild(option);
+                // Only add if not already used
+                if (!usedParams.includes(col.name)) {
+                    const option = document.createElement('option');
+                    option.value = col.name;
+                    option.textContent = `${col.name} (${col.dtype})`;
+                    paramSelect.appendChild(option);
+                }
             });
 
             const valueContainer = document.createElement('div');
@@ -563,41 +601,89 @@
 
             const valueInput = document.createElement('input');
             valueInput.type = 'text';
-            valueInput.placeholder = 'Type to search values...';
+            valueInput.placeholder = 'Value';
             valueInput.className = 'spec-search-input';
+            valueInput.readOnly = true; // Make it read-only for multi-select
 
-            const suggestionsDiv = document.createElement('div');
-            suggestionsDiv.className = 'spec-suggestions';
+            const multiSelectDiv = document.createElement('div');
+            multiSelectDiv.className = 'spec-multi-select';
+
+            const selectedItemsDiv = document.createElement('div');
+            selectedItemsDiv.className = 'spec-selected-items';
 
             valueContainer.appendChild(valueInput);
-            valueContainer.appendChild(suggestionsDiv);
+            valueContainer.appendChild(selectedItemsDiv);
+            valueContainer.appendChild(multiSelectDiv);
 
             // Setup search functionality
             let currentOptions = [];
-            let selectedIndex = -1;
+            let selectedValues = [];
+            let isMultiSelect = false;
 
             // Update options when parameter changes
             paramSelect.addEventListener('change', function() {
                 const selectedParam = availableColumns.find(col => col.name === this.value);
                 currentOptions = selectedParam?.options || [];
-                valueInput.value = '';
-                suggestionsDiv.style.display = 'none';
-                selectedIndex = -1;
+                selectedValues = [];
 
-                if (currentOptions.length > 0) {
-                    valueInput.placeholder = 'Type to search values...';
+                // Check parameter type for input mode
+                if (selectedParam && selectedParam.dtype === 'boolean') {
+                    // Boolean parameters get a true/false dropdown
+                    isMultiSelect = false;
+                    currentOptions = ['true', 'false'];
+                    valueInput.placeholder = 'Click to select true/false';
+                    valueInput.readOnly = true;
+                } else if (selectedParam && selectedParam.dtype === 'list' && currentOptions.length > 0) {
+                    // List parameters get multi-select checkboxes
+                    isMultiSelect = true;
+                    valueInput.placeholder = 'Click to select options';
+                    valueInput.readOnly = true;
+                } else if (currentOptions.length > 0) {
+                    // String parameters with options get single-select dropdown
+                    isMultiSelect = false;
+                    valueInput.placeholder = 'Value (click to see options)';
+                    valueInput.readOnly = false;
                 } else {
-                    valueInput.placeholder = 'Enter value';
+                    // Parameters without options get regular text input
+                    isMultiSelect = false;
+                    valueInput.placeholder = 'Value';
+                    valueInput.readOnly = false;
+                }
+
+                valueInput.value = '';
+                multiSelectDiv.style.display = 'none';
+                updateSelectedItems();
+
+                // Update other dropdowns to remove this selection
+                updateParameterDropdowns();
+            });
+
+            // Show multi-select when clicking on input (for multi-select mode)
+            valueInput.addEventListener('click', function() {
+                const selectedParam = availableColumns.find(col => col.name === paramSelect.value);
+
+                if (selectedParam && selectedParam.dtype === 'boolean') {
+                    // Show true/false dropdown for boolean parameters
+                    showBooleanSelect();
+                } else if (isMultiSelect && currentOptions.length > 0) {
+                    showMultiSelect();
+                } else if (!isMultiSelect && currentOptions.length > 0) {
+                    showSingleSelect();
                 }
             });
 
-            // Search and filter suggestions
-            function showSuggestions(query = '') {
-                suggestionsDiv.innerHTML = '';
-                selectedIndex = -1;
+            // Allow typing for single-value inputs
+            valueInput.addEventListener('input', function() {
+                if (!isMultiSelect && currentOptions.length > 0) {
+                    showSingleSelect(this.value);
+                }
+            });
+
+            function showSingleSelect(query = '') {
+                multiSelectDiv.innerHTML = '';
 
                 if (currentOptions.length === 0) {
-                    suggestionsDiv.style.display = 'none';
+                    multiSelectDiv.style.display = 'none';
                     return;
                 }
 
@@ -608,80 +694,128 @@
                     );
 
                 if (filteredOptions.length === 0) {
-                    suggestionsDiv.style.display = 'none';
+                    multiSelectDiv.style.display = 'none';
                     return;
                 }
 
-                filteredOptions.forEach((option, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'spec-suggestion-item';
-                    item.textContent = option;
-                    item.addEventListener('click', () => {
+                // Sort filtered options alphabetically
+                const sortedOptions = filteredOptions.sort((a, b) =>
+                    a.toString().localeCompare(b.toString())
+                );
+
+                sortedOptions.forEach(option => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'spec-multi-option';
+                    optionDiv.style.justifyContent = 'flex-start';
+
+                    const label = document.createElement('span');
+                    label.textContent = option;
+                    label.style.cursor = 'pointer';
+
+                    optionDiv.appendChild(label);
+
+                    optionDiv.addEventListener('click', function() {
                         valueInput.value = option;
-                        suggestionsDiv.style.display = 'none';
+                        multiSelectDiv.style.display = 'none';
                     });
-                    suggestionsDiv.appendChild(item);
+
+                    multiSelectDiv.appendChild(optionDiv);
                 });
 
-                suggestionsDiv.style.display = 'block';
+                multiSelectDiv.style.display = 'block';
             }
 
-            // Show all options when clicking on input
-            valueInput.addEventListener('click', function() {
-                if (currentOptions.length > 0) {
-                    showSuggestions();
-                }
-            });
+            function showBooleanSelect() {
+                multiSelectDiv.innerHTML = '';
 
-            // Show all options when focusing on input
-            valueInput.addEventListener('focus', function() {
-                if (currentOptions.length > 0) {
-                    showSuggestions();
-                }
-            });
+                ['false', 'true'].forEach(option => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'spec-multi-option';
+                    optionDiv.style.justifyContent = 'flex-start';
 
-            // Filter suggestions as user types
-            valueInput.addEventListener('input', function() {
-                const query = this.value;
-                showSuggestions(query);
-            });
+                    const label = document.createElement('span');
+                    label.textContent = option;
+                    label.style.cursor = 'pointer';
 
-            // Keyboard navigation
-            valueInput.addEventListener('keydown', function(e) {
-                const items = suggestionsDiv.querySelectorAll('.spec-suggestion-item');
+                    optionDiv.appendChild(label);
 
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                    updateHighlight(items);
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    selectedIndex = Math.max(selectedIndex - 1, -1);
-                    updateHighlight(items);
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (selectedIndex >= 0 && items[selectedIndex]) {
-                        valueInput.value = items[selectedIndex].textContent;
-                        suggestionsDiv.style.display = 'none';
-                        selectedIndex = -1;
+                    optionDiv.addEventListener('click', function() {
+                        valueInput.value = option;
+                        multiSelectDiv.style.display = 'none';
+                    });
+
+                    multiSelectDiv.appendChild(optionDiv);
+                });
+
+                multiSelectDiv.style.display = 'block';
+            }
+
+            function showMultiSelect() {
+                multiSelectDiv.innerHTML = '';
+
+                // Sort options alphabetically
+                const sortedOptions = [...currentOptions].sort((a, b) =>
+                    a.toString().localeCompare(b.toString())
+                );
+
+                sortedOptions.forEach(option => {
+                    const optionDiv = document.createElement('div');
+                    optionDiv.className = 'spec-multi-option';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = selectedValues.includes(option);
+
+                    const label = document.createElement('span');
+                    label.textContent = option;
+
+                    optionDiv.appendChild(checkbox);
+                    optionDiv.appendChild(label);
+
+                    optionDiv.addEventListener('click', function(e) {
+                        if (e.target.type !== 'checkbox') {
+                            checkbox.checked = !checkbox.checked;
+                        }
+                        toggleOption(option, checkbox.checked);
+                    });
+
+                    checkbox.addEventListener('change', function() {
+                        toggleOption(option, this.checked);
+                    });
+
+                    multiSelectDiv.appendChild(optionDiv);
+                });
+
+                multiSelectDiv.style.display = 'block';
+            }
+
+            function toggleOption(option, isSelected) {
+                if (isSelected) {
+                    if (!selectedValues.includes(option)) {
+                        selectedValues.push(option);
                     }
-                } else if (e.key === 'Escape') {
-                    suggestionsDiv.style.display = 'none';
-                    selectedIndex = -1;
+                } else {
+                    selectedValues = selectedValues.filter(val => val !== option);
                 }
-            });
-
-            function updateHighlight(items) {
-                items.forEach((item, index) => {
-                    item.classList.toggle('highlighted', index === selectedIndex);
-                });
+                updateSelectedItems();
+                updateInputValue();
             }
 
-            // Hide suggestions when clicking outside
+            function updateSelectedItems() {
+                // Hidden for now to clean up the interface
+                selectedItemsDiv.innerHTML = '';
+            }
+
+            function updateInputValue() {
+                if (isMultiSelect) {
+                    valueInput.value = selectedValues.join(', ');
+                }
+            }
+
+            // Hide multi-select when clicking outside
             document.addEventListener('click', function(e) {
                 if (!valueContainer.contains(e.target)) {
-                    suggestionsDiv.style.display = 'none';
-                    selectedIndex = -1;
+                    multiSelectDiv.style.display = 'none';
                 }
             });
 
@@ -703,6 +837,29 @@
             specItem.appendChild(removeBtn);
 
             container.appendChild(specItem);
+        }
+
+        // Update parameter dropdowns to prevent duplicates
+        function updateParameterDropdowns() {
+            const container = document.getElementById('specsContainer');
+            const allSelects = container.querySelectorAll('.spec-item select');
+            const usedParams = Array.from(allSelects).map(select => select.value).filter(val => val);
+
+            allSelects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Select parameter...</option>';
+
+                availableColumns.forEach(col => {
+                    // Add option if it's not used elsewhere OR it's the current selection
+                    if (!usedParams.includes(col.name) || col.name === currentValue) {
+                        const option = document.createElement('option');
+                        option.value = col.name;
+                        option.textContent = `${col.name} (${col.dtype})`;
+                        if (col.name === currentValue) option.selected = true;
+                        select.appendChild(option);
+                    }
+                });
+            });
         }
 
         // Perform search
@@ -828,7 +985,7 @@
 
             container.innerHTML = '';
             container.appendChild(tableContainer);
-            
+
             document.getElementById('resultsSection').classList.remove('hidden');
             document.getElementById('resultControls').classList.remove('hidden');
             showSuccess(`Found ${results.length} results (Session ID: ${currentSessionId})`);
@@ -836,6 +993,12 @@
 
         // Setup result controls (filters, sorting, pagination)
         function setupResultControls() {
+            // Store current values before updating
+            const currentSortBy = document.getElementById('sortBySelect').value;
+            const currentSortAsc = document.getElementById('sortAscCheckbox').checked;
+            const currentPage = document.getElementById('pageInput').value;
+            const currentPerPage = document.getElementById('perPageSelect').value;
+
             // Populate sort dropdown
             const sortSelect = document.getElementById('sortBySelect');
             sortSelect.innerHTML = '';
@@ -843,15 +1006,26 @@
                 const option = document.createElement('option');
                 option.value = col;
                 option.textContent = col.replace('_', ' ').toUpperCase();
-                if (col === 'overall_score') option.selected = true;
+                // Restore previous selection or default to overall_score
+                if (col === currentSortBy || (col === 'overall_score' && !currentSortBy)) {
+                    option.selected = true;
+                }
                 sortSelect.appendChild(option);
             });
 
-            // Clear existing filters and reset controls when new results come in
-            document.getElementById('filtersContainer').innerHTML = '';
-            document.getElementById('sortAscCheckbox').checked = true;
-            document.getElementById('pageInput').value = '1';
-            document.getElementById('perPageSelect').value = '10';
+            // Only clear filters and reset controls on initial search (not when applying filters)
+            if (!document.getElementById('resultControls').classList.contains('hidden')) {
+                // This is a filter application, preserve current settings
+                document.getElementById('sortAscCheckbox').checked = currentSortAsc;
+                document.getElementById('pageInput').value = currentPage;
+                document.getElementById('perPageSelect').value = currentPerPage;
+            } else {
+                // This is a new search, reset everything
+                document.getElementById('filtersContainer').innerHTML = '';
+                document.getElementById('sortAscCheckbox').checked = false;
+                document.getElementById('pageInput').value = '1';
+                document.getElementById('perPageSelect').value = '10';
+            }
         }
 
         // Add a filter row
@@ -859,14 +1033,25 @@
             const container = document.getElementById('filtersContainer');
             const filterItem = document.createElement('div');
             filterItem.className = 'filter-item';
-            
+
+            // Get already used parameters to prevent duplicates
+            const usedParams = Array.from(container.querySelectorAll('.filter-item select')).map(select => select.value).filter(val => val);
+
             const paramSelect = document.createElement('select');
             paramSelect.innerHTML = '<option value="">Select parameter...</option>';
             allResultColumns.forEach(col => {
-                const option = document.createElement('option');
-                option.value = col;
-                option.textContent = col.replace('_', ' ').toUpperCase();
-                paramSelect.appendChild(option);
+                // Only add if not already used
+                if (!usedParams.includes(col)) {
+                    const option = document.createElement('option');
+                    option.value = col;
+                    option.textContent = col.replace('_', ' ').toUpperCase();
+                    paramSelect.appendChild(option);
+                }
+            });
+
+            // Update other filter dropdowns when this one changes
+            paramSelect.addEventListener('change', function() {
+                updateFilterDropdowns();
             });
 
             const minInput = document.createElement('input');
@@ -891,8 +1076,31 @@
             controlRow.appendChild(removeBtn);
 
             filterItem.appendChild(controlRow);
-            
+
             container.appendChild(filterItem);
+        }
+
+        // Update filter dropdowns to prevent duplicates
+        function updateFilterDropdowns() {
+            const container = document.getElementById('filtersContainer');
+            const allSelects = container.querySelectorAll('.filter-item select');
+            const usedParams = Array.from(allSelects).map(select => select.value).filter(val => val);
+
+            allSelects.forEach(select => {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">Select parameter...</option>';
+
+                allResultColumns.forEach(col => {
+                    // Add option if it's not used elsewhere OR it's the current selection
+                    if (!usedParams.includes(col) || col === currentValue) {
+                        const option = document.createElement('option');
+                        option.value = col;
+                        option.textContent = col.replace('_', ' ').toUpperCase();
+                        if (col === currentValue) option.selected = true;
+                        select.appendChild(option);
+                    }
+                });
+            });
         }
 
         // Apply filters, sorting, and pagination

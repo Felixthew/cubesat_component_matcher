@@ -126,7 +126,8 @@ def list_choices(location: Location, col_name: str, dtype: str) -> list[str] | N
             elif dtype == "list":
                 deduped_results = set()
                 for list_data in result:
-                    deduped_results.add(list_data.split(", "))
+                    for item in list_data.split(", "):
+                        deduped_results.add(item.strip())
                 return list(deduped_results)
 
     # if not an exposable type, it has no options
