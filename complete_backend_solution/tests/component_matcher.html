@@ -427,6 +427,10 @@
                                 <label for="sortAscCheckbox" style="margin: 0;">Sort ascending</label>
                                 <input type="checkbox" id="sortAscCheckbox">
                             </div>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;">
+                                <label for="scoreCouplingCheckbox" style="margin: 0;">Score coupling</label>
+                                <input type="checkbox" id="scoreCouplingCheckbox">
+                            </div>
                         </div>
 
                         <div>
@@ -481,10 +485,13 @@
                 select.innerHTML = '<option value="">Select a solution...</option>';
 
                 data.schemas.forEach(schema => {
-                    const option = document.createElement('option');
-                    option.value = schema;
-                    option.textContent = schema;
-                    select.appendChild(option);
+                    // Filter out metadata and pg_toast schemas
+                    if (schema !== 'metadata' && schema !== 'pg_toast') {
+                        const option = document.createElement('option');
+                        option.value = schema;
+                        option.textContent = schema;
+                        select.appendChild(option);
+                    }
                 });
             } catch (error) {
                 showError('Failed to load solutions: ' + error.message);
@@ -996,6 +1003,7 @@
             // Store current values before updating
             const currentSortBy = document.getElementById('sortBySelect').value;
             const currentSortAsc = document.getElementById('sortAscCheckbox').checked;
+            const currentScoreCoupling = document.getElementById('scoreCouplingCheckbox').checked;
             const currentPage = document.getElementById('pageInput').value;
             const currentPerPage = document.getElementById('perPageSelect').value;
 
@@ -1017,12 +1025,14 @@
             if (!document.getElementById('resultControls').classList.contains('hidden')) {
                 // This is a filter application, preserve current settings
                 document.getElementById('sortAscCheckbox').checked = currentSortAsc;
+                document.getElementById('scoreCouplingCheckbox').checked = currentScoreCoupling;
                 document.getElementById('pageInput').value = currentPage;
                 document.getElementById('perPageSelect').value = currentPerPage;
             } else {
                 // This is a new search, reset everything
                 document.getElementById('filtersContainer').innerHTML = '';
                 document.getElementById('sortAscCheckbox').checked = false;
+                document.getElementById('scoreCouplingCheckbox').checked = false;
                 document.getElementById('pageInput').value = '1';
                 document.getElementById('perPageSelect').value = '10';
             }
@@ -1113,14 +1123,14 @@
             // Collect filters
             const filters = [];
             const filterItems = document.querySelectorAll('.filter-item');
-            
+
             filterItems.forEach(item => {
                 const param = item.children[0].value;  // paramSelect still first child
 
                 const controls = item.querySelector('.filter-controls-row'); // find controls row
                 const minVal = controls.children[0].value;  // minInput is first child of controls
                 const maxVal = controls.children[1].value;  // maxInput second child
-                
+
                 if (param && (minVal || maxVal)) {
                     const filter = { name: param };
                     if (minVal) filter.min_val = parseFloat(minVal);
@@ -1132,6 +1142,7 @@
             // Collect sorting
             const sortBy = document.getElementById('sortBySelect').value;
             const sortAsc = document.getElementById('sortAscCheckbox').checked;
+            const scoreCoupling = document.getElementById('scoreCouplingCheckbox').checked;
 
             // Collect pagination
             const page = parseInt(document.getElementById('pageInput').value) || 1;
@@ -1142,7 +1153,8 @@
                 filters: filters,
                 sort: {
                     by: sortBy,
-                    asc: sortAsc
+                    asc: sortAsc,
+                    score_coupling: scoreCoupling
                 },
                 pagination: {
                     page: page,

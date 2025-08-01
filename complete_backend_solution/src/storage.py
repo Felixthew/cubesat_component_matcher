@@ -1,5 +1,7 @@
 import uuid
 import json
+from typing import Any
+
 from psycopg2.extras import Json
 
 from complete_backend_solution.src.database import db
@@ -62,7 +64,7 @@ def load_request(session_id: str) -> dict:
     """
     return _load_data(session_id, "request_data")
 
-def load_results(session_id: str) -> list[dict]:
+def load_results(session_id: str) -> dict[str, Any]:
     """
     Retrieves results data from initial DB query given a session id
     :param session_id: session id

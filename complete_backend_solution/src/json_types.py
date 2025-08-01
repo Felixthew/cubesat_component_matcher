@@ -36,6 +36,7 @@ class Filter(BaseModel):
 class Sort(BaseModel):
     by: str = Field("overall_score")
     asc: bool = Field(True)
+    score_coupling: bool = Field(False)
 
 class Pagination(BaseModel):
     page: int = Field(1, ge=1)

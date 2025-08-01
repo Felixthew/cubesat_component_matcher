@@ -34,7 +34,7 @@ def _load_dtypes(location: Location) -> dict[str, str]:
     )
 
     return {
-        col: dtype
+        col: dtype.lower()
         for col, dtype in result
     }
 
