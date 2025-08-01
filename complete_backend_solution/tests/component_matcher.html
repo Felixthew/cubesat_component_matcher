@@ -162,46 +162,70 @@
             position: relative;
         }
 
-        .spec-options {
+        .spec-search-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .spec-search-input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .spec-suggestions {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            z-index: 10;
-            font-size: 0.75rem;
-            color: #6b7280;
+            z-index: 100;
             background: white;
             border: 1px solid #d1d5db;
             border-top: none;
-            border-radius: 0 0 4px 4px;
-            padding: 0.5rem;
-            max-height: 80px;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
             overflow-y: auto;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: none;
         }
 
-        .spec-options strong {
-            color: #374151;
-        }
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            align-items: end;
+        .spec-suggestion-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
         }
 
-        .results-container {
+        .spec-suggestion-item:hover {
+            background: #f3f4f6;
+        }
+
+        .spec-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .spec-suggestion-item.highlighted {
+            background: #e0e7ff;
+        }
+
+        .results-table-container {
             overflow-x: auto;
+            overflow-y: visible;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            width: 100%;
         }
 
         .results-table {
-            width: 100%;
-            min-width: 600px;
+            width: max-content;
+            min-width: 100%;
             border-collapse: collapse;
             background: white;
+            margin: 0;
         }
 
         .results-table th,
@@ -255,15 +279,45 @@
             gap: 1rem;
         }
 
+        .filter-item {
+            margin-bottom: 1rem;
+        }
+
+        .filter-controls-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            align-items: center;
+        }
+
+        .filter-controls-row input[type="number"] {
+            flex: 1;
+        }
+
+        .filter-controls-row button {
+            width: auto;
+            padding: 0.5rem;
+            background: #ef4444;
+            font-size: 0.8rem;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .filter-controls-row button:hover {
+            background: #dc2626;
+        }
+
         @media (max-width: 768px) {
             .spec-item {
                 grid-template-columns: 1fr;
             }
-            
+
             .header h1 {
                 font-size: 2rem;
             }
-            
+
             .content {
                 padding: 1rem;
             }
@@ -317,7 +371,7 @@
             <!-- Results Section -->
             <div class="section hidden" id="resultsSection">
                 <h2>Results</h2>
-                
+
                 <!-- Filters and Sorting Controls -->
                 <div class="hidden" id="resultControls">
                     <div class="grid" style="margin-bottom: 1rem;">
@@ -328,7 +382,7 @@
                             </div>
                             <button type="button" class="add-btn" id="addFilterBtn">Add Filter</button>
                         </div>
-                        
+
                         <div>
                             <h3>Sort Results</h3>
                             <div class="form-group">
@@ -337,13 +391,12 @@
                                     <option value="overall_score">Overall Score</option>
                                 </select>
                             </div>
-                            <div class="form-group">
-                                <label>
-                                    <input type="checkbox" id="sortAscCheckbox"> Ascending order
-                                </label>
+                            <div class="form-group" style="display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;">
+                                <label for="sortAscCheckbox" style="margin: 0;">Sort ascending</label>
+                                <input type="checkbox" id="sortAscCheckbox">
                             </div>
                         </div>
-                        
+
                         <div>
                             <h3>Pagination</h3>
                             <div class="form-group">
@@ -361,10 +414,10 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <button type="button" id="applyFiltersBtn">Apply Filters & Sorting</button>
                 </div>
-                
+
                 <div class="results-container" id="resultsContainer">
                     <!-- Results will be displayed here -->
                 </div>
@@ -374,7 +427,7 @@
 
     <script>
         const API_BASE = 'http://localhost:8000'; // Change this to your API URL
-        
+
         let currentSolution = '';
         let currentSystem = '';
         let availableColumns = [];
@@ -391,10 +444,10 @@
             try {
                 const response = await fetch(`${API_BASE}/options`);
                 const data = await response.json();
-                
+
                 const select = document.getElementById('solutionSelect');
                 select.innerHTML = '<option value="">Select a solution...</option>';
-                
+
                 data.schemas.forEach(schema => {
                     const option = document.createElement('option');
                     option.value = schema;
@@ -411,17 +464,17 @@
             try {
                 // Reset subsequent sections when solution changes
                 resetSystemAndBelow();
-                
+
                 // Show loading indicator
                 document.getElementById('systemSection').classList.remove('hidden');
                 document.getElementById('systemLoadingIndicator').classList.add('show');
-                
+
                 const response = await fetch(`${API_BASE}/options/${solution}`);
                 const data = await response.json();
-                
+
                 const select = document.getElementById('systemSelect');
                 select.innerHTML = '<option value="">Select a system...</option>';
-                
+
                 data.tables.forEach(table => {
                     const option = document.createElement('option');
                     option.value = table;
@@ -431,7 +484,7 @@
 
                 // Hide loading indicator
                 document.getElementById('systemLoadingIndicator').classList.remove('show');
-                
+
             } catch (error) {
                 document.getElementById('systemLoadingIndicator').classList.remove('show');
                 showError('Failed to load systems: ' + error.message);
@@ -452,20 +505,20 @@
             try {
                 // Reset everything below this level
                 resetResultsAndBelow();
-                
+
                 // Show loading indicator
                 document.getElementById('specsSection').classList.remove('hidden');
                 document.getElementById('specsLoadingIndicator').classList.add('show');
-                
+
                 const response = await fetch(`${API_BASE}/options/${solution}/${system}`);
                 const data = await response.json();
-                
+
                 availableColumns = data.columns;
                 setupSpecsSection();
-                
+
                 // Hide loading indicator
                 document.getElementById('specsLoadingIndicator').classList.remove('show');
-                
+
             } catch (error) {
                 document.getElementById('specsLoadingIndicator').classList.remove('show');
                 showError('Failed to load parameters: ' + error.message);
@@ -484,7 +537,7 @@
         function setupSpecsSection() {
             // Reset results when specs change
             resetResultsAndBelow();
-            
+
             const container = document.getElementById('specsContainer');
             container.innerHTML = '';
             addSpecificationRow();
@@ -495,7 +548,7 @@
             const container = document.getElementById('specsContainer');
             const specItem = document.createElement('div');
             specItem.className = 'spec-item';
-            
+
             const paramSelect = document.createElement('select');
             paramSelect.innerHTML = '<option value="">Select parameter...</option>';
             availableColumns.forEach(col => {
@@ -507,38 +560,128 @@
 
             const valueContainer = document.createElement('div');
             valueContainer.className = 'spec-value-container';
-            
+
             const valueInput = document.createElement('input');
             valueInput.type = 'text';
-            valueInput.placeholder = 'Value';
+            valueInput.placeholder = 'Type to search values...';
+            valueInput.className = 'spec-search-input';
 
-            const optionsDiv = document.createElement('div');
-            optionsDiv.className = 'spec-options';
-            optionsDiv.style.display = 'none';
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.className = 'spec-suggestions';
 
             valueContainer.appendChild(valueInput);
-            valueContainer.appendChild(optionsDiv);
+            valueContainer.appendChild(suggestionsDiv);
+
+            // Setup search functionality
+            let currentOptions = [];
+            let selectedIndex = -1;
 
             // Update options when parameter changes
             paramSelect.addEventListener('change', function() {
                 const selectedParam = availableColumns.find(col => col.name === this.value);
-                if (selectedParam && selectedParam.options && selectedParam.options.length > 0) {
-                    optionsDiv.innerHTML = `<strong>Options:</strong> ${selectedParam.options.join(', ')}`;
-                    optionsDiv.style.display = 'block';
+                currentOptions = selectedParam?.options || [];
+                valueInput.value = '';
+                suggestionsDiv.style.display = 'none';
+                selectedIndex = -1;
+
+                if (currentOptions.length > 0) {
+                    valueInput.placeholder = 'Type to search values...';
                 } else {
-                    optionsDiv.style.display = 'none';
+                    valueInput.placeholder = 'Enter value';
                 }
             });
 
-            // Hide options when clicking outside
-            valueInput.addEventListener('blur', function() {
-                setTimeout(() => optionsDiv.style.display = 'none', 200);
+            // Search and filter suggestions
+            function showSuggestions(query = '') {
+                suggestionsDiv.innerHTML = '';
+                selectedIndex = -1;
+
+                if (currentOptions.length === 0) {
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+
+                const filteredOptions = query === '' ?
+                    currentOptions :
+                    currentOptions.filter(option =>
+                        option.toString().toLowerCase().includes(query.toLowerCase())
+                    );
+
+                if (filteredOptions.length === 0) {
+                    suggestionsDiv.style.display = 'none';
+                    return;
+                }
+
+                filteredOptions.forEach((option, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'spec-suggestion-item';
+                    item.textContent = option;
+                    item.addEventListener('click', () => {
+                        valueInput.value = option;
+                        suggestionsDiv.style.display = 'none';
+                    });
+                    suggestionsDiv.appendChild(item);
+                });
+
+                suggestionsDiv.style.display = 'block';
+            }
+
+            // Show all options when clicking on input
+            valueInput.addEventListener('click', function() {
+                if (currentOptions.length > 0) {
+                    showSuggestions();
+                }
             });
 
+            // Show all options when focusing on input
             valueInput.addEventListener('focus', function() {
-                const selectedParam = availableColumns.find(col => col.name === paramSelect.value);
-                if (selectedParam && selectedParam.options && selectedParam.options.length > 0) {
-                    optionsDiv.style.display = 'block';
+                if (currentOptions.length > 0) {
+                    showSuggestions();
+                }
+            });
+
+            // Filter suggestions as user types
+            valueInput.addEventListener('input', function() {
+                const query = this.value;
+                showSuggestions(query);
+            });
+
+            // Keyboard navigation
+            valueInput.addEventListener('keydown', function(e) {
+                const items = suggestionsDiv.querySelectorAll('.spec-suggestion-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateHighlight(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateHighlight(items);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && items[selectedIndex]) {
+                        valueInput.value = items[selectedIndex].textContent;
+                        suggestionsDiv.style.display = 'none';
+                        selectedIndex = -1;
+                    }
+                } else if (e.key === 'Escape') {
+                    suggestionsDiv.style.display = 'none';
+                    selectedIndex = -1;
+                }
+            });
+
+            function updateHighlight(items) {
+                items.forEach((item, index) => {
+                    item.classList.toggle('highlighted', index === selectedIndex);
+                });
+            }
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!valueContainer.contains(e.target)) {
+                    suggestionsDiv.style.display = 'none';
+                    selectedIndex = -1;
                 }
             });
 
@@ -558,7 +701,7 @@
             specItem.appendChild(valueContainer);
             specItem.appendChild(weightInput);
             specItem.appendChild(removeBtn);
-            
+
             container.appendChild(specItem);
         }
 
@@ -566,19 +709,19 @@
         async function performSearch() {
             const specs = [];
             const specItems = document.querySelectorAll('.spec-item');
-            
+
             for (let item of specItems) {
                 const param = item.children[0].value;
                 const value = item.children[1].querySelector('input').value; // Updated to get input from container
                 const weight = parseFloat(item.children[2].value);
-                
+
                 if (param && value && weight) {
                     // Try to parse value as number if possible
                     let parsedValue = value;
                     if (!isNaN(value) && !isNaN(parseFloat(value))) {
                         parsedValue = parseFloat(value);
                     }
-                    
+
                     specs.push({
                         name: param,
                         value: parsedValue,
@@ -603,7 +746,7 @@
             try {
                 document.getElementById('searchBtn').disabled = true;
                 document.getElementById('searchBtn').textContent = 'Searching...';
-                
+
                 const response = await fetch(`${API_BASE}/search`, {
                     method: 'POST',
                     headers: {
@@ -615,7 +758,7 @@
                 const data = await response.json();
                 currentSessionId = data.session_id;
                 displayResults(data.results);
-                
+
             } catch (error) {
                 showError('Search failed: ' + error.message);
             } finally {
@@ -627,7 +770,7 @@
         // Display search results
         function displayResults(results) {
             const container = document.getElementById('resultsContainer');
-            
+
             if (!results || results.length === 0) {
                 container.innerHTML = '<p>No results found.</p>';
                 document.getElementById('resultsSection').classList.remove('hidden');
@@ -640,45 +783,51 @@
 
             const table = document.createElement('table');
             table.className = 'results-table';
-            
+
             // Create header
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
-            
+
             allResultColumns.forEach(key => {
                 const th = document.createElement('th');
                 th.textContent = key.replace('_', ' ').toUpperCase();
                 headerRow.appendChild(th);
             });
-            
+
             thead.appendChild(headerRow);
             table.appendChild(thead);
-            
+
             // Create body
             const tbody = document.createElement('tbody');
-            
+
             results.forEach(result => {
                 const row = document.createElement('tr');
-                
+
                 allResultColumns.forEach(key => {
                     const td = document.createElement('td');
                     const value = result[key];
                     td.textContent = value !== null && value !== undefined ? value : 'N/A';
-                    
+
                     // Highlight score columns
                     if (key.toLowerCase().includes('score')) {
                         td.className = 'score-cell';
                     }
-                    
+
                     row.appendChild(td);
                 });
-                
+
                 tbody.appendChild(row);
             });
-            
+
             table.appendChild(tbody);
+
+            // Create dedicated table container
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'results-table-container';
+            tableContainer.appendChild(table);
+
             container.innerHTML = '';
-            container.appendChild(table);
+            container.appendChild(tableContainer);
             
             document.getElementById('resultsSection').classList.remove('hidden');
             document.getElementById('resultControls').classList.remove('hidden');
@@ -733,9 +882,15 @@
             removeBtn.onclick = () => filterItem.remove();
 
             filterItem.appendChild(paramSelect);
-            filterItem.appendChild(minInput);
-            filterItem.appendChild(maxInput);
-            filterItem.appendChild(removeBtn);
+
+            const controlRow = document.createElement('div');
+            controlRow.className = 'filter-controls-row';
+
+            controlRow.appendChild(minInput);
+            controlRow.appendChild(maxInput);
+            controlRow.appendChild(removeBtn);
+
+            filterItem.appendChild(controlRow);
             
             container.appendChild(filterItem);
         }
@@ -752,9 +907,11 @@
             const filterItems = document.querySelectorAll('.filter-item');
             
             filterItems.forEach(item => {
-                const param = item.children[0].value;
-                const minVal = item.children[1].value;
-                const maxVal = item.children[2].value;
+                const param = item.children[0].value;  // paramSelect still first child
+
+                const controls = item.querySelector('.filter-controls-row'); // find controls row
+                const minVal = controls.children[0].value;  // minInput is first child of controls
+                const maxVal = controls.children[1].value;  // maxInput second child
                 
                 if (param && (minVal || maxVal)) {
                     const filter = { name: param };
