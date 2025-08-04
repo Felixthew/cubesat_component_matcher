@@ -35,7 +35,8 @@ class Filter(BaseModel):
 
 class Sort(BaseModel):
     by: str = Field("overall_score")
-    asc: bool = Field(False)
+    asc: bool = Field(True)
+    score_coupling: bool = Field(False)
 
 class Pagination(BaseModel):
     page: int = Field(1, ge=1)
@@ -51,7 +52,6 @@ class SearchResponse(BaseModel):
     results: list[dict]
 
 class RetrieveRequest(BaseModel):
-    session_id: str
     filters: list[Filter]
     sort: Sort
     pagination: Pagination

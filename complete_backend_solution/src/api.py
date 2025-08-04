@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import complete_backend_solution.src.json_types as jt
 from complete_backend_solution.src.engine import ScoringEngine
@@ -7,6 +8,14 @@ import complete_backend_solution.src.data_loader as dl
 import json
 
 app = FastAPI(title="Component Matcher")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
@@ -56,19 +65,23 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     # I changed this to Json to get rid of the NaNs, hopefully that is all good
     json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
     scored_table = json.loads(json_str) # BOOM
+    original_columns = engine.extended_df.columns.tolist()
 
     # identify/generate session id for the recall then cache session data
     sid = query.session_id or storage.generate_session_id()
     storage.save_request(sid, query.model_dump())
-    storage.save_results(sid, scored_table)
+    storage.save_results(sid, {
+        'data': scored_table,
+        'column_order': original_columns
+    })
 
     return jt.SearchResponse(session_id=sid, results=scored_table)
 
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
-def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
-    sid = query.session_id
+def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
+    sid = session_id
 
     # check for faulty inputs or storage
     try:
@@ -79,7 +92,7 @@ def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
         raise HTTPException(404, "Results not found")
 
     # on success, retrieve df
-    df_inter = pd.DataFrame(raw_table)
+    df_inter = _order_cols(query, raw_table)
 
     # apply preferences
     df_inter = _filter(query.filters, df_inter)
@@ -92,6 +105,26 @@ def retrieve(query: jt.RetrieveRequest) -> jt.SearchResponse:
     # package and return
     result = df_inter.to_dict(orient="records")
     return jt.SearchResponse(session_id=sid, results=result)
+
+
+def _order_cols(query, raw_table):
+    if query.sort.score_coupling:
+        columns = raw_table['column_order']
+
+        score_columns = set(col for col in columns if col.endswith('_score'))
+        value_columns = [col for col in columns if not col.endswith('_score')]
+
+        column_order = []
+        for val_col in value_columns:
+            column_order.append(val_col)
+            if val_col + '_score' in score_columns:
+                column_order.append(val_col + '_score')
+                score_columns.remove(val_col + '_score')
+        column_order += score_columns
+        df_inter = pd.DataFrame(raw_table['data'])[column_order]
+    else:
+        df_inter = pd.DataFrame(raw_table['data'])[raw_table['column_order']]
+    return df_inter
 
 
 def _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:
@@ -109,3 +142,7 @@ def _paginate(paging: jt.Pagination, df: pd.DataFrame) -> pd.DataFrame:
     first = paging.per_page * (paging.page - 1)
     last = first + paging.per_page
     return df.iloc[first:last]
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)

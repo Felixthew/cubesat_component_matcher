@@ -1,5 +1,5 @@
 {
-    "session_id": "eceafd7f-9b39-42a7-ba28-129c08a1613c",
+    "session_id": "a8b7b949-71e3-44d8-9efc-430952ab1441",
     "results": [
         {
             "Organization": "Aerospacelab",
@@ -12,9 +12,9 @@
             "Intended Destination": "LEO, GEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.6666666667,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.3320880033
         },
         {
             "Organization": "Artemis Space Technologies",
@@ -42,9 +42,9 @@
             "Intended Destination": "GEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 0.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.0
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Astro Digital",
@@ -72,9 +72,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "Berlin Space Technologies",
@@ -87,9 +87,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "C3S Electronics Development",
@@ -102,9 +102,9 @@
             "Intended Destination": "LEO, MEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.6666666667,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.8302200083
         },
         {
             "Organization": "CREOTECH",
@@ -132,9 +132,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "General Atomics EMS",
@@ -147,9 +147,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "German Orbital Systems",
@@ -162,9 +162,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "Gran Systems",
@@ -177,9 +177,9 @@
             "Intended Destination": "LEO, Lunar",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 0.5,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.2490660025
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Harpy Aerospace",
@@ -222,9 +222,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Loft Orbital",
@@ -237,9 +237,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Momentus Space",
@@ -267,9 +267,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Nara Space",
@@ -282,9 +282,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "NearSpace Launch",
@@ -297,9 +297,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Northrop Grumman",
@@ -312,9 +312,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "NovaWurks",
@@ -342,9 +342,9 @@
             "Intended Destination": "LEO, MEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.6666666667,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.8302200083
         },
         {
             "Organization": "OHB LuxSpace",
@@ -357,9 +357,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "OHB Sweden",
@@ -372,9 +372,9 @@
             "Intended Destination": "LEO, MEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.6666666667,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.8302200083
         },
         {
             "Organization": "Open Cosmos",
@@ -387,9 +387,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "Orbital Astronautics",
@@ -462,9 +462,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "SatRev",
@@ -477,9 +477,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "Sierra Space",
@@ -507,9 +507,9 @@
             "Intended Destination": "LEO",
             "US Office": 0,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 1.0,
-            "overall_score": 0.99626401
+            "overall_score": 0.6641760066
         },
         {
             "Organization": "SpaceX",
@@ -522,9 +522,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Space Inventor",
@@ -567,9 +567,9 @@
             "Intended Destination": "LEO",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 1.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.498132005
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "Surrey Satellite Technology Ltd.",
@@ -627,9 +627,9 @@
             "Intended Destination": "VLEO, LEO, Cislunar",
             "US Office": 1,
             "Organization_score": 0.0,
-            "Intended Destination_score": 0.0,
+            "Intended Destination_score": 0.3333333333,
             "US Office_score": 0.0,
-            "overall_score": 0.0
+            "overall_score": 0.1660440017
         },
         {
             "Organization": "York Space Systems",

@@ -198,7 +198,7 @@ def _clean_string(val: str) -> str:
     return val.strip().lower()
 
 def _parse_collection(vals: str) -> list[str]:
-    return _clean_string(vals).split(",")
+    return [_clean_string(val) for val in vals.split(",")]
 
 def _parse_range(val: str) -> tuple[float, float]:
     range_elements = val.split("-")

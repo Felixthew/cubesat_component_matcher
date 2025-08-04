@@ -34,7 +34,7 @@ def _load_dtypes(location: Location) -> dict[str, str]:
     )
 
     return {
-        col: dtype
+        col: dtype.lower()
         for col, dtype in result
     }
 
@@ -88,7 +88,8 @@ def list_tables(schema: str) -> list[str]:
         """,
         {"schema": schema}
     )
-    return [t["table_name"] for t in tables]
+    return [t[0] for t in tables]
+    #return [t["table_name"] for t in tables]
 
 def list_choices(location: Location, col_name: str, dtype: str) -> list[str] | None:
     """
@@ -123,7 +124,8 @@ def list_choices(location: Location, col_name: str, dtype: str) -> list[str] | N
             elif dtype == "list":
                 deduped_results = set()
                 for list_data in result:
-                    deduped_results.add(list_data.split(", "))
+                    for item in list_data.split(", "):
+                        deduped_results.add(item.strip())
                 return list(deduped_results)
 
     # if not an exposable type, it has no options
