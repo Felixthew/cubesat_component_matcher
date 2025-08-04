@@ -232,12 +232,11 @@ def _normalize_negatives(
         max: int | float,
         min: int | float
 ) -> tuple[int | float, int | float, int | float]:
-    # why 2x and not normalize so min becomes 0?
     if min < 0:
         delta = abs(min)
-        val1 += 2*delta
-        val2 += 2*delta
-        max += 2*delta
+        val1 += delta
+        val2 += delta
+        max += delta
     return val1, val2, max
 
 # add new type methods here for engine iteration

@@ -1,4 +1,5 @@
 import pandas as pd
+from sqlalchemy import false
 
 from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 
@@ -78,5 +79,5 @@ class ScoringEngine:
         score_df = pd.json_normalize(scored_series.tolist())
 
         # join score df and raw df and return
-        extended_df = candidates_df.join(score_df)
+        extended_df = candidates_df.join(score_df).sort_values(by="overall_score", ascending=False)
         return extended_df

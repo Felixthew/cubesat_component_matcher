@@ -20,7 +20,6 @@ def get_systems(solution: str) -> jt.TableList:
     if not tables:
         raise HTTPException(404, "No existing systems in request solution category")
     return jt.TableList(schema=solution, tables=tables)
-    # [item["table_name"] for item in tables])
 
 @app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")

@@ -73,8 +73,6 @@ def list_schema() -> list[str]:
     )
     return [s[0] for s in schema]
 
-    # return [s["schema_name"] for s in schema]
-
 def list_tables(schema: str) -> list[str]:
     """
     List all tables (systems) in a given schema
