@@ -38,7 +38,7 @@ def save_request(session_id: str, request_data: dict):
         }
     )
 
-def save_results(session_id: str, results_data: Json):
+def save_results(session_id: str, results_data: dict):
     """
     Saves returned data after a request in metadata.session_data table
     :param session_id: previously-generated session id

@@ -2,6 +2,10 @@ from pydantic import BaseModel, Field
 
 # Utility module to keep track of json-relevant objects used in the API
 
+class Location(BaseModel):
+    schema: str
+    table: str
+
 class SchemaList(BaseModel):
     schemas: list[str]
 
@@ -15,13 +19,8 @@ class ColumnProfile(BaseModel):
     options: list[str] | None = None
 
 class ColumnList(BaseModel):
-    schema: str
-    table: str
+    location: Location
     columns: list[ColumnProfile]
-
-class Location(BaseModel):
-    schema: str
-    table: str
 
 class ColumnSpec(BaseModel):
     name: str
@@ -35,8 +34,8 @@ class Filter(BaseModel):
 
 class Sort(BaseModel):
     by: str = Field("overall_score")
-    asc: bool = Field(True)
-    score_coupling: bool = Field(False)
+    asc: bool = Field(False)
+    score_coupling: bool = Field(True)
 
 class Pagination(BaseModel):
     page: int = Field(1, ge=1)

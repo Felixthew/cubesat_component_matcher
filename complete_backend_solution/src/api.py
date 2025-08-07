@@ -47,7 +47,7 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
         jt.ColumnProfile(name=name, dtype=dtype, options=dl.list_choices(location, name, dtype))
         for name, dtype in dtype_rows.items()
     ]
-    return jt.ColumnList(schema=solution, table=system, columns=param_list)
+    return jt.ColumnList(location=location, columns=param_list)
 
 
 @app.post("/search", response_model=jt.SearchResponse, summary="Retrieve scored results given new spec requests")
@@ -85,14 +85,14 @@ def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
 
     # check for faulty inputs or storage
     try:
-        raw_table = storage.load_results(sid)
+        raw_results = storage.load_results(sid)
     except ValueError:
         raise HTTPException(404, "Session not found")
-    if raw_table is None:
+    if raw_results is None:
         raise HTTPException(404, "Results not found")
 
     # on success, retrieve df
-    df_inter = _order_cols(query, raw_table)
+    df_inter = _order_cols(query, raw_results)
 
     # apply preferences
     df_inter = _filter(query.filters, df_inter)
@@ -107,36 +107,41 @@ def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
     return jt.SearchResponse(session_id=sid, results=result)
 
 
-def _order_cols(query, raw_table):
+def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
     if query.sort.score_coupling:
-        columns = raw_table['column_order']
+        columns = raw_results['column_order']
 
         score_columns = set(col for col in columns if col.endswith('_score'))
         value_columns = [col for col in columns if not col.endswith('_score')]
 
-        column_order = []
+        column_order = ["overall_score"]
         for val_col in value_columns:
             column_order.append(val_col)
-            if val_col + '_score' in score_columns:
-                column_order.append(val_col + '_score')
-                score_columns.remove(val_col + '_score')
-        column_order += score_columns
-        df_inter = pd.DataFrame(raw_table['data'])[column_order]
+            score_col = f"{val_col}_score"
+            if score_col in score_columns:
+                column_order.append(score_col)
+                score_columns.remove(score_col)
+        df_inter = pd.DataFrame(raw_results['data'])[column_order]
     else:
-        df_inter = pd.DataFrame(raw_table['data'])[raw_table['column_order']]
+        df_inter = pd.DataFrame(raw_results['data'])[raw_results['column_order']]
     return df_inter
 
 
 def _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:
     for f in filters:
-        if f.min_val is not None:
-            df = df[df[f.name] >= f.min_val]
-        if f.max_val is not None:
-            df = df[df[f.name] <= f.max_val]
+        try:
+            if f.min_val is not None:
+                df = df[df[f.name] >= f.min_val]
+            if f.max_val is not None:
+                df = df[df[f.name] <= f.max_val]
+        except TypeError:
+            continue
+            # raise ValueError("Column is not numerically comparable")
+            # ^ decide to propagate type error or just make it harmless to pass strings etc in the filter
     return df
 
 def _sort(sort: jt.Sort, df: pd.DataFrame) -> pd.DataFrame:
-    return df.sort_values(sort.by, ascending=sort.asc)
+    return df.sort_values(by=sort.by, ascending=sort.asc)
 
 def _paginate(paging: jt.Pagination, df: pd.DataFrame) -> pd.DataFrame:
     first = paging.per_page * (paging.page - 1)
