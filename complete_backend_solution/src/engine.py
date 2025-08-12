@@ -7,11 +7,9 @@ class ScoringEngine:
     def __init__(self,
                  request: dict,
                  candidates_df: pd.DataFrame,
-                 dtypes: dict[str, str],
-                 scoring_config: dict | None):
+                 dtypes: dict[str, str]):
         self.specs = request
         self.dtypes = dtypes
-        self.config = scoring_config or SCORING_CONFIG
         self.global_maxes = {
             col: candidates_df[col].max()
             for col in dtypes
@@ -25,14 +23,14 @@ class ScoringEngine:
         self.extended_df: pd.DataFrame = self._score_all(candidates_df)
 
     # score a single cell against the respective requested value
-    def _score_single(self, column_name, request_val, candidate_val):
-        print(self.dtypes)
+    def _score_single(self, column_name, request_val, configs, candidate_val):
+        # print(self.dtypes)
         dtype = self.dtypes[column_name]
         scorer = SCORING_REGISTRY[dtype]
 
-        # can lead the way for column-specific kwargs, forced or user-specified
-        type_kwargs = self.config[dtype]
-        all_kwargs = {**type_kwargs}
+        # can lead the way for type-specific kwargs or overrides. unspecified configs use defaults in Scorer
+        column_kwargs = configs
+        all_kwargs = {**column_kwargs}
         if dtype == "number":
             all_kwargs["max_val"] = self.global_maxes[column_name]
             all_kwargs["min_val"] = self.global_mins[column_name]
@@ -55,9 +53,10 @@ class ScoringEngine:
             # parse columnwise data in request
             request_val = data["value"]
             request_weight = data["weight"]
+            request_configs = data["configs"]
 
             # compute single column score and store in unique score_summary entry
-            raw_score = self._score_single(col, request_val, row[col])
+            raw_score = self._score_single(col, request_val, request_configs, row[col])
             score_summary[f"{col}_score"] = raw_score
 
             # weight score and add to aggregate score

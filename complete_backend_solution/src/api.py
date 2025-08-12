@@ -57,11 +57,9 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     engine_request = dl.load_request(query.specs)
     engine_candidates_df = dl.load_candidates(query.location)
     engine_dtypes = dl.get_dtypes(query.location.schema, query.location.table)
-    engine_scoring_config = None
-    # ^configs need more infrastructure established -- left to defaults for now
 
     # create and run the engine. let it do the heavy lifting on computing extended_df
-    engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)
+    engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes)
     # I changed this to Json to get rid of the NaNs, hopefully that is all good
     json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
     scored_table = json.loads(json_str) # BOOM
@@ -70,12 +68,18 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     # identify/generate session id for the recall then cache session data
     sid = query.session_id or storage.generate_session_id()
     storage.save_request(sid, query.model_dump())
-    storage.save_results(sid, {
-        'data': scored_table,
-        'column_order': original_columns
-    })
 
-    return jt.SearchResponse(session_id=sid, results=scored_table)
+    results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)
+    storage.save_results_bm(results.model_dump())
+    # storage.save_results_bm(results)
+    return results
+
+    # storage.save_results(sid, {
+    #     'data': scored_table,
+    #     'column_order': original_columns
+    # })
+    #
+    # return jt.SearchResponse(session_id=sid, values=scored_table)
 
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
@@ -104,12 +108,12 @@ def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
 
     # package and return
     result = df_inter.to_dict(orient="records")
-    return jt.SearchResponse(session_id=sid, results=result)
+    return jt.SearchResponse(session_id=sid, values=result)
 
 
 def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
     if query.sort.score_coupling:
-        columns = raw_results['column_order']
+        columns = raw_results["order"]
 
         score_columns = set(col for col in columns if col.endswith('_score'))
         value_columns = [col for col in columns if not col.endswith('_score')]
@@ -121,9 +125,9 @@ def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
             if score_col in score_columns:
                 column_order.append(score_col)
                 score_columns.remove(score_col)
-        df_inter = pd.DataFrame(raw_results['data'])[column_order]
+        df_inter = pd.DataFrame(raw_results["values"])[column_order]
     else:
-        df_inter = pd.DataFrame(raw_results['data'])[raw_results['column_order']]
+        df_inter = pd.DataFrame(raw_results["values"])[raw_results['column_order']]
     return df_inter
 
 

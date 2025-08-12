@@ -1,45 +1,34 @@
 {
-    "session_id": "b996c4a2-51a2-436a-8f89-054a6944b6cc",
-    "results": [
+    "detail": [
         {
-            "Board": "board 1",
-            "Dimensions": "10, 2, 5",
-            "TRL": 1,
-            "Dimensions_score": 1.0,
-            "TRL_score": 0.8095238095,
-            "overall_score": 0.9365079365
+            "type": "missing",
+            "loc": [
+                "body",
+                "specs",
+                0,
+                "configs"
+            ],
+            "msg": "Field required",
+            "input": {
+                "name": "Dimensions",
+                "value": "10,2,5",
+                "weight": 10.0
+            }
         },
         {
-            "Board": "board 2",
-            "Dimensions": "5,1,5",
-            "TRL": 4,
-            "Dimensions_score": 0.8,
-            "TRL_score": 0.9523809524,
-            "overall_score": 0.8507936508
-        },
-        {
-            "Board": "board 3",
-            "Dimensions": "13,7,4",
-            "TRL": 5,
-            "Dimensions_score": 0.8205128205,
-            "TRL_score": 1.0,
-            "overall_score": 0.8803418803
-        },
-        {
-            "Board": "board 4",
-            "Dimensions": "-5,-9,-10",
-            "TRL": -8,
-            "Dimensions_score": 0.5444444444,
-            "TRL_score": 0.380952381,
-            "overall_score": 0.4899470899
-        },
-        {
-            "Board": "board 5",
-            "Dimensions": "-10,-2,-5",
-            "TRL": -5,
-            "Dimensions_score": 0.6222222222,
-            "TRL_score": 0.5238095238,
-            "overall_score": 0.5894179894
+            "type": "missing",
+            "loc": [
+                "body",
+                "specs",
+                1,
+                "configs"
+            ],
+            "msg": "Field required",
+            "input": {
+                "name": "TRL",
+                "value": 5,
+                "weight": 5.0
+            }
         }
     ]
 }

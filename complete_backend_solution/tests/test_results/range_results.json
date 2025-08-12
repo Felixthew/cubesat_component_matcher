@@ -1,23 +1,19 @@
 {
-    "session_id": "ba17d73c-ad27-4171-9a0d-30639a41db5e",
-    "results": [
+    "detail": [
         {
-            "Computer": "c1",
-            "Voltage": "10-20",
-            "Voltage_score": 0.0820849986,
-            "overall_score": 0.0820849986
-        },
-        {
-            "Computer": "c2",
-            "Voltage": "40-40",
-            "Voltage_score": 0.6065306597,
-            "overall_score": 0.6065306597
-        },
-        {
-            "Computer": "c3",
-            "Voltage": "5-20",
-            "Voltage_score": 0.0820849986,
-            "overall_score": 0.0820849986
+            "type": "missing",
+            "loc": [
+                "body",
+                "specs",
+                0,
+                "configs"
+            ],
+            "msg": "Field required",
+            "input": {
+                "name": "Voltage",
+                "value": 45,
+                "weight": 10.0
+            }
         }
     ]
 }

@@ -26,6 +26,7 @@ class ColumnSpec(BaseModel):
     name: str
     value: str | int | float
     weight: float = Field(..., gt=0)
+    configs: dict[str, str | int | float | bool]
 
 class Filter(BaseModel):
     name: str
@@ -48,7 +49,8 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     session_id: str
-    results: list[dict]
+    values: list[dict]
+    order: list[str]
 
 class RetrieveRequest(BaseModel):
     filters: list[Filter]

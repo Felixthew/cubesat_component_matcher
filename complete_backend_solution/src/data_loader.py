@@ -46,14 +46,14 @@ def load_candidates(location: Location) -> pd.DataFrame:
     """
     return pd.read_sql_table(table_name=location.table, con=db.db_engine, schema=location.schema)
 
-def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str | int | float, float]]:
+def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str, str | int | float]]:
     """
     Parses a list of ColumnSpec objects into a dict that can be used in the engine
     :param specs: list of ColumnSpec objects received from the JSON payload
     :return: {name: {"value": value, "weight": weight}, ...} formatted dict that contains all request info about a table
     """
     return {
-        col.name: {"value": col.value, "weight": col.weight}
+        col.name: {"value": col.value, "weight": col.weight, "configs": col.configs}
         for col in specs
     }
 
