@@ -1,5 +1,4 @@
 import pandas as pd
-from sqlalchemy import false
 
 from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 
@@ -8,6 +7,7 @@ class ScoringEngine:
                  request: dict,
                  candidates_df: pd.DataFrame,
                  dtypes: dict[str, str]):
+
         self.specs = request
         self.dtypes = dtypes
         self.global_maxes = {

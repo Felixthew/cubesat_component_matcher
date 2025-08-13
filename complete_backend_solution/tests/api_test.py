@@ -26,12 +26,12 @@ class TestUserAPI:
 
     def test_get_tables(self, client):
         """Test retrieving options"""
-        response = client.get("/options/avionics_TEST")
+        response = client.get("/options/avionics")
         print(response.json())
 
 
     def test_get_params(self, client):
-        response = client.get("/options/power_TEST/solar_arrays")
+        response = client.get("/options/power/solar_arrays")
         print(response.json())
 
         assert response.status_code == 200

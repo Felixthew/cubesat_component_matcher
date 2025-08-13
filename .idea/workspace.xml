@@ -5,18 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/information_schema.FNRwLQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/metadata.L3st5Q.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/metadata.L3st5Q.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/platforms_TEST.EUsbAw.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/platforms_TEST.EUsbAw.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/power.BYleBg.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/power.BYleBg.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/power_TEST.jEc5Gg.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/power_TEST.jEc5Gg.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/29a1736b-38e5-4533-b231-93a02f5f7048/storage_v2/_src_/database/railway.Hf4GOg/schema/public.abK9xQ.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/sqldialects.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/README_frontend.md" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/README_frontend.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/data_loader.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/database.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/json_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/json_types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/storage.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/storage.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/filtered_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/filtered_results.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/list_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/list_results.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/range_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/range_results.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/results.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/tuple_results.json" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/test_results/tuple_results.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/api_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/api_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/component_data_TEST/avionics_TEST/TEST_avionics.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/component_data_TEST/launch_TEST/launch_systems.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/component_data_TEST/platforms_TEST/platforms_TEST.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/component_data_TEST/power_TEST/power_TEST.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/component_data_TEST/power_TEST/~$power_TEST.xlsx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -257,7 +263,8 @@
       <workItem from="1753490316075" duration="11272000" />
       <workItem from="1753657672700" duration="2807000" />
       <workItem from="1753896747357" duration="18005000" />
-      <workItem from="1754413060012" duration="23368000" />
+      <workItem from="1754413060012" duration="24878000" />
+      <workItem from="1755105879588" duration="5142000" />
     </task>
     <task id="LOCAL-00001">
       <option name="closed" value="true" />
@@ -288,10 +295,10 @@
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$data_loader.coverage" NAME="data_loader Coverage Results" MODIFIED="1752344403311" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/aiden_halfstack_solution/src" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$test.coverage" NAME="test Coverage Results" MODIFIED="1750710457331" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test_files" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$storage_test.coverage" NAME="storage_test Coverage Results" MODIFIED="1752515003148" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/tests" />
-    <SUITE FILE_PATH="coverage/cubesat_component_matcher$.coverage" NAME=" Coverage Results" MODIFIED="1754950816398" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/tests" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$.coverage" NAME=" Coverage Results" MODIFIED="1755110920060" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/tests" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$api_test.coverage" NAME="api_test Coverage Results" MODIFIED="1750705107473" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/cubesat_component_matcher$api.coverage" NAME="api Coverage Results" MODIFIED="1754509985907" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/src" />
-    <SUITE FILE_PATH="coverage/cubesat_component_matcher$upload_table.coverage" NAME="upload_table Coverage Results" MODIFIED="1752788309430" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$api.coverage" NAME="api Coverage Results" MODIFIED="1755106798795" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/src" />
+    <SUITE FILE_PATH="coverage/cubesat_component_matcher$upload_table.coverage" NAME="upload_table Coverage Results" MODIFIED="1755112395251" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$storage.coverage" NAME="storage Coverage Results" MODIFIED="1752436552447" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/complete_backend_solution/src" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$scorer.coverage" NAME="scorer Coverage Results" MODIFIED="1751756890057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/aiden_halfstack_solution/src" />
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$vector_optimization_algo.coverage" NAME="vector_optimization_algo Coverage Results" MODIFIED="1750705134035" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
