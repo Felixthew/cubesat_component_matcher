@@ -18,13 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# should I add a /kwargs option or just bundle that in with listing al params.
 @app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
 def get_solutions() -> jt.SchemaList:
     return jt.SchemaList(schemas=dl.list_schema())
-
 
 @app.get("/options/{solution}", response_model=jt.TableList,
          summary="Lists all system types to choose from, e.g. chemical propulsion")
@@ -33,7 +30,6 @@ def get_systems(solution: str) -> jt.TableList:
     if not tables:
         raise HTTPException(404, "No existing systems in request solution category")
     return jt.TableList(schema=solution, tables=tables)
-
 
 @app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
@@ -67,22 +63,28 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)
     # I changed this to Json to get rid of the NaNs, hopefully that is all good
     json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
-    scored_table = json.loads(json_str)  # BOOM
+    scored_table = json.loads(json_str) # BOOM
     original_columns = engine.extended_df.columns.tolist()
 
     # identify/generate session id for the recall then cache session data
     sid = query.session_id or storage.generate_session_id()
     storage.save_request(sid, query.model_dump())
-    storage.save_results(sid, {
-        'data': scored_table,
-        'column_order': original_columns
-    })
 
-    return jt.SearchResponse(session_id=sid, results=scored_table)
+    results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)
+    storage.save_results_bm(results.model_dump())
+    # storage.save_results_bm(results)
+    return results
+
+    # storage.save_results(sid, {
+    #     'data': scored_table,
+    #     'column_order': original_columns
+    # })
+    #
+    # return jt.SearchResponse(session_id=sid, values=scored_table)
 
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
-          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
+         summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
 def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
     sid = session_id
 
@@ -107,12 +109,12 @@ def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
 
     # package and return
     result = df_inter.to_dict(orient="records")
-    return jt.SearchResponse(session_id=sid, results=result)
+    return jt.SearchResponse(session_id=sid, values=result)
 
 
 def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
     if query.sort.score_coupling:
-        columns = raw_results['column_order']
+        columns = raw_results["order"]
 
         score_columns = set(col for col in columns if col.endswith('_score'))
         value_columns = [col for col in columns if not col.endswith('_score')]
@@ -124,9 +126,9 @@ def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
             if score_col in score_columns:
                 column_order.append(score_col)
                 score_columns.remove(score_col)
-        df_inter = pd.DataFrame(raw_results['data'])[column_order]
+        df_inter = pd.DataFrame(raw_results["values"])[column_order]
     else:
-        df_inter = pd.DataFrame(raw_results['data'])[raw_results['column_order']]
+        df_inter = pd.DataFrame(raw_results["values"])[raw_results['column_order']]
     return df_inter
 
 
@@ -143,18 +145,14 @@ def _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:
             # ^ decide to propagate type error or just make it harmless to pass strings etc in the filter
     return df
 
-
 def _sort(sort: jt.Sort, df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(by=sort.by, ascending=sort.asc)
-
 
 def _paginate(paging: jt.Pagination, df: pd.DataFrame) -> pd.DataFrame:
     first = paging.per_page * (paging.page - 1)
     last = first + paging.per_page
     return df.iloc[first:last]
 
-
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="127.0.0.1", port=8000)

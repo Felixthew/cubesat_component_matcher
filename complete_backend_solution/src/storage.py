@@ -5,6 +5,7 @@ from typing import Any
 from psycopg2.extras import Json
 
 from complete_backend_solution.src.database import db
+from complete_backend_solution.src import json_types as jt
 
 # sessions stay cached for a week by default
 DEFAULT_EXPIRATION_TIME_HOURS = 168
@@ -54,6 +55,18 @@ def save_results(session_id: str, results_data: dict):
             "sid": session_id,
             "data": Json(results_data)
          }
+    )
+
+
+def save_results_bm(results: jt.SearchResponse):
+    db.execute(
+        """
+        UPDATE metadata.session_data
+        SET results_data = :data
+            WHERE session_id = :sid
+        """,
+        {"sid": results.session_id,
+         "data": Json({"values": results.values, "order": results.order})}
     )
 
 def load_request(session_id: str) -> dict:

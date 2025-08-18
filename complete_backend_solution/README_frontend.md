@@ -24,4 +24,7 @@ Also might put the flow chart of our idea of how the front end will work here ju
 ### Notes for consideration
 - filter does NOTHING if non numeric column is passed to it (can be swapped for a valueError)
 - scores are returns unrounded
-
+- Consider neglecting "notes" cols on prompt (startswith "notes"?)
+- range accepts NUMBERS not ranges from user
+- EXPLAIN ALL CONFIGS
+- 

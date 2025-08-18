@@ -12,6 +12,7 @@ class Database:
     BLACKLIST_SCHEMA = {
         "information_schema",
         "pg_catalog",
+        "pg_toast",
         "public"
     }
 

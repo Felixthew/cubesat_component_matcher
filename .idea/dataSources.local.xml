@@ -40,10 +40,13 @@
             </node>
             <node kind="database" qname="railway">
               <node kind="schema">
-                <name qname="information_schema" />
+                <name qname="avionics" />
+                <name qname="gnc" />
                 <name qname="metadata" />
-                <name qname="platforms_TEST" />
-                <name qname="power_TEST" />
+                <name qname="platforms" />
+                <name qname="power" />
+                <name qname="structures" />
+                <name qname="thermal" />
               </node>
             </node>
           </node>
