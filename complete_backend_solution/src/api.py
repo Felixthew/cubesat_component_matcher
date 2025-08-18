@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from complete_backend_solution.src.scorer import SCORING_KWARGS
 import pandas as pd
 import complete_backend_solution.src.json_types as jt
 from complete_backend_solution.src.engine import ScoringEngine
@@ -17,10 +18,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# should I add a /kwargs option or just bundle that in with listing al params.
 @app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
 def get_solutions() -> jt.SchemaList:
     return jt.SchemaList(schemas=dl.list_schema())
+
 
 @app.get("/options/{solution}", response_model=jt.TableList,
          summary="Lists all system types to choose from, e.g. chemical propulsion")
@@ -30,10 +34,10 @@ def get_systems(solution: str) -> jt.TableList:
         raise HTTPException(404, "No existing systems in request solution category")
     return jt.TableList(schema=solution, tables=tables)
 
+
 @app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
 def get_params(solution: str, system: str) -> jt.ColumnList:
-
     # retrieves cached dtype data
     dtype_rows = dl.get_dtypes(solution, system)
     location = jt.Location(schema=solution, table=system)
@@ -44,7 +48,8 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
 
     # construct list of json-friendly col-dtype entries and return
     param_list = [
-        jt.ColumnProfile(name=name, dtype=dtype, options=dl.list_choices(location, name, dtype))
+        jt.ColumnProfile(name=name, dtype=dtype, options=dl.list_choices(location, name, dtype),
+                         kwargs=SCORING_KWARGS[dtype])
         for name, dtype in dtype_rows.items()
     ]
     return jt.ColumnList(location=location, columns=param_list)
@@ -52,19 +57,17 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
 
 @app.post("/search", response_model=jt.SearchResponse, summary="Retrieve scored results given new spec requests")
 def search(query: jt.SearchRequest) -> jt.SearchResponse:
-
     # prepare engine parameters
     engine_request = dl.load_request(query.specs)
     engine_candidates_df = dl.load_candidates(query.location)
     engine_dtypes = dl.get_dtypes(query.location.schema, query.location.table)
-    engine_scoring_config = None
-    # ^configs need more infrastructure established -- left to defaults for now
+    engine_scoring_config = query.kwargs if query.kwargs else None
 
     # create and run the engine. let it do the heavy lifting on computing extended_df
     engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)
     # I changed this to Json to get rid of the NaNs, hopefully that is all good
     json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
-    scored_table = json.loads(json_str) # BOOM
+    scored_table = json.loads(json_str)  # BOOM
     original_columns = engine.extended_df.columns.tolist()
 
     # identify/generate session id for the recall then cache session data
@@ -79,7 +82,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
 
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
-         summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
+          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
 def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
     sid = session_id
 
@@ -140,14 +143,18 @@ def _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:
             # ^ decide to propagate type error or just make it harmless to pass strings etc in the filter
     return df
 
+
 def _sort(sort: jt.Sort, df: pd.DataFrame) -> pd.DataFrame:
     return df.sort_values(by=sort.by, ascending=sort.asc)
+
 
 def _paginate(paging: jt.Pagination, df: pd.DataFrame) -> pd.DataFrame:
     first = paging.per_page * (paging.page - 1)
     last = first + paging.per_page
     return df.iloc[first:last]
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="127.0.0.1", port=8000)

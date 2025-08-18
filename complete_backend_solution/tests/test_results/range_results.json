@@ -1,17 +1,17 @@
 {
-    "session_id": "ba17d73c-ad27-4171-9a0d-30639a41db5e",
+    "session_id": "3c25b021-1757-4c0b-ba34-6077bc638a8c",
     "results": [
-        {
-            "Computer": "c1",
-            "Voltage": "10-20",
-            "Voltage_score": 0.0820849986,
-            "overall_score": 0.0820849986
-        },
         {
             "Computer": "c2",
             "Voltage": "40-40",
             "Voltage_score": 0.6065306597,
             "overall_score": 0.6065306597
+        },
+        {
+            "Computer": "c1",
+            "Voltage": "10-20",
+            "Voltage_score": 0.0820849986,
+            "overall_score": 0.0820849986
         },
         {
             "Computer": "c3",

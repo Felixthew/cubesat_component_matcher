@@ -1,3 +1,5 @@
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 # Utility module to keep track of json-relevant objects used in the API
@@ -17,6 +19,7 @@ class ColumnProfile(BaseModel):
     name: str
     dtype: str
     options: list[str] | None = None
+    kwargs: dict[str, str] | None = None
 
 class ColumnList(BaseModel):
     location: Location
@@ -41,10 +44,15 @@ class Pagination(BaseModel):
     page: int = Field(1, ge=1)
     per_page: int = Field(10, ge=1, le=100)
 
+class SearchKwargs(BaseModel):
+    col_kwargs: dict[str, dict[str, Any]] | None = None
+    type_kwargs: dict[str, dict[str, Any]] | None = None
+
 class SearchRequest(BaseModel):
     location: Location
     specs: list[ColumnSpec]
     session_id: str | None = None
+    kwargs: SearchKwargs | None = None
 
 class SearchResponse(BaseModel):
     session_id: str

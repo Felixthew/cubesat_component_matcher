@@ -1,7 +1,5 @@
 import pytest
 from fastapi.testclient import TestClient
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from complete_backend_solution.src.api import app
 import json
 
@@ -72,11 +70,20 @@ class TestUserAPI:
         with open("test_results/range_results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)
 
+    def test_get_scores_kwargs(self, client):
+        # Load the JSON data from a file
+        with open('component_data_TEST/test_requests/test_req_kwargs.json', 'r') as f:
+            search_request = json.load(f)
+        response = client.post("/search", json=search_request)
+        print(response.json())
+        with open("test_results/kwargs_results.json", "w") as json_file:
+            json.dump(response.json(), json_file, indent=4)
+
     def test_filter(self, client):
         # Load the JSON data from a file
         with open('component_data_TEST/test_requests/test_retrieve.json', 'r') as f:
             search_request = json.load(f)
-        response = client.post("/search/57b4da64-8cef-4d95-ae0c-272569119b38", json=search_request)
+        response = client.post("/search/4c3d84f1-88df-4dba-a2ac-225c56929114", json=search_request)
         print(response.json())
         with open("test_results/filtered_results.json", "w") as json_file:
             json.dump(response.json(), json_file, indent=4)

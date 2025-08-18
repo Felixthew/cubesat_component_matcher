@@ -1,0 +1,33 @@
+{
+  "location": {
+    "schema": "platforms_TEST",
+    "table": "hosted_payloads"
+  },
+  "specs": [
+    {
+      "name": "Headquarters",
+      "value": "USA, Germany",
+      "weight": 10.0
+    },
+    {
+      "name": "Intended Destination",
+      "value": "Leo, Meo",
+      "weight": 20.0
+    },
+    {
+      "name": "Organization",
+      "value": "Xplore",
+      "weight": 10.0
+    }
+  ],
+  "kwargs": {
+      "col_kwargs": {
+        "Headquarters": {"contains_any": true}
+      },
+     "type_kwargs": {
+       "string": {"contains_any":  false},
+       "list": {"match_mode":  "contains"}
+     }
+  },
+  "session_id": null
+}

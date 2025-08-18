@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from rapidfuzz import fuzz
 
+
 # Additional config options must be added in
 # - the proper type method
 # - the SCORING_CONFIG
@@ -53,8 +54,9 @@ class NumberScorer(Scorer):
 
 
 class StringScorer(Scorer):
-    def score(self, request_val, candidate_val, threshold=80, exact_match=False) -> float:
+    def score(self, request_val, candidate_val, threshold=80, exact_match=False, contains_any=False) -> float:
         """
+        :param contains_any: returns 1 if the request contains the candidate in its list. Must be exact match (could be changed in the future, im thinking maybe take the highest match in the list).
         :param threshold: minimum fuzz ratio [0..100] for scoring;
             ratios above the threshold are linearly mapped onto [0..1]
         :param exact_match: toggle for only succeeding the string match if they are identical.
@@ -63,6 +65,10 @@ class StringScorer(Scorer):
 
         if request_val is None or candidate_val is None:
             return 0.0
+
+        if contains_any:
+            request_vals = list(map(lambda x: _clean_string(x), request_val.split(",")))
+            return 1.0 if _clean_string(candidate_val) in request_vals else 0.0
 
         request_val = _clean_string(request_val)
         candidate_val = _clean_string(candidate_val)
@@ -197,8 +203,10 @@ class RangeScorer(Scorer):
 def _clean_string(val: str) -> str:
     return val.strip().lower()
 
+
 def _parse_collection(vals: str) -> list[str]:
     return [_clean_string(val) for val in vals.split(",")]
+
 
 def _parse_range(val: str) -> tuple[float, float]:
     range_elements = val.split("-")
@@ -223,8 +231,10 @@ def _parse_range(val: str) -> tuple[float, float]:
 def _union_max(vals1: list[float | int], vals2: list[float | int]) -> float | int:
     return max(max(vals1), max(vals2))
 
+
 def _union_min(vals1: list[float | int], vals2: list[float | int]) -> float | int:
     return min(min(vals1), min(vals2))
+
 
 def _normalize_negatives(
         val1: int | float,
@@ -238,6 +248,7 @@ def _normalize_negatives(
         val2 += delta
         max += delta
     return val1, val2, max
+
 
 # add new type methods here for engine iteration
 SCORING_REGISTRY = {
@@ -257,4 +268,24 @@ SCORING_CONFIG = {
     "list": {"match_mode": "overlap"},
     "boolean": {},
     "range": {"decay_factor": 1.0}
+}
+
+SCORING_KWARGS = {
+    "number": {
+        "use_global_max": "Default true. Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min.",
+        "max_val": "Default auto calculated. Global max value used in use global max config",
+        "min_val": "Default auto calculated. Global min value used in use global max config"},
+    "string": {
+        "threshold": "Default 80. minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]",
+        "exact_match": "Default false. toggle for only succeeding the string match if they are identical. Equivalent to threshold=100",
+        "contains_any": "Default false. Returns full match if the request contains the candidate in its list. Request must be comma seperated list. Must be exact match"},
+    "tuple": {
+        "product_scoring": "Default false. Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume",
+        "normalize_to_max": "Default true. Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode"},
+    "list": {
+        "match_mode": "Default 'overlap'. 'jaccard' more heavily penalizes differences between sets,while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences"},
+    "boolean": {
+    },
+    "range": {
+        "decay_factor": "Default 1.0. values between 0 and 1 make the decay more rapid, values over 1 slow it down"}
 }

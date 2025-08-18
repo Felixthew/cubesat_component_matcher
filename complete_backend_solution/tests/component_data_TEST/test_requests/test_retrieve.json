@@ -13,7 +13,8 @@
   ],
   "sort": {
     "by": "Specific Power (W/kg)",
-    "asc": true
+    "asc": true,
+    "score_coupling" : true
   },
   "pagination": {
     "page": 1,

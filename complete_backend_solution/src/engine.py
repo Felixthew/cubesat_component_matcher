@@ -1,6 +1,5 @@
 import pandas as pd
-from sqlalchemy import false
-
+from complete_backend_solution.src.json_types import SearchKwargs
 from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFIG
 
 class ScoringEngine:
@@ -8,10 +7,9 @@ class ScoringEngine:
                  request: dict,
                  candidates_df: pd.DataFrame,
                  dtypes: dict[str, str],
-                 scoring_config: dict | None):
+                 scoring_config: SearchKwargs | None):
         self.specs = request
         self.dtypes = dtypes
-        self.config = scoring_config or SCORING_CONFIG
         self.global_maxes = {
             col: candidates_df[col].max()
             for col in dtypes
@@ -22,20 +20,34 @@ class ScoringEngine:
             for col in dtypes
             if dtypes[col] == "number"
         }
+        # Extract kwargs with defaults
+        self.col_kwargs = {}
+        self.type_kwargs = SCORING_CONFIG
+
+        if scoring_config is not None:
+            if scoring_config.col_kwargs is not None:
+                self.col_kwargs = scoring_config.col_kwargs
+            if scoring_config.type_kwargs is not None:
+                for dtype_kwargs in scoring_config.type_kwargs:
+                    for k in dtype_kwargs:
+                        self.type_kwargs[dtype_kwargs][k] = scoring_config.type_kwargs[dtype_kwargs][k]
+
         self.extended_df: pd.DataFrame = self._score_all(candidates_df)
 
     # score a single cell against the respective requested value
     def _score_single(self, column_name, request_val, candidate_val):
-        print(self.dtypes)
         dtype = self.dtypes[column_name]
         scorer = SCORING_REGISTRY[dtype]
-
-        # can lead the way for column-specific kwargs, forced or user-specified
-        type_kwargs = self.config[dtype]
-        all_kwargs = {**type_kwargs}
+        all_kwargs = {}
         if dtype == "number":
             all_kwargs["max_val"] = self.global_maxes[column_name]
             all_kwargs["min_val"] = self.global_mins[column_name]
+        if dtype in self.type_kwargs:
+            for k in self.type_kwargs[dtype]:
+                all_kwargs[k] = self.type_kwargs[dtype][k]
+        if column_name in self.col_kwargs:
+            for k in self.col_kwargs[column_name]:
+                all_kwargs[k] = self.col_kwargs[column_name][k]
 
         return scorer.score(request_val, candidate_val, **all_kwargs)
 
