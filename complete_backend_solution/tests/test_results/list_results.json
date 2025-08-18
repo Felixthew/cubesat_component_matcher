@@ -1,6 +1,6 @@
 {
-    "session_id": "2ae60f07-f2b7-41d5-84d2-31d77edcc5a0",
-    "results": [
+    "session_id": "3b3a0340-19cf-44a2-8571-347ac1a32482",
+    "values": [
         {
             "Organization": "CREOTECH",
             "Headquarters": "Poland",
@@ -646,5 +646,20 @@
             "US Office_score": 0.0,
             "overall_score": 0.0
         }
+    ],
+    "order": [
+        "Organization",
+        "Headquarters",
+        "Max Volume (m3)",
+        "Max Mass (kg)",
+        "Peak Power (W)",
+        "3-\u03c3 Pointing Control (deg)",
+        "3-\u03c3 Pointing Knowledge (deg)",
+        "Intended Destination",
+        "US Office",
+        "Organization_score",
+        "Intended Destination_score",
+        "US Office_score",
+        "overall_score"
     ]
 }

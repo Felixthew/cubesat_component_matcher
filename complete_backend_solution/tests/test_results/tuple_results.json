@@ -1,6 +1,6 @@
 {
-    "session_id": "caeea03e-fcc8-4aa9-a373-02accc518119",
-    "results": [
+    "session_id": "31e99f74-5c47-446b-8b19-4bb16fc9b58d",
+    "values": [
         {
             "Board": "board 3",
             "Dimensions": "13,7,4",
@@ -33,5 +33,13 @@
             "TRL_score": 0.0,
             "overall_score": 0.2888888889
         }
+    ],
+    "order": [
+        "Board",
+        "Dimensions",
+        "TRL",
+        "Dimensions_score",
+        "TRL_score",
+        "overall_score"
     ]
 }

@@ -28,9 +28,9 @@ class ScoringEngine:
             if scoring_config.col_kwargs is not None:
                 self.col_kwargs = scoring_config.col_kwargs
             if scoring_config.type_kwargs is not None:
-                for dtype_kwargs in scoring_config.type_kwargs:
-                    for k in dtype_kwargs:
-                        self.type_kwargs[dtype_kwargs][k] = scoring_config.type_kwargs[dtype_kwargs][k]
+                for data_type in scoring_config.type_kwargs:
+                    for k in scoring_config.type_kwargs[data_type]:
+                        self.type_kwargs[data_type][k] = scoring_config.type_kwargs[data_type][k]
 
         self.extended_df: pd.DataFrame = self._score_all(candidates_df)
 

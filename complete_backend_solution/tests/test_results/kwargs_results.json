@@ -1,6 +1,6 @@
 {
-    "session_id": "f2566e36-53c7-40e3-9993-77c626a73732",
-    "results": [
+    "session_id": "ab167d4a-a808-4c28-876d-d8c54a942505",
+    "values": [
         {
             "Organization": "Xplore",
             "Headquarters": "USA",
@@ -646,5 +646,20 @@
             "Organization_score": 0.0,
             "overall_score": 0.25
         }
+    ],
+    "order": [
+        "Organization",
+        "Headquarters",
+        "Max Volume (m3)",
+        "Max Mass (kg)",
+        "Peak Power (W)",
+        "3-\u03c3 Pointing Control (deg)",
+        "3-\u03c3 Pointing Knowledge (deg)",
+        "Intended Destination",
+        "US Office",
+        "Headquarters_score",
+        "Intended Destination_score",
+        "Organization_score",
+        "overall_score"
     ]
 }

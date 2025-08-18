@@ -1,6 +1,6 @@
 {
-    "session_id": "b557a545-59de-4096-80a1-4dc086c56cb1",
-    "results": [
+    "session_id": "d76452ba-3e6e-46e6-8787-ee30a39cad22",
+    "values": [
         {
             "Company": "DHV Technologies",
             "Product": "Solar Panels for CubeSats Set",
@@ -547,5 +547,18 @@
             "Specific Power (W/kg)_score": 0.0,
             "overall_score": 0.0
         }
+    ],
+    "order": [
+        "Company",
+        "Product",
+        "Panel Mount",
+        "Panel Material",
+        "Panel Deployment",
+        "Panel Deployability",
+        "Specific Power (W/kg)",
+        "Peak BOL Solar Array Power (W)",
+        "Company_score",
+        "Specific Power (W/kg)_score",
+        "overall_score"
     ]
 }

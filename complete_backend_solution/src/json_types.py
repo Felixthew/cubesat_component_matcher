@@ -29,7 +29,7 @@ class ColumnSpec(BaseModel):
     name: str
     value: str | int | float
     weight: float = Field(..., gt=0)
-    configs: dict[str, str | int | float | bool]
+    configs: dict[str, str | int | float | bool] | None = None
 
 class Filter(BaseModel):
     name: str

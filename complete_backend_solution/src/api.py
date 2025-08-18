@@ -71,7 +71,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     storage.save_request(sid, query.model_dump())
 
     results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)
-    storage.save_results_bm(results.model_dump())
+    storage.save_results_bm(results)
     # storage.save_results_bm(results)
     return results
 
