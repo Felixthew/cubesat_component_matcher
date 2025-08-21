@@ -112,7 +112,8 @@ def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
 
     # package and return
     result = df_inter.to_dict(orient="records")
-    return jt.SearchResponse(session_id=sid, values=result)
+    # i don't like order being forced pase to the user, i'd rather make it optional field just for behind the scenes
+    return jt.SearchResponse(session_id=sid, values=result, order=raw_results["order"])
 
 
 def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
