@@ -10,8 +10,8 @@ from sqlalchemy import create_engine, text, inspect, Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 # The database public url for the railway server
-# connection_string = "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway"
-connection_string = "postgresql://felixwatt@localhost:5432/testdb"
+connection_string = "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway"
+# connection_string = "postgresql://felixwatt@localhost:5432/testdb"
 
 
 def upload_excel(file_path, schema="public", verbose=False):

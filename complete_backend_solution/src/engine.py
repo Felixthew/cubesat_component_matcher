@@ -8,6 +8,7 @@ class ScoringEngine:
                  candidates_df: pd.DataFrame,
                  dtypes: dict[str, str],
                  scoring_config: SearchKwargs | None):
+
         self.specs = request
         self.dtypes = dtypes
         self.global_maxes = {

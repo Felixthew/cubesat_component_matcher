@@ -276,16 +276,16 @@ SCORING_KWARGS = {
         "max_val": "Default auto calculated. Global max value used in use global max config",
         "min_val": "Default auto calculated. Global min value used in use global max config"},
     "string": {
-        "threshold": "Default 80. minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]",
-        "exact_match": "Default false. toggle for only succeeding the string match if they are identical. Equivalent to threshold=100",
-        "contains_any": "Default false. Returns full match if the request contains the candidate in its list. Request must be comma seperated list. Must be exact match"},
+        "threshold": "Default 80. Minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]",
+        "exact_match": "Default false. Toggle for only succeeding the string match if they are identical. Equivalent to threshold=100",
+        "contains_any": "Default false. Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match"},
     "tuple": {
         "product_scoring": "Default false. Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume",
         "normalize_to_max": "Default true. Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode"},
     "list": {
-        "match_mode": "Default 'overlap'. 'jaccard' more heavily penalizes differences between sets,while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences"},
+        "match_mode": "Default 'overlap'. 'jaccard' more heavily penalizes differences between sets, while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences"},
     "boolean": {
     },
     "range": {
-        "decay_factor": "Default 1.0. values between 0 and 1 make the decay more rapid, values over 1 slow it down"}
+        "decay_factor": "Default 1.0. values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)"}
 }

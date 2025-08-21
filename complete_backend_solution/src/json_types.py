@@ -1,5 +1,4 @@
 from typing import Any
-
 from pydantic import BaseModel, Field
 
 # Utility module to keep track of json-relevant objects used in the API
@@ -29,7 +28,8 @@ class ColumnSpec(BaseModel):
     name: str
     value: str | int | float
     weight: float = Field(..., gt=0)
-    configs: dict[str, str | int | float | bool] | None = None
+    # don't need with your version?
+    # configs: dict[str, str | int | float | bool] | None = None
 
 class Filter(BaseModel):
     name: str

@@ -40,7 +40,6 @@
             </node>
             <node kind="database" qname="railway">
               <node kind="schema">
-                <name qname="avionics" />
                 <name qname="gnc" />
                 <name qname="metadata" />
                 <name qname="platforms" />
