@@ -337,8 +337,20 @@
             cursor: pointer;
         }
 
-        .filter-controls-row button:hover {
-            background: #dc2626;
+        .kwargs-item {
+            display: grid;
+            grid-template-columns: 2fr 2fr 1fr auto;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: end;
+        }
+
+        .kwargs-container {
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 1rem;
+            background: white;
+            margin-bottom: 1rem;
         }
 
         @media (max-width: 768px) {
@@ -398,6 +410,27 @@
                     <button type="button" class="add-btn" id="addSpecBtn">Add Specification</button>
                 </div>
                 <button type="button" id="searchBtn" style="margin-top: 1rem;">Search Components</button>
+            </div>
+
+            <!-- Step 4: Configure Scoring Parameters (Optional) -->
+            <div class="section hidden" id="kwargsSection">
+                <h2>4. Configure Scoring Parameters (Optional)</h2>
+                <div class="grid" style="margin-bottom: 1rem;">
+                    <div>
+                        <h3>Global Type Parameters</h3>
+                        <div id="typeKwargsContainer">
+                            <!-- Type-wide kwargs will be added here -->
+                        </div>
+                        <button type="button" class="add-btn" id="addTypeKwargBtn">Add Type Parameter</button>
+                    </div>
+                    <div>
+                        <h3>Column-Specific Parameters</h3>
+                        <div id="colKwargsContainer">
+                            <!-- Column-specific kwargs will be added here -->
+                        </div>
+                        <button type="button" class="add-btn" id="addColKwargBtn">Add Column Parameter</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Results Section -->
@@ -469,6 +502,7 @@
         let availableColumns = [];
         let currentSessionId = '';
         let allResultColumns = [];
+        let availableDataTypes = new Set();
 
         // Initialize the application
         async function init() {
@@ -534,9 +568,11 @@
         function resetSystemAndBelow() {
             document.getElementById('systemSelect').innerHTML = '<option value="">Select a system...</option>';
             document.getElementById('specsSection').classList.add('hidden');
+            document.getElementById('kwargsSection').classList.add('hidden');
             resetResultsAndBelow();
             currentSystem = '';
             availableColumns = [];
+            availableDataTypes.clear();
         }
 
         // Load parameters for selected system
@@ -553,7 +589,15 @@
                 const data = await response.json();
 
                 availableColumns = data.columns;
+
+                // Collect unique data types
+                availableDataTypes.clear();
+                data.columns.forEach(col => {
+                    availableDataTypes.add(col.dtype);
+                });
+
                 setupSpecsSection();
+                setupKwargsSection();
 
                 // Hide loading indicator
                 document.getElementById('specsLoadingIndicator').classList.remove('show');
@@ -580,6 +624,17 @@
             const container = document.getElementById('specsContainer');
             container.innerHTML = '';
             addSpecificationRow();
+        }
+
+        // Setup kwargs section
+        function setupKwargsSection() {
+            document.getElementById('kwargsSection').classList.remove('hidden');
+
+            const typeContainer = document.getElementById('typeKwargsContainer');
+            const colContainer = document.getElementById('colKwargsContainer');
+
+            typeContainer.innerHTML = '';
+            colContainer.innerHTML = '';
         }
 
         // Add a specification row
@@ -869,6 +924,166 @@
             });
         }
 
+        // Add a type-wide kwargs row
+        function addTypeKwargRow() {
+            const container = document.getElementById('typeKwargsContainer');
+            const kwargsItem = document.createElement('div');
+            kwargsItem.className = 'kwargs-item';
+
+            // Data type select
+            const typeSelect = document.createElement('select');
+            typeSelect.innerHTML = '<option value="">Select data type...</option>';
+            Array.from(availableDataTypes).sort().forEach(dtype => {
+                const option = document.createElement('option');
+                option.value = dtype;
+                option.textContent = dtype;
+                typeSelect.appendChild(option);
+            });
+
+            // Parameter name input
+            const paramInput = document.createElement('input');
+            paramInput.type = 'text';
+            paramInput.placeholder = 'Parameter name';
+
+            // Parameter value input
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.placeholder = 'Parameter value';
+
+            // Remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'remove-btn';
+            removeBtn.onclick = () => kwargsItem.remove();
+
+            kwargsItem.appendChild(typeSelect);
+            kwargsItem.appendChild(paramInput);
+            kwargsItem.appendChild(valueInput);
+            kwargsItem.appendChild(removeBtn);
+
+            container.appendChild(kwargsItem);
+        }
+
+        // Add a column-specific kwargs row
+        function addColKwargRow() {
+            const container = document.getElementById('colKwargsContainer');
+            const kwargsItem = document.createElement('div');
+            kwargsItem.className = 'kwargs-item';
+
+            // Column select
+            const colSelect = document.createElement('select');
+            colSelect.innerHTML = '<option value="">Select column...</option>';
+            availableColumns.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col.name;
+                option.textContent = `${col.name} (${col.dtype})`;
+                colSelect.appendChild(option);
+            });
+
+            // Parameter name input with dropdown if kwargs available
+            const paramContainer = document.createElement('div');
+            paramContainer.style.position = 'relative';
+
+            const paramInput = document.createElement('input');
+            paramInput.type = 'text';
+            paramInput.placeholder = 'Parameter name';
+
+            const paramDropdown = document.createElement('div');
+            paramDropdown.className = 'spec-multi-select';
+            paramDropdown.style.display = 'none';
+
+            paramContainer.appendChild(paramInput);
+            paramContainer.appendChild(paramDropdown);
+
+            // Update parameter suggestions when column changes
+            colSelect.addEventListener('change', function() {
+                const selectedCol = availableColumns.find(col => col.name === this.value);
+                if (selectedCol && selectedCol.kwargs) {
+                    // Show available kwargs for this column
+                    updateParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);
+                } else {
+                    paramDropdown.style.display = 'none';
+                }
+            });
+
+            // Show suggestions when clicking on parameter input
+            paramInput.addEventListener('click', function() {
+                const selectedCol = availableColumns.find(col => col.name === colSelect.value);
+                if (selectedCol && selectedCol.kwargs) {
+                    showParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);
+                }
+            });
+
+            // Parameter value input
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.placeholder = 'Parameter value';
+
+            // Remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '×';
+            removeBtn.className = 'remove-btn';
+            removeBtn.onclick = () => kwargsItem.remove();
+
+            kwargsItem.appendChild(colSelect);
+            kwargsItem.appendChild(paramContainer);
+            kwargsItem.appendChild(valueInput);
+            kwargsItem.appendChild(removeBtn);
+
+            container.appendChild(kwargsItem);
+        }
+
+        // Update parameter suggestions for column kwargs
+        function updateParamSuggestions(paramInput, paramDropdown, kwargs) {
+            if (!kwargs || Object.keys(kwargs).length === 0) {
+                paramDropdown.style.display = 'none';
+                return;
+            }
+
+            paramDropdown.innerHTML = '';
+
+            Object.keys(kwargs).forEach(paramName => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'spec-multi-option';
+                optionDiv.style.justifyContent = 'flex-start';
+
+                const label = document.createElement('span');
+                label.textContent = `${paramName}: ${kwargs[paramName]}`;
+                label.style.cursor = 'pointer';
+
+                optionDiv.appendChild(label);
+
+                optionDiv.addEventListener('click', function() {
+                    paramInput.value = paramName;
+                    paramDropdown.style.display = 'none';
+                });
+
+                paramDropdown.appendChild(optionDiv);
+            });
+        }
+
+        // Show parameter suggestions
+        function showParamSuggestions(paramInput, paramDropdown, kwargs) {
+            if (!kwargs || Object.keys(kwargs).length === 0) {
+                return;
+            }
+
+            updateParamSuggestions(paramInput, paramDropdown, kwargs);
+            paramDropdown.style.display = 'block';
+
+            // Hide dropdown when clicking outside
+            const hideDropdown = (e) => {
+                if (!paramInput.parentElement.contains(e.target)) {
+                    paramDropdown.style.display = 'none';
+                    document.removeEventListener('click', hideDropdown);
+                }
+            };
+
+            setTimeout(() => {
+                document.addEventListener('click', hideDropdown);
+            }, 0);
+        }
+
         // Perform search
         async function performSearch() {
             const specs = [];
@@ -876,7 +1091,7 @@
 
             for (let item of specItems) {
                 const param = item.children[0].value;
-                const value = item.children[1].querySelector('input').value; // Updated to get input from container
+                const value = item.children[1].querySelector('input').value;
                 const weight = parseFloat(item.children[2].value);
 
                 if (param && value && weight) {
@@ -899,12 +1114,75 @@
                 return;
             }
 
+            // Collect kwargs
+            const kwargs = {
+                col_kwargs: {},
+                type_kwargs: {}
+            };
+
+            // Collect type-wide kwargs
+            const typeKwargItems = document.querySelectorAll('#typeKwargsContainer .kwargs-item');
+            typeKwargItems.forEach(item => {
+                const dataType = item.children[0].value;
+                const paramName = item.children[1].value;
+                const paramValue = item.children[2].value;
+
+                if (dataType && paramName && paramValue) {
+                    if (!kwargs.type_kwargs[dataType]) {
+                        kwargs.type_kwargs[dataType] = {};
+                    }
+
+                    // Try to parse value as number if possible
+                    let parsedValue = paramValue;
+                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {
+                        parsedValue = parseFloat(paramValue);
+                    } else if (paramValue.toLowerCase() === 'true') {
+                        parsedValue = true;
+                    } else if (paramValue.toLowerCase() === 'false') {
+                        parsedValue = false;
+                    }
+
+                    kwargs.type_kwargs[dataType][paramName] = parsedValue;
+                }
+            });
+
+            // Collect column-specific kwargs
+            const colKwargItems = document.querySelectorAll('#colKwargsContainer .kwargs-item');
+            colKwargItems.forEach(item => {
+                const colName = item.children[0].value;
+                const paramName = item.children[1].querySelector('input').value;
+                const paramValue = item.children[2].value;
+
+                if (colName && paramName && paramValue) {
+                    if (!kwargs.col_kwargs[colName]) {
+                        kwargs.col_kwargs[colName] = {};
+                    }
+
+                    // Try to parse value as number if possible
+                    let parsedValue = paramValue;
+                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {
+                        parsedValue = parseFloat(paramValue);
+                    } else if (paramValue.toLowerCase() === 'true') {
+                        parsedValue = true;
+                    } else if (paramValue.toLowerCase() === 'false') {
+                        parsedValue = false;
+                    }
+
+                    kwargs.col_kwargs[colName][paramName] = parsedValue;
+                }
+            });
+
+            // Only include kwargs if there are any
+            const hasKwargs = Object.keys(kwargs.col_kwargs).length > 0 || Object.keys(kwargs.type_kwargs).length > 0;
+
             const searchRequest = {
                 location: {
                     schema: currentSolution,
                     table: currentSystem
                 },
-                specs: specs
+                specs: specs,
+                session_id: currentSessionId || null,
+                kwargs: hasKwargs ? kwargs : null
             };
 
             try {
@@ -921,7 +1199,8 @@
 
                 const data = await response.json();
                 currentSessionId = data.session_id;
-                displayResults(data.results);
+                // FIXED: Changed from data.results to data.values
+                displayResults(data.values);
 
             } catch (error) {
                 showError('Search failed: ' + error.message);
@@ -1165,7 +1444,7 @@
             try {
                 document.getElementById('applyFiltersBtn').disabled = true;
                 document.getElementById('applyFiltersBtn').textContent = 'Applying...';
-                
+
                 const response = await fetch(`${API_BASE}/search/${currentSessionId}`, {
                     method: 'POST',
                     headers: {
@@ -1175,8 +1454,9 @@
                 });
 
                 const data = await response.json();
-                displayResults(data.results);
-                
+                // FIXED: Changed from data.results to data.values
+                displayResults(data.values);
+
             } catch (error) {
                 showError('Failed to apply filters: ' + error.message);
             } finally {
@@ -1189,24 +1469,24 @@
         function showError(message) {
             const existing = document.querySelector('.error');
             if (existing) existing.remove();
-            
+
             const error = document.createElement('div');
             error.className = 'error';
             error.textContent = message;
             document.querySelector('.content').prepend(error);
-            
+
             setTimeout(() => error.remove(), 5000);
         }
 
         function showSuccess(message) {
             const existing = document.querySelector('.success');
             if (existing) existing.remove();
-            
+
             const success = document.createElement('div');
             success.className = 'success';
             success.textContent = message;
             document.querySelector('.content').prepend(success);
-            
+
             setTimeout(() => success.remove(), 5000);
         }
 
@@ -1230,6 +1510,8 @@
         });
 
         document.getElementById('addSpecBtn').addEventListener('click', addSpecificationRow);
+        document.getElementById('addTypeKwargBtn').addEventListener('click', addTypeKwargRow);
+        document.getElementById('addColKwargBtn').addEventListener('click', addColKwargRow);
         document.getElementById('searchBtn').addEventListener('click', performSearch);
         document.getElementById('addFilterBtn').addEventListener('click', addFilterRow);
         document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
