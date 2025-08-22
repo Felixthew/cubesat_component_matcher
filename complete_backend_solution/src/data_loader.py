@@ -53,7 +53,7 @@ def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str, str | int | flo
     :return: {name: {"value": value, "weight": weight}, ...} formatted dict that contains all request info about a table
     """
     return {
-        col.name: {"value": col.value, "weight": col.weight, "configs": col.configs}
+        col.name: {"value": col.value, "weight": col.weight}
         for col in specs
     }
 

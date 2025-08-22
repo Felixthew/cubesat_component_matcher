@@ -1,8 +1,8 @@
 import os
 from sqlalchemy import create_engine, text, Engine, Row, Sequence
 
-DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
-# DB_URL = os.getenv("DB_URL", "postgresql://felixwatt@localhost:5432/testdb")
+# DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
+DB_URL = os.getenv("DB_URL", "postgresql://felixwatt@localhost:5432/testdb")
 db_engine = create_engine(DB_URL)
 
 class Database:
