@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+from complete_backend_solution.src.json_types import KwargProfile
 from complete_backend_solution.src.scorer import SCORING_KWARGS
 import pandas as pd
 import complete_backend_solution.src.json_types as jt
@@ -50,6 +52,10 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
     ]
     return jt.ColumnList(location=location, columns=param_list)
 
+@app.get("/kwargs", response_model=dict[str,list[jt.KwargProfile]],
+         summary="Lists all scoring kwargs by type")
+def get_params() -> dict[str, list[KwargProfile]]:
+    return SCORING_KWARGS
 
 @app.post("/search", response_model=jt.SearchResponse, summary="Retrieve scored results given new spec requests")
 def search(query: jt.SearchRequest) -> jt.SearchResponse:

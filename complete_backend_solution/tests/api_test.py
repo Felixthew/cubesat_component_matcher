@@ -34,6 +34,12 @@ class TestUserAPI:
 
         assert response.status_code == 200
 
+    def test_get_kwargs(self, client):
+        response = client.get("/kwargs")
+        print(response.json())
+
+        assert response.status_code == 200
+
     def test_get_scores(self, client):
         # Load the JSON data from a file
         with open('component_data_TEST/test_requests/test_request.json', 'r') as f:

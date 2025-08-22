@@ -4,6 +4,13 @@ from pydantic import BaseModel, Field
 
 # Utility module to keep track of json-relevant objects used in the API
 
+class KwargProfile(BaseModel):
+    name: str
+    dtype: str
+    default: Any
+    description: str
+    options: list[str] | None = None
+
 class Location(BaseModel):
     schema: str
     table: str
@@ -19,7 +26,7 @@ class ColumnProfile(BaseModel):
     name: str
     dtype: str
     options: list[str] | None = None
-    kwargs: dict[str, str] | None = None
+    kwargs: list[KwargProfile] | None = None
 
 class ColumnList(BaseModel):
     location: Location

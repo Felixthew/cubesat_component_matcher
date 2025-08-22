@@ -339,18 +339,68 @@
 
         .kwargs-item {
             display: grid;
-            grid-template-columns: 2fr 2fr 1fr auto;
+            grid-template-columns: 1.5fr 2fr 2fr 1.5fr auto;
             gap: 0.5rem;
             margin-bottom: 0.5rem;
             align-items: end;
         }
 
-        .kwargs-container {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 1rem;
-            background: white;
-            margin-bottom: 1rem;
+        .info-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: #6b7280;
+            border-radius: 50%;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            line-height: 16px;
+            cursor: help;
+            margin-left: 4px;
+            position: relative;
+        }
+
+        .info-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            margin-bottom: 5px;
+            background: #1f2937;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: normal;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .info-tooltip::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: #1f2937;
+        }
+
+        .param-option-with-info {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .param-option-with-info:hover .info-tooltip {
+            opacity: 1;
         }
 
         @media (max-width: 768px) {
@@ -365,6 +415,31 @@
             .content {
                 padding: 1rem;
             }
+        }
+
+        // Helper function to get value from value container (handles different input types)
+        function getValueFromContainer(container) {
+            // Check for additional select elements (boolean dropdown or options dropdown)
+            // Look for selects that are not the first 3 main selects in the kwargs item
+            const parentItem = container.closest('.kwargs-item');
+            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
+
+            if (extraSelects.length > 0 && extraSelects[0].style.display !== 'none') {
+                const value = extraSelects[0].value;
+                if (value === 'true') return true;
+                if (value === 'false') return false;
+                return value || null;
+            }
+
+            // Check for regular input (if it's the valueInput itself)
+            if (container.tagName === 'INPUT' && container.style.display !== 'none') {
+                if (container.type === 'number') {
+                    return container.value ? parseFloat(container.value) : null;
+                }
+                return container.value || null;
+            }
+
+            return null;
         }
     </style>
 </head>
@@ -415,21 +490,11 @@
             <!-- Step 4: Configure Scoring Parameters (Optional) -->
             <div class="section hidden" id="kwargsSection">
                 <h2>4. Configure Scoring Parameters (Optional)</h2>
-                <div class="grid" style="margin-bottom: 1rem;">
-                    <div>
-                        <h3>Global Type Parameters</h3>
-                        <div id="typeKwargsContainer">
-                            <!-- Type-wide kwargs will be added here -->
-                        </div>
-                        <button type="button" class="add-btn" id="addTypeKwargBtn">Add Type Parameter</button>
+                <div class="kwargs-container">
+                    <div id="kwargsContainer">
+                        <!-- Kwargs will be added here -->
                     </div>
-                    <div>
-                        <h3>Column-Specific Parameters</h3>
-                        <div id="colKwargsContainer">
-                            <!-- Column-specific kwargs will be added here -->
-                        </div>
-                        <button type="button" class="add-btn" id="addColKwargBtn">Add Column Parameter</button>
-                    </div>
+                    <button type="button" class="add-btn" id="addKwargBtn">Add Scoring Parameter</button>
                 </div>
             </div>
 
@@ -503,10 +568,13 @@
         let currentSessionId = '';
         let allResultColumns = [];
         let availableDataTypes = new Set();
+        let globalKwargProfiles = {}; // kwargs organized by data type
+        let selectedSpecs = new Set(); // track which columns are being scored
 
         // Initialize the application
         async function init() {
             await loadSolutions();
+            await loadGlobalKwargProfiles();
         }
 
         // Load available solutions
@@ -529,6 +597,18 @@
                 });
             } catch (error) {
                 showError('Failed to load solutions: ' + error.message);
+            }
+        }
+
+        // Load global kwargs profiles
+        async function loadGlobalKwargProfiles() {
+            try {
+                const response = await fetch(`${API_BASE}/kwargs`);
+                const data = await response.json();
+                globalKwargProfiles = data;
+            } catch (error) {
+                console.warn('Failed to load global kwargs profiles:', error.message);
+                globalKwargProfiles = {};
             }
         }
 
@@ -630,11 +710,8 @@
         function setupKwargsSection() {
             document.getElementById('kwargsSection').classList.remove('hidden');
 
-            const typeContainer = document.getElementById('typeKwargsContainer');
-            const colContainer = document.getElementById('colKwargsContainer');
-
-            typeContainer.innerHTML = '';
-            colContainer.innerHTML = '';
+            const container = document.getElementById('kwargsContainer');
+            container.innerHTML = '';
         }
 
         // Add a specification row
@@ -718,6 +795,7 @@
 
                 // Update other dropdowns to remove this selection
                 updateParameterDropdowns();
+                updateKwargsAvailability();
             });
 
             // Show multi-select when clicking on input (for multi-select mode)
@@ -734,14 +812,28 @@
                 }
             });
 
-            // Allow typing for single-value inputs
+            // Handle comma-separated input for contains_any functionality
             valueInput.addEventListener('input', function() {
                 if (!isMultiSelect && currentOptions.length > 0) {
-                    showSingleSelect(this.value);
+                    // Get the current input value
+                    const fullValue = this.value;
+
+                    // Check if this might be a comma-separated list (for contains_any)
+                    const lastCommaIndex = fullValue.lastIndexOf(',');
+                    let searchTerm = fullValue;
+                    let prefix = '';
+
+                    if (lastCommaIndex !== -1) {
+                        // Split at last comma
+                        prefix = fullValue.substring(0, lastCommaIndex + 1).trim() + ' ';
+                        searchTerm = fullValue.substring(lastCommaIndex + 1).trim();
+                    }
+
+                    showSingleSelect(searchTerm, prefix);
                 }
             });
 
-            function showSingleSelect(query = '') {
+            function showSingleSelect(query = '', prefix = '') {
                 multiSelectDiv.innerHTML = '';
 
                 if (currentOptions.length === 0) {
@@ -777,7 +869,13 @@
                     optionDiv.appendChild(label);
 
                     optionDiv.addEventListener('click', function() {
-                        valueInput.value = option;
+                        if (prefix) {
+                            // For comma-separated lists, append to existing content
+                            valueInput.value = prefix + option;
+                        } else {
+                            // Normal single selection
+                            valueInput.value = option;
+                        }
                         multiSelectDiv.style.display = 'none';
                     });
 
@@ -891,7 +989,10 @@
             const removeBtn = document.createElement('button');
             removeBtn.textContent = '×';
             removeBtn.className = 'remove-btn';
-            removeBtn.onclick = () => specItem.remove();
+            removeBtn.onclick = () => {
+                specItem.remove();
+                updateKwargsAvailability();
+            };
 
             specItem.appendChild(paramSelect);
             specItem.appendChild(valueContainer);
@@ -924,109 +1025,313 @@
             });
         }
 
-        // Add a type-wide kwargs row
-        function addTypeKwargRow() {
-            const container = document.getElementById('typeKwargsContainer');
-            const kwargsItem = document.createElement('div');
-            kwargsItem.className = 'kwargs-item';
+        // Update kwargs availability based on selected specs - now refreshes existing dropdowns
+        function updateKwargsAvailability() {
+            // Refresh all existing type and column selection dropdowns in kwargs
+            const kwargItems = document.querySelectorAll('#kwargsContainer .kwargs-item');
 
-            // Data type select
-            const typeSelect = document.createElement('select');
-            typeSelect.innerHTML = '<option value="">Select data type...</option>';
-            Array.from(availableDataTypes).sort().forEach(dtype => {
-                const option = document.createElement('option');
-                option.value = dtype;
-                option.textContent = dtype;
-                typeSelect.appendChild(option);
+            kwargItems.forEach(item => {
+                const typeSelect = item.children[0];  // kwarg type select
+                const selectionSelect = item.children[1];  // selection dropdown
+
+                const currentKwargType = typeSelect.value;
+                const currentSelection = selectionSelect.value;
+
+                // Only update if a kwarg type is selected
+                if (currentKwargType === 'type') {
+                    // Refresh with available data types
+                    populateSelectionWithTypes(selectionSelect);
+                    // Restore selection if it still exists
+                    if (currentSelection) {
+                        const optionExists = Array.from(selectionSelect.options).some(opt => opt.value === currentSelection);
+                        if (optionExists) {
+                            selectionSelect.value = currentSelection;
+                        }
+                    }
+                } else if (currentKwargType === 'column') {
+                    // Refresh with available columns
+                    populateSelectionWithColumns(selectionSelect);
+                    // Restore selection if it still exists
+                    if (currentSelection) {
+                        const optionExists = Array.from(selectionSelect.options).some(opt => opt.value === currentSelection);
+                        if (optionExists) {
+                            selectionSelect.value = currentSelection;
+                        }
+                    }
+                }
             });
 
-            // Parameter name input
-            const paramInput = document.createElement('input');
-            paramInput.type = 'text';
-            paramInput.placeholder = 'Parameter name';
-
-            // Parameter value input
-            const valueInput = document.createElement('input');
-            valueInput.type = 'text';
-            valueInput.placeholder = 'Parameter value';
-
-            // Remove button
-            const removeBtn = document.createElement('button');
-            removeBtn.textContent = '×';
-            removeBtn.className = 'remove-btn';
-            removeBtn.onclick = () => kwargsItem.remove();
-
-            kwargsItem.appendChild(typeSelect);
-            kwargsItem.appendChild(paramInput);
-            kwargsItem.appendChild(valueInput);
-            kwargsItem.appendChild(removeBtn);
-
-            container.appendChild(kwargsItem);
+            console.log('Kwargs dropdowns refreshed with current specifications');
         }
 
-        // Add a column-specific kwargs row
-        function addColKwargRow() {
-            const container = document.getElementById('colKwargsContainer');
+        // Helper function to get value from value container (handles different input types)
+        function getValueFromContainer(container) {
+            // Check for additional select elements (boolean dropdown or options dropdown)
+            // Look for selects that are not the first 3 main selects in the kwargs item
+            const parentItem = container.closest('.kwargs-item');
+            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
+
+            if (extraSelects.length > 0 && extraSelects[0].style.display !== 'none') {
+                const value = extraSelects[0].value;
+                if (value === 'true') return true;
+                if (value === 'false') return false;
+                return value || null;
+            }
+
+            // Check for regular input (if it's the valueInput itself)
+            if (container.tagName === 'INPUT' && container.style.display !== 'none') {
+                if (container.type === 'number') {
+                    return container.value ? parseFloat(container.value) : null;
+                }
+                return container.value || null;
+            }
+
+            return null;
+        }
+
+        // Helper function to populate selection with data types
+        function populateSelectionWithTypes(selectionSelect) {
+            const currentSpecs = getCurrentSelectedSpecs();
+            const usedDtypes = new Set();
+
+            currentSpecs.forEach(colName => {
+                const col = availableColumns.find(c => c.name === colName);
+                if (col) {
+                    usedDtypes.add(col.dtype);
+                }
+            });
+
+            selectionSelect.innerHTML = '<option value="">Select data type...</option>';
+            if (usedDtypes.size === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No specifications selected';
+                option.disabled = true;
+                selectionSelect.appendChild(option);
+            } else {
+                Array.from(usedDtypes).sort().forEach(dtype => {
+                    const option = document.createElement('option');
+                    option.value = dtype;
+                    option.textContent = dtype;
+                    selectionSelect.appendChild(option);
+                });
+            }
+        }
+
+        // Helper function to populate selection with columns
+        function populateSelectionWithColumns(selectionSelect) {
+            const currentSpecs = getCurrentSelectedSpecs();
+
+            selectionSelect.innerHTML = '<option value="">Select column...</option>';
+            if (currentSpecs.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No specifications selected';
+                option.disabled = true;
+                selectionSelect.appendChild(option);
+            } else {
+                currentSpecs.forEach(colName => {
+                    const col = availableColumns.find(c => c.name === colName);
+                    if (col) {
+                        const option = document.createElement('option');
+                        option.value = col.name;
+                        option.textContent = `${col.name} (${col.dtype})`;
+                        option.dataset.columnData = JSON.stringify(col);
+                        selectionSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        // Helper function to populate parameters based on type and selection
+        function populateParameters(paramSelect, kwargType, selectedItem, selectionElement) {
+            paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+
+            if (kwargType === 'type') {
+                // Type-wide: selectedItem is a dtype, show type-wide parameters
+                if (globalKwargProfiles[selectedItem]) {
+                    globalKwargProfiles[selectedItem].forEach(kwargProfile => {
+                        const option = document.createElement('option');
+                        option.value = kwargProfile.name;
+                        option.textContent = kwargProfile.name;
+                        option.dataset.kwargProfile = JSON.stringify(kwargProfile);
+                        paramSelect.appendChild(option);
+                    });
+                }
+            } else if (kwargType === 'column') {
+                // Column-specific: selectedItem is a column name
+                const selectedColData = JSON.parse(selectionElement.selectedOptions[0]?.dataset.columnData || '{}');
+
+                // Use a Set to track parameter names and avoid duplicates
+                const addedParams = new Set();
+
+                // First priority: column-specific kwargs if available
+                if (selectedColData.kwargs && selectedColData.kwargs.length > 0) {
+                    selectedColData.kwargs.forEach(kwargProfile => {
+                        if (!addedParams.has(kwargProfile.name)) {
+                            const option = document.createElement('option');
+                            option.value = kwargProfile.name;
+                            option.textContent = kwargProfile.name;
+                            option.dataset.kwargProfile = JSON.stringify(kwargProfile);
+                            paramSelect.appendChild(option);
+                            addedParams.add(kwargProfile.name);
+                        }
+                    });
+                }
+
+                // Second priority: type-wide kwargs for this column's data type (only if not already added)
+                if (selectedColData.dtype && globalKwargProfiles[selectedColData.dtype]) {
+                    globalKwargProfiles[selectedColData.dtype].forEach(kwargProfile => {
+                        if (!addedParams.has(kwargProfile.name)) {
+                            const option = document.createElement('option');
+                            option.value = kwargProfile.name;
+                            option.textContent = kwargProfile.name;
+                            option.dataset.kwargProfile = JSON.stringify(kwargProfile);
+                            paramSelect.appendChild(option);
+                            addedParams.add(kwargProfile.name);
+                        }
+                    });
+                }
+            }
+        }
+
+        // Helper function to get currently selected specs from the page
+        function getCurrentSelectedSpecs() {
+            const specs = [];
+            const specItems = document.querySelectorAll('.spec-item');
+            specItems.forEach(item => {
+                const param = item.children[0].value;
+                if (param) {
+                    specs.push(param);
+                }
+            });
+            return specs;
+        }
+
+        // Add a unified kwargs row
+        function addKwargRow() {
+            const container = document.getElementById('kwargsContainer');
             const kwargsItem = document.createElement('div');
             kwargsItem.className = 'kwargs-item';
 
-            // Column select
-            const colSelect = document.createElement('select');
-            colSelect.innerHTML = '<option value="">Select column...</option>';
-            availableColumns.forEach(col => {
-                const option = document.createElement('option');
-                option.value = col.name;
-                option.textContent = `${col.name} (${col.dtype})`;
-                colSelect.appendChild(option);
-            });
+            // 1. Kwarg Type select (Type-wide vs Column-specific)
+            const typeSelect = document.createElement('select');
+            typeSelect.innerHTML = `
+                <option value="">Select type...</option>
+                <option value="type">Type-wide</option>
+                <option value="column">Column-specific</option>
+            `;
 
-            // Parameter name input with dropdown if kwargs available
+            // 2. Selection dropdown (dtype or column based on type selection)
+            const selectionSelect = document.createElement('select');
+            selectionSelect.innerHTML = '<option value="">Select...</option>';
+            selectionSelect.disabled = true;
+
+            // 3. Parameter select
             const paramContainer = document.createElement('div');
             paramContainer.style.position = 'relative';
 
-            const paramInput = document.createElement('input');
-            paramInput.type = 'text';
-            paramInput.placeholder = 'Parameter name';
+            const paramSelect = document.createElement('select');
+            paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+            paramSelect.disabled = true;
 
-            const paramDropdown = document.createElement('div');
-            paramDropdown.className = 'spec-multi-select';
-            paramDropdown.style.display = 'none';
+            // Add tooltip div that will show on hover
+            const paramTooltip = document.createElement('div');
+            paramTooltip.className = 'info-tooltip';
+            paramTooltip.style.display = 'none';
+            paramContainer.appendChild(paramSelect);
+            paramContainer.appendChild(paramTooltip);
 
-            paramContainer.appendChild(paramInput);
-            paramContainer.appendChild(paramDropdown);
-
-            // Update parameter suggestions when column changes
-            colSelect.addEventListener('change', function() {
-                const selectedCol = availableColumns.find(col => col.name === this.value);
-                if (selectedCol && selectedCol.kwargs) {
-                    // Show available kwargs for this column
-                    updateParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);
-                } else {
-                    paramDropdown.style.display = 'none';
-                }
-            });
-
-            // Show suggestions when clicking on parameter input
-            paramInput.addEventListener('click', function() {
-                const selectedCol = availableColumns.find(col => col.name === colSelect.value);
-                if (selectedCol && selectedCol.kwargs) {
-                    showParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);
-                }
-            });
-
-            // Parameter value input
+            // 4. Value input
             const valueInput = document.createElement('input');
             valueInput.type = 'text';
             valueInput.placeholder = 'Parameter value';
+            valueInput.disabled = true;
 
-            // Remove button
+            // 5. Remove button
             const removeBtn = document.createElement('button');
             removeBtn.textContent = '×';
             removeBtn.className = 'remove-btn';
             removeBtn.onclick = () => kwargsItem.remove();
 
-            kwargsItem.appendChild(colSelect);
-            kwargsItem.appendChild(paramContainer);
+            // Event listeners for cascading dropdowns
+            typeSelect.addEventListener('change', function() {
+                const selectedType = this.value;
+
+                // Reset dependent dropdowns
+                selectionSelect.innerHTML = '<option value="">Select...</option>';
+                paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+                valueInput.value = '';
+
+                if (selectedType === 'type') {
+                    // Populate with dtypes
+                    selectionSelect.disabled = false;
+                    populateSelectionWithTypes(selectionSelect);
+                } else if (selectedType === 'column') {
+                    // Populate with columns
+                    selectionSelect.disabled = false;
+                    populateSelectionWithColumns(selectionSelect);
+                } else {
+                    selectionSelect.disabled = true;
+                    paramSelect.disabled = true;
+                    valueInput.disabled = true;
+                }
+            });
+
+            selectionSelect.addEventListener('change', function() {
+                const kwargType = typeSelect.value;
+                const selectedItem = this.value;
+
+                // Reset dependent dropdowns
+                paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+                valueInput.value = '';
+
+                if (selectedItem) {
+                    paramSelect.disabled = false;
+                    populateParameters(paramSelect, kwargType, selectedItem, this);
+                } else {
+                    paramSelect.disabled = true;
+                    valueInput.disabled = true;
+                }
+            });
+
+            paramSelect.addEventListener('change', function() {
+                if (this.value) {
+                    valueInput.disabled = false;
+                    updateValueInputForKwarg(this, valueInput);
+
+                    // Update tooltip with parameter description
+                    const selectedOption = this.selectedOptions[0];
+                    if (selectedOption && selectedOption.dataset.kwargProfile) {
+                        const kwargProfile = JSON.parse(selectedOption.dataset.kwargProfile);
+                        paramTooltip.textContent = `Default: ${kwargProfile.default} | ${kwargProfile.description}`;
+                        paramTooltip.style.display = 'block';
+                    }
+                } else {
+                    valueInput.disabled = true;
+                    paramTooltip.style.display = 'none';
+                    // Remove any extra select elements
+                    const existingSelect = valueInput.parentElement.querySelector('select:not([id]):not(.kwargs-item select)');
+                    if (existingSelect) {
+                        existingSelect.remove();
+                    }
+                }
+            });
+
+            // Show/hide tooltip on hover
+            paramContainer.addEventListener('mouseenter', function() {
+                if (paramSelect.value && paramTooltip.textContent) {
+                    paramTooltip.style.opacity = '1';
+                }
+            });
+
+            paramContainer.addEventListener('mouseleave', function() {
+                paramTooltip.style.opacity = '0';
+            });
+
+            kwargsItem.appendChild(typeSelect);
+            kwargsItem.appendChild(selectionSelect);
+            kwargsItem.appendChild(paramContainer);  // Use container instead of paramSelect directly
             kwargsItem.appendChild(valueInput);
             kwargsItem.appendChild(removeBtn);
 
@@ -1084,6 +1389,84 @@
             }, 0);
         }
 
+        // Update value input based on selected kwarg profile
+        function updateValueInputForKwarg(paramSelect, valueInput) {
+            const selectedOption = paramSelect.selectedOptions[0];
+            if (!selectedOption || !selectedOption.dataset.kwargProfile) {
+                valueInput.type = 'text';
+                valueInput.placeholder = 'Parameter value';
+                valueInput.value = '';
+                // Remove any existing additional select elements (but not the main selects)
+                const parentItem = valueInput.closest('.kwargs-item');
+                const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
+                extraSelects.forEach(select => select.remove());
+                valueInput.style.display = 'block';
+                return;
+            }
+
+            const kwargProfile = JSON.parse(selectedOption.dataset.kwargProfile);
+            const dtype = kwargProfile.dtype.toLowerCase();
+
+            // Remove any existing additional select elements (but keep the main 3 selects)
+            const parentItem = valueInput.closest('.kwargs-item');
+            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
+            extraSelects.forEach(select => select.remove());
+
+            // If there are options, create a dropdown
+            if (kwargProfile.options && kwargProfile.options.length > 0) {
+                valueInput.style.display = 'none';
+
+                const optionsSelect = document.createElement('select');
+                optionsSelect.innerHTML = '<option value="">Select option...</option>';
+
+                kwargProfile.options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option;
+                    optionElement.textContent = option;
+                    if (option === kwargProfile.default) {
+                        optionElement.selected = true;
+                    }
+                    optionsSelect.appendChild(optionElement);
+                });
+
+                // Insert after the valueInput (4th position)
+                valueInput.parentNode.insertBefore(optionsSelect, valueInput.nextSibling);
+                return;
+            }
+
+            // Show the input and configure it based on type
+            valueInput.style.display = 'block';
+
+            if (dtype === 'boolean') {
+                // Create true/false dropdown for booleans
+                valueInput.style.display = 'none';
+
+                const boolSelect = document.createElement('select');
+                boolSelect.innerHTML = `
+                    <option value="">Select...</option>
+                    <option value="true" ${kwargProfile.default === true ? 'selected' : ''}>true</option>
+                    <option value="false" ${kwargProfile.default === false ? 'selected' : ''}>false</option>
+                `;
+
+                // Insert after the valueInput (4th position)
+                valueInput.parentNode.insertBefore(boolSelect, valueInput.nextSibling);
+            } else if (dtype === 'int' || dtype === 'integer') {
+                valueInput.type = 'number';
+                valueInput.step = '1';
+                valueInput.value = kwargProfile.default || '';
+                valueInput.placeholder = `Default: ${kwargProfile.default}`;
+            } else if (dtype === 'float' || dtype === 'number') {
+                valueInput.type = 'number';
+                valueInput.step = 'any';
+                valueInput.value = kwargProfile.default || '';
+                valueInput.placeholder = `Default: ${kwargProfile.default}`;
+            } else {
+                valueInput.type = 'text';
+                valueInput.value = kwargProfile.default || '';
+                valueInput.placeholder = `Default: ${kwargProfile.default}`;
+            }
+        }
+
         // Perform search
         async function performSearch() {
             const specs = [];
@@ -1120,57 +1503,48 @@
                 type_kwargs: {}
             };
 
-            // Collect type-wide kwargs
-            const typeKwargItems = document.querySelectorAll('#typeKwargsContainer .kwargs-item');
-            typeKwargItems.forEach(item => {
-                const dataType = item.children[0].value;
-                const paramName = item.children[1].value;
-                const paramValue = item.children[2].value;
+            // Collect kwargs from unified structure
+            const kwargItems = document.querySelectorAll('#kwargsContainer .kwargs-item');
+            console.log('Found kwargs items:', kwargItems.length);
 
-                if (dataType && paramName && paramValue) {
-                    if (!kwargs.type_kwargs[dataType]) {
-                        kwargs.type_kwargs[dataType] = {};
+            kwargItems.forEach((item, index) => {
+                const kwargType = item.children[0].value;      // 'type' or 'column'
+                const selection = item.children[1].value;      // dtype or column name
+                const paramName = item.children[2].querySelector('select').value;  // parameter name (now in container)
+                const valueContainer = item.children[3];       // value input/select
+
+                console.log(`Kwarg ${index}:`, {
+                    kwargType,
+                    selection,
+                    paramName,
+                    valueContainer: valueContainer.tagName
+                });
+
+                if (kwargType && selection && paramName) {
+                    // Get value from appropriate input element
+                    let paramValue = getValueFromContainer(valueContainer);
+                    console.log(`Kwarg ${index} value:`, paramValue);
+
+                    // Only add if we have a value
+                    if (paramValue !== null && paramValue !== '' && paramValue !== undefined) {
+                        if (kwargType === 'type') {
+                            // Type-wide kwargs
+                            if (!kwargs.type_kwargs[selection]) {
+                                kwargs.type_kwargs[selection] = {};
+                            }
+                            kwargs.type_kwargs[selection][paramName] = paramValue;
+                        } else if (kwargType === 'column') {
+                            // Column-specific kwargs
+                            if (!kwargs.col_kwargs[selection]) {
+                                kwargs.col_kwargs[selection] = {};
+                            }
+                            kwargs.col_kwargs[selection][paramName] = paramValue;
+                        }
                     }
-
-                    // Try to parse value as number if possible
-                    let parsedValue = paramValue;
-                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {
-                        parsedValue = parseFloat(paramValue);
-                    } else if (paramValue.toLowerCase() === 'true') {
-                        parsedValue = true;
-                    } else if (paramValue.toLowerCase() === 'false') {
-                        parsedValue = false;
-                    }
-
-                    kwargs.type_kwargs[dataType][paramName] = parsedValue;
                 }
             });
 
-            // Collect column-specific kwargs
-            const colKwargItems = document.querySelectorAll('#colKwargsContainer .kwargs-item');
-            colKwargItems.forEach(item => {
-                const colName = item.children[0].value;
-                const paramName = item.children[1].querySelector('input').value;
-                const paramValue = item.children[2].value;
-
-                if (colName && paramName && paramValue) {
-                    if (!kwargs.col_kwargs[colName]) {
-                        kwargs.col_kwargs[colName] = {};
-                    }
-
-                    // Try to parse value as number if possible
-                    let parsedValue = paramValue;
-                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {
-                        parsedValue = parseFloat(paramValue);
-                    } else if (paramValue.toLowerCase() === 'true') {
-                        parsedValue = true;
-                    } else if (paramValue.toLowerCase() === 'false') {
-                        parsedValue = false;
-                    }
-
-                    kwargs.col_kwargs[colName][paramName] = parsedValue;
-                }
-            });
+            console.log('Final kwargs object:', kwargs);
 
             // Only include kwargs if there are any
             const hasKwargs = Object.keys(kwargs.col_kwargs).length > 0 || Object.keys(kwargs.type_kwargs).length > 0;
@@ -1248,7 +1622,18 @@
 
                 allResultColumns.forEach(key => {
                     const td = document.createElement('td');
-                    const value = result[key];
+                    let value = result[key];
+
+                    // Convert boolean values (0/1) to true/false for boolean columns
+                    const column = availableColumns.find(col => col.name === key);
+                    if (column && column.dtype === 'boolean') {
+                        if (value === 1 || value === '1' || value === true) {
+                            value = 'true';
+                        } else if (value === 0 || value === '0' || value === false) {
+                            value = 'false';
+                        }
+                    }
+
                     td.textContent = value !== null && value !== undefined ? value : 'N/A';
 
                     // Highlight score columns
@@ -1510,8 +1895,7 @@
         });
 
         document.getElementById('addSpecBtn').addEventListener('click', addSpecificationRow);
-        document.getElementById('addTypeKwargBtn').addEventListener('click', addTypeKwargRow);
-        document.getElementById('addColKwargBtn').addEventListener('click', addColKwargRow);
+        document.getElementById('addKwargBtn').addEventListener('click', addKwargRow);
         document.getElementById('searchBtn').addEventListener('click', performSearch);
         document.getElementById('addFilterBtn').addEventListener('click', addFilterRow);
         document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
