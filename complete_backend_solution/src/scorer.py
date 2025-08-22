@@ -297,7 +297,7 @@ SCORING_KWARGS = {
         ),
         jt.KwargProfile(
             name="contains_any", dtype="Boolean", default=False,
-            description="Returns full match if the request contains the candidate in its list. Request must be comma separated list. Must be exact match"
+            description="Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match"
         )
     ],
     "tuple": [
@@ -323,7 +323,7 @@ SCORING_KWARGS = {
     "range": [
         jt.KwargProfile(
             name="decay_factor", dtype="Float", default=1.0,
-            description="Values between 0 and 1 make the decay more rapid, values over 1 slow it down"
+            description="Values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)"
         )
     ]
 }
