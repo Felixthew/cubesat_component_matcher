@@ -17,6 +17,7 @@ import complete_backend_solution.src.json_types as jt
 # - update default configs in SCORING_CONFIG
 # Then double check for type properties that may require attention in engine.py or data_loader.py
 # (Add test cases in test/scorer_test)
+
 class Scorer(ABC):
     @abstractmethod
     def score(self, request_val, candidate_val, **kwargs) -> float:
@@ -326,4 +327,3 @@ SCORING_KWARGS = {
         )
     ]
 }
-

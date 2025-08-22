@@ -46,7 +46,9 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
 
     # construct list of json-friendly col-dtype entries and return
     param_list = [
-        jt.ColumnProfile(name=name, dtype=dtype, options=dl.list_choices(location, name, dtype),
+        jt.ColumnProfile(name=name,
+                         dtype=dtype,
+                         options=dl.list_choices(location, name, dtype),
                          kwargs=SCORING_KWARGS[dtype])
         for name, dtype in dtype_rows.items()
     ]
@@ -76,6 +78,10 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     sid = query.session_id or storage.generate_session_id()
     storage.save_request(sid, query.model_dump())
 
+    # prune old session data
+    storage.prune_expired_sessions()
+
+    # package and store results then return
     results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)
     storage.save_results_bm(results)
     # storage.save_results_bm(results)
@@ -109,9 +115,6 @@ def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
     df_inter = _filter(query.filters, df_inter)
     df_inter = _sort(query.sort, df_inter)
     df_inter = _paginate(query.pagination, df_inter)
-
-    # prune old session data
-    storage.prune_expired_sessions()
 
     # package and return
     result = df_inter.to_dict(orient="records")

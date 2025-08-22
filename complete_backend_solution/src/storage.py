@@ -11,7 +11,7 @@ from complete_backend_solution.src import json_types as jt
 DEFAULT_EXPIRATION_TIME_HOURS = 168
 
 # whitelisted columns to query from. MUST BE UPDATED IF TABLE CHANGES
-ALLOWED_DATA = {"request_data", "results_data"}
+_ALLOWED_DATA = {"request_data", "results_data"}
 
 def generate_session_id() -> str:
     """
@@ -105,7 +105,7 @@ def _load_data(session_id: str, data_name: str) -> dict | list[dict]:
     return result[0][0] if result else None
 
 def _validate_input(input: str):
-    if input not in ALLOWED_DATA:
+    if input not in _ALLOWED_DATA:
         raise ValueError("Invalid data input")
 
 def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):

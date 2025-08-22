@@ -89,7 +89,6 @@ def list_tables(schema: str) -> list[str]:
         {"schema": schema}
     )
     return [t[0] for t in tables]
-    #return [t["table_name"] for t in tables]
 
 def list_choices(location: Location, col_name: str, dtype: str) -> list[str] | None:
     """

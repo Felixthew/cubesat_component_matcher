@@ -68,10 +68,45 @@ EXPOSABLE_DTYPES.
 
 #### About the Database
 
+All of the database querying and API work relies on the current organizational structure of the database. It can be 
+changed, but the db.execute() SQL commands will have to be altered to reflect it, as will the json_type object Location.
+As is, this is the structure we chose:
+
+- Schema "solutions" (e.g. platforms, propulsion, deorbit)
+  - Table "systems" (e.g. ESPA class satellites, chemical propulsion, deployable booms)
+    - Row "products" (e.g. NASA Exo-Brake, HPS NABEO-1)
+- Schema for metadata ("Metadata")
+  - Table: "data_types"
+    - Stores datatype info for every column of every table of every schema
+  - Table: "session_data"
+    - Stores requests and results from searches for several purposes. See "Persisting Data" below for more info
+
+This structure ensures each solution schema is completely self-contained and easily uploadable from any directory of
+Excel spreadsheets. The Metadata schema is critical for datatype retrieval and the API's reslicing.
 
 ### Persisting Data (storage.py)
 
-The purpose of these methods is to store, retrieve, and remove the session data cached during queries. After the 
-initial search method is 
+This is where session data is controlled. Since retrieve() in api.py is just a reslice, it doesn't actually query the 
+database again (that would be costly) -- it retrieves the cached results of the associated search() and manipulates it.
+This means that storage.py is responsible for the methods called in search() and retrieve() in order to add the correct
+data to the metadata.session_data table.
+
+Each session_data entry has four properties: session_id, request_data, results_data, and created_at. session_id is the
+primary key generated during a search, and used during a retrieval to access the previously-stored results data for 
+reslicing. request_data and results_data are cached at the end of a search and are the JSON payloads in each direction 
+of a query. The request is saved really only for auditing right now and isn't necessary for function, but the results 
+saved are the raw ones computed by the engine. This is absolutely critical for any reslicing to exist in its current 
+form. Lastly, created_at allows for pruning. To keep the database thin, the method prune_expired_sessions() is called 
+sneakily during every search() call. The thought was that search() would be called less frequently that retrieve(), and
+will always necessarily create a fresh session entry before pruning the old ones. The global variable 
+DEFAULT_EXPIRATION_TIME_HOURS controls how long session data can last before pruning. It is currently set to 168 -- one
+week. storage.py interfaces with api.py and database.py.
 
 ### Scoring Data (engine.py, scorer.py)
+
+In terms of functionality, this is the meat and potatoes of the project. The engine and scorer run all of the logic once
+supplied with a request and a candidate table. The engine completes its task during instantiation. It is constructed, 
+and then the instance variable extended_df is the scored table ready for jsonification and return. The engine has 
+several parameters computed in api.py via data_loader.py and results in even more instance variables after parsing:
+
+-  
