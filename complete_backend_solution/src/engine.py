@@ -4,7 +4,7 @@ from complete_backend_solution.src.scorer import SCORING_REGISTRY, SCORING_CONFI
 
 class ScoringEngine:
     def __init__(self,
-                 request: dict,
+                 request: dict[str, dict[str, str | int | float]],
                  candidates_df: pd.DataFrame,
                  dtypes: dict[str, str],
                  scoring_config: SearchKwargs | None):

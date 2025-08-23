@@ -106,7 +106,28 @@ week. storage.py interfaces with api.py and database.py.
 
 In terms of functionality, this is the meat and potatoes of the project. The engine and scorer run all of the logic once
 supplied with a request and a candidate table. The engine completes its task during instantiation. It is constructed, 
-and then the instance variable extended_df is the scored table ready for jsonification and return. The engine has 
-several parameters computed in api.py via data_loader.py and results in even more instance variables after parsing:
+and then the instance variable extended_df is the scored table ready for jsonification and return. It hinges on a single
+call from the scoring function _score_all(), which iterates through calling _score_row(), which finally iterates through
+calling _score_single(). More info on the scoring methodology is below. The engine has several parameters computed in 
+api.py via data_loader.py and results in even more instance variables after parsing:
 
--  
+#### Parameters
+-  request: dict in the form of {"Mass (kg)": {"value": 100, "weight": 0.5}, ...}. This is constructed by 
+data_loader.load_request() in api.search(). As shown, this contains all of the info from the user's JSON payload.
+- candidates_df: Pandas Dataframe of the selected table. The table of product "candidates" is selected given location
+data in api.py via data_loader.load_candidates().
+- dtypes: dict in the form of {"Mass (kg)": "number", "Manufacturer": "string", ...}. This is pulled from the 
+metadata.data_types table, generated during file upload. data_loader.get_dtypes() retrieves this dict from the database.
+This method has built-in caching to reduce query costs with functools' lru_cache.
+- scoring_configs: json_types.SearchKwarg containing two properties: col_kwargs and type_kwargs. These are passed in
+directly from the request payload as well. More detailed info on configs will be below and in README_frontend.md.
+
+#### Properties
+- specs: the request argument. This is iterated through in _score_row() to each individual _score_single() call.
+- dtypes: the dtypes argument. This is used in _score_single() to verify which scorer will be used.
+- global_maxes, global_mins: these are an ugly, regrettable exception to the compartmentalization that otherwise exists.
+These are here to prevent continuous DB queries or DF lookups during the score-crunching of the datatype *number*. This
+will be elaborated upon in the section about scoring.
+- col_kwargs: dict that holds the config settings for particular rows. If the scoring_configs parameter contains no
+column-specific config requests, it will be empty and default to typewide kwargs.
+- type_kwargs: 
