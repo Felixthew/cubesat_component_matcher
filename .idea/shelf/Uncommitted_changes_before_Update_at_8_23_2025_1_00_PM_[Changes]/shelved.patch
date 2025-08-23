@@ -1,0 +1,1107 @@
+Index: complete_backend_solution/tests/api_test.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import pytest\r\nfrom fastapi.testclient import TestClient\r\nfrom complete_backend_solution.src.api import app\r\nimport json\r\n\r\n@pytest.fixture\r\ndef client():\r\n    \"\"\"Create a test client for the FastAPI app\"\"\"\r\n    return TestClient(app)\r\n\r\n\r\n@pytest.fixture(autouse=True)\r\ndef reset_db():\r\n    \"\"\"Reset the database before each test\"\"\"\r\n    pass\r\n\r\n\r\nclass TestUserAPI:\r\n\r\n    def test_get_options(self, client):\r\n        \"\"\"Test retrieving options\"\"\"\r\n        response = client.get(\"/options\")\r\n        print(response.json())\r\n\r\n    def test_get_tables(self, client):\r\n        \"\"\"Test retrieving options\"\"\"\r\n        response = client.get(\"/options/avionics\")\r\n        print(response.json())\r\n\r\n\r\n    def test_get_params(self, client):\r\n        response = client.get(\"/options/power/solar_arrays\")\r\n        print(response.json())\r\n\r\n        assert response.status_code == 200\r\n\r\n    def test_get_scores(self, client):\r\n        # Load the JSON data from a file\r\n        with open('component_data_TEST/test_requests/test_request.json', 'r') as f:\r\n            search_request = json.load(f)\r\n        response = client.post(\"/search\", json=search_request)\r\n        print(response.json())\r\n        with open(\"test_results/results.json\", \"w\") as json_file:\r\n            json.dump(response.json(), json_file, indent=4)\r\n\r\n    def test_get_scores_list(self, client):\r\n        # Load the JSON data from a file\r\n        with open('component_data_TEST/test_requests/test_req2.json', 'r') as f:\r\n            search_request = json.load(f)\r\n        response = client.post(\"/search\", json=search_request)\r\n        print(response.json())\r\n        with open(\"test_results/list_results.json\", \"w\") as json_file:\r\n            json.dump(response.json(), json_file, indent=4)\r\n\r\n    def test_get_scores_tuple(self, client):\r\n        # Load the JSON data from a file\r\n        with open('component_data_TEST/test_requests/test_req3.json', 'r') as f:\r\n            search_request = json.load(f)\r\n        response = client.post(\"/search\", json=search_request)\r\n        print(response.json())\r\n        with open(\"test_results/tuple_results.json\", \"w\") as json_file:\r\n            json.dump(response.json(), json_file, indent=4)\r\n\r\n    def test_get_scores_range(self, client):\r\n        # Load the JSON data from a file\r\n        with open('component_data_TEST/test_requests/test_req4.json', 'r') as f:\r\n            search_request = json.load(f)\r\n        response = client.post(\"/search\", json=search_request)\r\n        print(response.json())\r\n        with open(\"test_results/range_results.json\", \"w\") as json_file:\r\n            json.dump(response.json(), json_file, indent=4)\r\n\r\n    def test_get_scores_kwargs(self, client):\r\n        # Load the JSON data from a file\r\n        with open('component_data_TEST/test_requests/test_req_kwargs.json', 'r') as f:\r\n            search_request = json.load(f)\r\n        response = client.post(\"/search\", json=search_request)\r\n        print(response.json())\r\n        with open(\"test_results/kwargs_results.json\", \"w\") as json_file:\r\n            json.dump(response.json(), json_file, indent=4)\r\n\r\n    def test_filter(self, client):\r\n        # Load the JSON data from a file\r\n        with open('component_data_TEST/test_requests/test_retrieve.json', 'r') as f:\r\n            search_request = json.load(f)\r\n        response = client.post(\"/search/4c3d84f1-88df-4dba-a2ac-225c56929114\", json=search_request)\r\n        print(response.json())\r\n        with open(\"test_results/filtered_results.json\", \"w\") as json_file:\r\n            json.dump(response.json(), json_file, indent=4)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/complete_backend_solution/tests/api_test.py b/complete_backend_solution/tests/api_test.py
+--- a/complete_backend_solution/tests/api_test.py	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/complete_backend_solution/tests/api_test.py	(date 1755968355753)
+@@ -34,6 +34,12 @@
+ 
+         assert response.status_code == 200
+ 
++    def test_get_kwargs(self, client):
++        response = client.get("/kwargs")
++        print(response.json())
++
++        assert response.status_code == 200
++
+     def test_get_scores(self, client):
+         # Load the JSON data from a file
+         with open('component_data_TEST/test_requests/test_request.json', 'r') as f:
+Index: complete_backend_solution/src/api.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from fastapi import FastAPI, HTTPException\r\nfrom fastapi.middleware.cors import CORSMiddleware\r\nfrom complete_backend_solution.src.scorer import SCORING_KWARGS\r\nimport pandas as pd\r\nimport complete_backend_solution.src.json_types as jt\r\nfrom complete_backend_solution.src.engine import ScoringEngine\r\nimport complete_backend_solution.src.storage as storage\r\nimport complete_backend_solution.src.data_loader as dl\r\nimport json\r\n\r\napp = FastAPI(title=\"Component Matcher\")\r\n\r\napp.add_middleware(\r\n    CORSMiddleware,\r\n    allow_origins=[\"*\"],\r\n    allow_credentials=True,\r\n    allow_methods=[\"*\"],\r\n    allow_headers=[\"*\"],\r\n)\r\n\r\n@app.get(\"/options\", response_model=jt.SchemaList,\r\n         summary=\"Lists all solution types to choose from, e.g. propulsion\")\r\ndef get_solutions() -> jt.SchemaList:\r\n    return jt.SchemaList(schemas=dl.list_schema())\r\n\r\n@app.get(\"/options/{solution}\", response_model=jt.TableList,\r\n         summary=\"Lists all system types to choose from, e.g. chemical propulsion\")\r\ndef get_systems(solution: str) -> jt.TableList:\r\n    tables = dl.list_tables(solution)\r\n    if not tables:\r\n        raise HTTPException(404, \"No existing systems in request solution category\")\r\n    return jt.TableList(schema=solution, tables=tables)\r\n\r\n@app.get(\"/options/{solution}/{system}\", response_model=jt.ColumnList,\r\n         summary=\"Lists all parameters of a given system, e.g. thrust\")\r\ndef get_params(solution: str, system: str) -> jt.ColumnList:\r\n    # retrieves cached dtype data\r\n    dtype_rows = dl.get_dtypes(solution, system)\r\n    location = jt.Location(schema=solution, table=system)\r\n\r\n    # except if null result\r\n    if dtype_rows is None:\r\n        raise HTTPException(404, f\"{system} in {solution} not found\")\r\n\r\n    # construct list of json-friendly col-dtype entries and return\r\n    param_list = [\r\n        jt.ColumnProfile(name=name,\r\n                         dtype=dtype,\r\n                         options=dl.list_choices(location, name, dtype),\r\n                         kwargs=SCORING_KWARGS[dtype])\r\n        for name, dtype in dtype_rows.items()\r\n    ]\r\n    return jt.ColumnList(location=location, columns=param_list)\r\n\r\n\r\n@app.post(\"/search\", response_model=jt.SearchResponse, summary=\"Retrieve scored results given new spec requests\")\r\ndef search(query: jt.SearchRequest) -> jt.SearchResponse:\r\n    # prepare engine parameters\r\n    engine_request = dl.load_request(query.specs)\r\n    engine_candidates_df = dl.load_candidates(query.location)\r\n    engine_dtypes = dl.get_dtypes(query.location.schema, query.location.table)\r\n    engine_scoring_config = query.kwargs if query.kwargs else None\r\n\r\n    # create and run the engine. let it do the heavy lifting on computing extended_df\r\n    engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)\r\n    # I changed this to Json to get rid of the NaNs, hopefully that is all good\r\n    json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)\r\n    scored_table = json.loads(json_str) # BOOM\r\n    original_columns = engine.extended_df.columns.tolist()\r\n\r\n    # identify/generate session id for the recall then cache session data\r\n    sid = query.session_id or storage.generate_session_id()\r\n    storage.save_request(sid, query.model_dump())\r\n\r\n    # prune old session data\r\n    storage.prune_expired_sessions()\r\n\r\n    # package and store results then return\r\n    results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)\r\n    storage.save_results_bm(results)\r\n    # storage.save_results_bm(results)\r\n    return results\r\n\r\n    # storage.save_results(sid, {\r\n    #     'data': scored_table,\r\n    #     'column_order': original_columns\r\n    # })\r\n    #\r\n    # return jt.SearchResponse(session_id=sid, values=scored_table)\r\n\r\n\r\n@app.post(\"/search/{session_id}\", response_model=jt.SearchResponse,\r\n         summary=\"Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination\")\r\ndef retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:\r\n    sid = session_id\r\n\r\n    # check for faulty inputs or storage\r\n    try:\r\n        raw_results = storage.load_results(sid)\r\n    except ValueError:\r\n        raise HTTPException(404, \"Session not found\")\r\n    if raw_results is None:\r\n        raise HTTPException(404, \"Results not found\")\r\n\r\n    # on success, retrieve df\r\n    df_inter = _order_cols(query, raw_results)\r\n\r\n    # apply preferences\r\n    df_inter = _filter(query.filters, df_inter)\r\n    df_inter = _sort(query.sort, df_inter)\r\n    df_inter = _paginate(query.pagination, df_inter)\r\n\r\n    # package and return\r\n    result = df_inter.to_dict(orient=\"records\")\r\n    # i don't like order being forced pase to the user, i'd rather make it optional field just for behind the scenes\r\n    return jt.SearchResponse(session_id=sid, values=result, order=raw_results[\"order\"])\r\n\r\n\r\ndef _order_cols(query: jt.RetrieveRequest, raw_results: dict):\r\n    if query.sort.score_coupling:\r\n        columns = raw_results[\"order\"]\r\n\r\n        score_columns = set(col for col in columns if col.endswith('_score'))\r\n        value_columns = [col for col in columns if not col.endswith('_score')]\r\n\r\n        column_order = [\"overall_score\"]\r\n        for val_col in value_columns:\r\n            column_order.append(val_col)\r\n            score_col = f\"{val_col}_score\"\r\n            if score_col in score_columns:\r\n                column_order.append(score_col)\r\n                score_columns.remove(score_col)\r\n        df_inter = pd.DataFrame(raw_results[\"values\"])[column_order]\r\n    else:\r\n        df_inter = pd.DataFrame(raw_results[\"values\"])[raw_results['column_order']]\r\n    return df_inter\r\n\r\n\r\ndef _filter(filters: list[jt.Filter], df: pd.DataFrame) -> pd.DataFrame:\r\n    for f in filters:\r\n        try:\r\n            if f.min_val is not None:\r\n                df = df[df[f.name] >= f.min_val]\r\n            if f.max_val is not None:\r\n                df = df[df[f.name] <= f.max_val]\r\n        except TypeError:\r\n            continue\r\n            # raise ValueError(\"Column is not numerically comparable\")\r\n            # ^ decide to propagate type error or just make it harmless to pass strings etc in the filter\r\n    return df\r\n\r\ndef _sort(sort: jt.Sort, df: pd.DataFrame) -> pd.DataFrame:\r\n    return df.sort_values(by=sort.by, ascending=sort.asc)\r\n\r\ndef _paginate(paging: jt.Pagination, df: pd.DataFrame) -> pd.DataFrame:\r\n    first = paging.per_page * (paging.page - 1)\r\n    last = first + paging.per_page\r\n    return df.iloc[first:last]\r\n\r\nif __name__ == \"__main__\":\r\n    import uvicorn\r\n    uvicorn.run(app, host=\"127.0.0.1\", port=8000)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/complete_backend_solution/src/api.py b/complete_backend_solution/src/api.py
+--- a/complete_backend_solution/src/api.py	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/complete_backend_solution/src/api.py	(date 1755968355750)
+@@ -1,5 +1,7 @@
+ from fastapi import FastAPI, HTTPException
+ from fastapi.middleware.cors import CORSMiddleware
++
++from complete_backend_solution.src.json_types import KwargProfile
+ from complete_backend_solution.src.scorer import SCORING_KWARGS
+ import pandas as pd
+ import complete_backend_solution.src.json_types as jt
+@@ -52,6 +54,10 @@
+     ]
+     return jt.ColumnList(location=location, columns=param_list)
+ 
++@app.get("/kwargs", response_model=dict[str,list[jt.KwargProfile]],
++         summary="Lists all scoring kwargs by type")
++def get_params() -> dict[str, list[KwargProfile]]:
++    return SCORING_KWARGS
+ 
+ @app.post("/search", response_model=jt.SearchResponse, summary="Retrieve scored results given new spec requests")
+ def search(query: jt.SearchRequest) -> jt.SearchResponse:
+Index: complete_backend_solution/src/json_types.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from typing import Any\r\nfrom pydantic import BaseModel, Field\r\n\r\n# Utility module to keep track of json-relevant objects used in the API\r\n\r\nclass Location(BaseModel):\r\n    schema: str\r\n    table: str\r\n\r\nclass SchemaList(BaseModel):\r\n    schemas: list[str]\r\n\r\nclass TableList(BaseModel):\r\n    schema: str\r\n    tables: list[str]\r\n\r\nclass ColumnProfile(BaseModel):\r\n    name: str\r\n    dtype: str\r\n    options: list[str] | None = None\r\n    kwargs: dict[str, str] | None = None\r\n\r\nclass ColumnList(BaseModel):\r\n    location: Location\r\n    columns: list[ColumnProfile]\r\n\r\nclass ColumnSpec(BaseModel):\r\n    name: str\r\n    value: str | int | float\r\n    weight: float = Field(..., gt=0)\r\n    # don't need with your version?\r\n    # configs: dict[str, str | int | float | bool] | None = None\r\n\r\nclass Filter(BaseModel):\r\n    name: str\r\n    min_val: float | int | None = None\r\n    max_val: float | int | None = None\r\n\r\nclass Sort(BaseModel):\r\n    by: str = Field(\"overall_score\")\r\n    asc: bool = Field(False)\r\n    score_coupling: bool = Field(True)\r\n\r\nclass Pagination(BaseModel):\r\n    page: int = Field(1, ge=1)\r\n    per_page: int = Field(10, ge=1, le=100)\r\n\r\nclass SearchKwargs(BaseModel):\r\n    col_kwargs: dict[str, dict[str, Any]] | None = None\r\n    type_kwargs: dict[str, dict[str, Any]] | None = None\r\n\r\nclass SearchRequest(BaseModel):\r\n    location: Location\r\n    specs: list[ColumnSpec]\r\n    session_id: str | None = None\r\n    kwargs: SearchKwargs | None = None\r\n\r\nclass SearchResponse(BaseModel):\r\n    session_id: str\r\n    values: list[dict]\r\n    order: list[str]\r\n\r\nclass RetrieveRequest(BaseModel):\r\n    filters: list[Filter]\r\n    sort: Sort\r\n    pagination: Pagination
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/complete_backend_solution/src/json_types.py b/complete_backend_solution/src/json_types.py
+--- a/complete_backend_solution/src/json_types.py	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/complete_backend_solution/src/json_types.py	(date 1755968355751)
+@@ -3,6 +3,13 @@
+ 
+ # Utility module to keep track of json-relevant objects used in the API
+ 
++class KwargProfile(BaseModel):
++    name: str
++    dtype: str
++    default: Any
++    description: str
++    options: list[str] | None = None
++
+ class Location(BaseModel):
+     schema: str
+     table: str
+@@ -18,7 +25,7 @@
+     name: str
+     dtype: str
+     options: list[str] | None = None
+-    kwargs: dict[str, str] | None = None
++    kwargs: list[KwargProfile] | None = None
+ 
+ class ColumnList(BaseModel):
+     location: Location
+Index: complete_backend_solution/src/database.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import os\r\nfrom sqlalchemy import create_engine, text, Engine, Row, Sequence\r\n\r\nDB_URL = os.getenv(\"DB_URL\", \"postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway\")\r\n# DB_URL = os.getenv(\"DB_URL\", \"postgresql://felixwatt@localhost:5432/testdb\")\r\ndb_engine = create_engine(DB_URL)\r\n\r\nclass Database:\r\n    def __init__(self, engine: Engine):\r\n        self.db_engine = engine\r\n\r\n    BLACKLIST_SCHEMA = {\r\n        \"information_schema\",\r\n        \"pg_catalog\",\r\n        \"pg_toast\",\r\n        \"public\"\r\n    }\r\n\r\n    def execute(self, sql_str: str, params: dict = None):\r\n        \"\"\"\r\n        Executes raw SQL queries with the given database\r\n        :param sql_str: string query\r\n        :param params: SQL parameters to inject\r\n        :return: Result object if the query returns a table, otherwise just the row count after performing the operation\r\n        \"\"\"\r\n        params = params or {}\r\n        with self.db_engine.begin() as conn:\r\n            result = conn.execute(text(sql_str), params)\r\n            if result.returns_rows:\r\n                return result.all()\r\n            else:\r\n                return result.rowcount\r\n\r\ndb = Database(db_engine)
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/complete_backend_solution/src/database.py b/complete_backend_solution/src/database.py
+--- a/complete_backend_solution/src/database.py	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/complete_backend_solution/src/database.py	(date 1755968355751)
+@@ -1,8 +1,8 @@
+ import os
+ from sqlalchemy import create_engine, text, Engine, Row, Sequence
+ 
+-DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
+-# DB_URL = os.getenv("DB_URL", "postgresql://felixwatt@localhost:5432/testdb")
++# DB_URL = os.getenv("DB_URL", "postgresql://postgres:YKOFNCLsAncBgawWEMQJfnuljPaaWXot@turntable.proxy.rlwy.net:46609/railway")
++DB_URL = os.getenv("DB_URL", "postgresql://felixwatt@localhost:5432/testdb")
+ db_engine = create_engine(DB_URL)
+ 
+ class Database:
+Index: complete_backend_solution/src/scorer.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import math\r\nfrom math import prod\r\nfrom abc import ABC, abstractmethod\r\nimport numpy as np\r\nfrom rapidfuzz import fuzz\r\n\r\n\r\n# Additional config options must be added in\r\n# - the proper type method\r\n# - the SCORING_CONFIG\r\n# Make sure the scoring config default is the same as the method default parameters\r\n\r\n# Additional datatypes must:\r\n# - add a new subclass of Scorer\r\n# - update SCORING_REGISTRY\r\n# - update default configs in SCORING_CONFIG\r\n# Then double check for type properties that may require attention in engine.py or data_loader.py\r\n# (Add test cases in test/scorer_test)\r\n\r\nclass Scorer(ABC):\r\n    @abstractmethod\r\n    def score(self, request_val, candidate_val, **kwargs) -> float:\r\n        \"\"\"\r\n        Computes compatibility score between the user request value and the candidate value\r\n        :param request_val: user value\r\n        :param candidate_val: value to be compared to\r\n        :param kwargs: space to add type-specific configs, changing computation behavior\r\n        :return: compatibility score for request_val and candidate_val\r\n        \"\"\"\r\n        pass\r\n\r\n\r\nclass NumberScorer(Scorer):\r\n    def score(self, request_val, candidate_val, use_global_max=True, max_val=None, min_val=None, **_) -> float:\r\n        \"\"\"\r\n        :param use_global_max: normalize values against the max and min value in the dataset, otherwise against each other\r\n        :param max_val: global max value used in above config\r\n        :param min_val: global min value used in above config\r\n        \"\"\"\r\n\r\n        if request_val is None or candidate_val is None:\r\n            return 0.0\r\n\r\n        max_val = max_val if use_global_max and max_val else max(request_val, candidate_val)\r\n        min_val = min_val if use_global_max and min_val else min(request_val, candidate_val)\r\n        request_val, candidate_val, max_val = _normalize_negatives(request_val, candidate_val, max_val, min_val)\r\n\r\n        diff = abs(request_val - candidate_val)\r\n\r\n        if max_val == 0.0:\r\n            max_val = 1.0\r\n\r\n        return max(0.0, 1.0 - diff / max_val)\r\n\r\n\r\nclass StringScorer(Scorer):\r\n    def score(self, request_val, candidate_val, threshold=80, exact_match=False, contains_any=False) -> float:\r\n        \"\"\"\r\n        :param contains_any: returns 1 if the request contains the candidate in its list. Must be exact match (could be changed in the future, im thinking maybe take the highest match in the list).\r\n        :param threshold: minimum fuzz ratio [0..100] for scoring;\r\n            ratios above the threshold are linearly mapped onto [0..1]\r\n        :param exact_match: toggle for only succeeding the string match if they are identical.\r\n            Equivalent to threshold=100\r\n        \"\"\"\r\n\r\n        if request_val is None or candidate_val is None:\r\n            return 0.0\r\n\r\n        if contains_any:\r\n            request_vals = list(map(lambda x: _clean_string(x), request_val.split(\",\")))\r\n            return 1.0 if _clean_string(candidate_val) in request_vals else 0.0\r\n\r\n        request_val = _clean_string(request_val)\r\n        candidate_val = _clean_string(candidate_val)\r\n\r\n        if exact_match or threshold == 100:\r\n            return request_val == candidate_val\r\n\r\n        raw_ratio = fuzz.ratio(request_val, candidate_val)\r\n        if raw_ratio < threshold:\r\n            return 0.0\r\n        return (raw_ratio - threshold) / (100 - threshold)\r\n\r\n\r\nclass TupleScorer(Scorer):\r\n    def score(self, request_val, candidate_val, product_scoring=False, normalize_to_max=True, **_) -> float:\r\n        \"\"\"\r\n        :param product_scoring: combines tuple components multiplicatively and computes single representative values,\r\n            otherwise computes piecewise and averages. Useful when product is significant, e.g. volume\r\n        :param normalize_to_max: scoring models frame themselves using the input data's maximum value to normalize,\r\n            useful when all values are near each other/on the same scale. Has no effect on product_scoring mode\r\n        \"\"\"\r\n\r\n        if request_val is None or candidate_val is None:\r\n            return 0.0\r\n\r\n        request_val = _parse_collection(request_val)\r\n        candidate_val = _parse_collection(candidate_val)\r\n\r\n        # fail if input aren't numbers\r\n        try:\r\n            request_val_list = [float(x) for x in request_val]\r\n        except (TypeError, ValueError):\r\n            raise ValueError(\"Improper input\")\r\n\r\n        # return 0 if candidates aren't numbers\r\n        try:\r\n            candidate_val_list = [float(x) for x in candidate_val]\r\n        except (TypeError, ValueError):\r\n            return 0.0\r\n\r\n        # score numbers singly as combined products\r\n        if product_scoring:\r\n            req_product = prod(request_val_list)\r\n            cand_product = prod(candidate_val_list)\r\n            return NumberScorer().score(\r\n                req_product,\r\n                cand_product,\r\n                normalize_to_max,\r\n                max(req_product, cand_product)\r\n                # ^technically redundant\r\n            )\r\n\r\n        # score numbers dimensionwise and average the results\r\n        results = []\r\n        for req_val, cand_val in zip(sorted(request_val_list), sorted(candidate_val_list)):\r\n            results.append(NumberScorer().score(\r\n                req_val,\r\n                cand_val,\r\n                normalize_to_max,\r\n                _union_max(request_val_list, candidate_val_list),\r\n                _union_min(request_val_list, candidate_val_list)\r\n            ))\r\n\r\n        return float(np.mean(results))\r\n\r\n\r\nclass ListScorer(Scorer):\r\n    def score(self, request_val, candidate_val, match_mode=\"overlap\", jaccard_softener=1, **_) -> float:\r\n        \"\"\"\r\n        :param match_mode: \"jaccard\" more heavily penalizes differences between sets,\r\n            while \"overlap\" mode is based only on the inclusion in the requested set.\r\n            \"contains\" returns a true/false for inclusion of ANY element, good for multiselect preferences\r\n        :param jaccard_softener: slightly increases jaccard scores for fairness. NOT EXPOSED AS A CONFIG OPTION\r\n        \"\"\"\r\n        print(match_mode)\r\n\r\n        # return 0 for empty inputs\r\n        if request_val is None or candidate_val is None:\r\n            return 0.0\r\n\r\n        req_set, cand_set = set(_parse_collection(request_val)), set(_parse_collection(candidate_val))\r\n\r\n        # checks for inclusion anywhere once\r\n        if match_mode == \"contains\":\r\n            for val in req_set:\r\n                if val in cand_set:\r\n                    return 1.0\r\n            return 0.0\r\n\r\n        intersect = req_set & cand_set\r\n\r\n        # disjunct sets gets full penalty\r\n        if len(intersect) == 0:\r\n            return 0.0\r\n\r\n        # use overlap or jaccard arithmetic\r\n        if match_mode == \"overlap\":\r\n            return len(intersect) / len(req_set)\r\n        return (len(intersect) + jaccard_softener) / (len(req_set | cand_set) + jaccard_softener)\r\n\r\n\r\nclass BooleanScorer(Scorer):\r\n    def score(self, request_val, candidate_val, **_) -> float:\r\n        return 1.0 if bool(request_val) == bool(candidate_val) else 0.0\r\n\r\n\r\nclass RangeScorer(Scorer):\r\n    def score(self, request_val, candidate_val, decay_factor=1.0, **kwargs) -> float:\r\n        \"\"\"\r\n        NOTE: request_val is a SINGLE NUMBER (int, float), not a range itself\r\n        :param decay_factor: values between 0 and 1 make the decay more rapid, values over 1 slow it down\r\n        \"\"\"\r\n\r\n        # negative decay factor will result in scores larger than 1.0 outside of the bounds\r\n        if decay_factor < 0:\r\n            raise ValueError(\"Decay Factor cannot be negative\")\r\n\r\n        if request_val is None or candidate_val is None:\r\n            return 0.0\r\n\r\n        low, high = _parse_range(candidate_val)\r\n\r\n        # if the request is contained in the range, return 1.0\r\n        if low <= request_val <= high:\r\n            return 1.0\r\n\r\n        # else exponentially decay score\r\n        diff = low - request_val if request_val < low else request_val - high\r\n        return math.exp(-diff / (10 * decay_factor))\r\n\r\n\r\ndef _clean_string(val: str) -> str:\r\n    return val.strip().lower()\r\n\r\n\r\ndef _parse_collection(vals: str) -> list[str]:\r\n    return [_clean_string(val) for val in vals.split(\",\")]\r\n\r\n\r\ndef _parse_range(val: str) -> tuple[float, float]:\r\n    range_elements = val.split(\"-\")\r\n\r\n    # handle bad formatting\r\n    if len(range_elements) != 2:\r\n        raise ValueError(\"Improper range format\")\r\n    try:\r\n        min, max = float(range_elements[0]), float(range_elements[1])\r\n    except TypeError:\r\n        raise ValueError(\"Not a number range\")\r\n    except IndexError:\r\n        raise ValueError(\"Improper range format\")\r\n\r\n    # order\r\n    if min > max:\r\n        min, max = max, min\r\n\r\n    return min, max\r\n\r\n\r\ndef _union_max(vals1: list[float | int], vals2: list[float | int]) -> float | int:\r\n    return max(max(vals1), max(vals2))\r\n\r\n\r\ndef _union_min(vals1: list[float | int], vals2: list[float | int]) -> float | int:\r\n    return min(min(vals1), min(vals2))\r\n\r\n\r\ndef _normalize_negatives(\r\n        val1: int | float,\r\n        val2: int | float,\r\n        max: int | float,\r\n        min: int | float\r\n) -> tuple[int | float, int | float, int | float]:\r\n    if min < 0:\r\n        delta = abs(min)\r\n        val1 += delta\r\n        val2 += delta\r\n        max += delta\r\n    return val1, val2, max\r\n\r\n\r\n# add new type methods here for engine iteration\r\nSCORING_REGISTRY = {\r\n    \"number\": NumberScorer(),\r\n    \"string\": StringScorer(),\r\n    \"tuple\": TupleScorer(),\r\n    \"list\": ListScorer(),\r\n    \"boolean\": BooleanScorer(),\r\n    \"range\": RangeScorer()\r\n}\r\n\r\n# add new default configs here\r\nSCORING_CONFIG = {\r\n    \"number\": {\"use_global_max\": True},\r\n    \"string\": {\"threshold\": 80, \"exact_match\": False},\r\n    \"tuple\": {\"product_scoring\": False, \"normalize_to_max\": True},\r\n    \"list\": {\"match_mode\": \"overlap\"},\r\n    \"boolean\": {},\r\n    \"range\": {\"decay_factor\": 1.0}\r\n}\r\n\r\nSCORING_KWARGS = {\r\n    \"number\": {\r\n        \"use_global_max\": \"Default true. Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min.\",\r\n        \"max_val\": \"Default auto calculated. Global max value used in use global max config\",\r\n        \"min_val\": \"Default auto calculated. Global min value used in use global max config\"},\r\n    \"string\": {\r\n        \"threshold\": \"Default 80. Minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]\",\r\n        \"exact_match\": \"Default false. Toggle for only succeeding the string match if they are identical. Equivalent to threshold=100\",\r\n        \"contains_any\": \"Default false. Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match\"},\r\n    \"tuple\": {\r\n        \"product_scoring\": \"Default false. Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume\",\r\n        \"normalize_to_max\": \"Default true. Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode\"},\r\n    \"list\": {\r\n        \"match_mode\": \"Default 'overlap'. 'jaccard' more heavily penalizes differences between sets, while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences\"},\r\n    \"boolean\": {\r\n    },\r\n    \"range\": {\r\n        \"decay_factor\": \"Default 1.0. values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)\"}\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/complete_backend_solution/src/scorer.py b/complete_backend_solution/src/scorer.py
+--- a/complete_backend_solution/src/scorer.py	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/complete_backend_solution/src/scorer.py	(date 1755968355752)
+@@ -3,6 +3,7 @@
+ from abc import ABC, abstractmethod
+ import numpy as np
+ from rapidfuzz import fuzz
++import complete_backend_solution.src.json_types as jt
+ 
+ 
+ # Additional config options must be added in
+@@ -271,21 +272,58 @@
+ }
+ 
+ SCORING_KWARGS = {
+-    "number": {
+-        "use_global_max": "Default true. Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min.",
+-        "max_val": "Default auto calculated. Global max value used in use global max config",
+-        "min_val": "Default auto calculated. Global min value used in use global max config"},
+-    "string": {
+-        "threshold": "Default 80. Minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]",
+-        "exact_match": "Default false. Toggle for only succeeding the string match if they are identical. Equivalent to threshold=100",
+-        "contains_any": "Default false. Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match"},
+-    "tuple": {
+-        "product_scoring": "Default false. Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume",
+-        "normalize_to_max": "Default true. Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode"},
+-    "list": {
+-        "match_mode": "Default 'overlap'. 'jaccard' more heavily penalizes differences between sets, while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences"},
+-    "boolean": {
+-    },
+-    "range": {
+-        "decay_factor": "Default 1.0. values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)"}
++    "number": [
++        jt.KwargProfile(
++            name="use_global_max", dtype="Boolean", default=True,
++            description="Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min."
++        ),
++        jt.KwargProfile(
++            name="max_val", dtype="Float", default="auto calculated",
++            description="Global max value used in use global max config"
++        ),
++        jt.KwargProfile(
++            name="min_val", dtype="Float", default="auto calculated",
++            description="Global min value used in use global max config"
++        )
++    ],
++    "string": [
++        jt.KwargProfile(
++            name="threshold", dtype="Int", default=80,
++            description="Minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]"
++        ),
++        jt.KwargProfile(
++            name="exact_match", dtype="Boolean", default=False,
++            description="Toggle for only succeeding the string match if they are identical. Equivalent to threshold=100"
++        ),
++        jt.KwargProfile(
++            name="contains_any", dtype="Boolean", default=False,
++            description="Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match"
++        )
++    ],
++    "tuple": [
++        jt.KwargProfile(
++            name="product_scoring", dtype="Boolean", default=False,
++            description="Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume"
++        ),
++        jt.KwargProfile(
++            name="normalize_to_max", dtype="Boolean", default=True,
++            description="Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode"
++        )
++    ],
++    "list": [
++        jt.KwargProfile(
++            name="match_mode", dtype="String", default="overlap",
++            description="'jaccard' more heavily penalizes differences between sets, while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences",
++            options=["overlap", "jaccard", "contains"]
++        )
++    ],
++    "boolean": [
++        # No kwargs listed for "boolean" type; empty list
++    ],
++    "range": [
++        jt.KwargProfile(
++            name="decay_factor", dtype="Float", default=1.0,
++            description="Values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)"
++        )
++    ]
+ }
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"AutoImportSettings\">\r\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\r\n  </component>\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"c04d87e7-d48a-4bbe-b83a-4bc2139bda5f\" name=\"Changes\" comment=\"\">\r\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/complete_backend_solution/README_backend.md\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/complete_backend_solution/README_backend.md\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/complete_backend_solution/src/data_loader.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/complete_backend_solution/src/data_loader.py\" afterDir=\"false\" />\r\n      <change beforePath=\"$PROJECT_DIR$/complete_backend_solution/src/engine.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/complete_backend_solution/src/engine.py\" afterDir=\"false\" />\r\n    </list>\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"FileTemplateManagerImpl\">\r\n    <option name=\"RECENT_TEMPLATES\">\r\n      <list>\r\n        <option value=\"HTML File\" />\r\n        <option value=\"Python Script\" />\r\n        <option value=\"CSS File\" />\r\n      </list>\r\n    </option>\r\n  </component>\r\n  <component name=\"FlaskConsoleOptions\" custom-start-script=\"import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass\">\r\n    <envs>\r\n      <env key=\"FLASK_APP\" value=\"app\" />\r\n    </envs>\r\n    <option name=\"myCustomStartScript\" value=\"import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass\" />\r\n    <option name=\"myEnvs\">\r\n      <map>\r\n        <entry key=\"FLASK_APP\" value=\"app\" />\r\n      </map>\r\n    </option>\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"GitHubPullRequestSearchHistory\">{\r\n  &quot;lastFilter&quot;: {\r\n    &quot;state&quot;: &quot;OPEN&quot;,\r\n    &quot;assignee&quot;: &quot;AidenPowell14&quot;\r\n  }\r\n}</component>\r\n  <component name=\"GithubPullRequestsUISettings\">{\r\n  &quot;selectedUrlAndAccountId&quot;: {\r\n    &quot;url&quot;: &quot;https://github.com/Felixthew/cubesat_component_matcher.git&quot;,\r\n    &quot;accountId&quot;: &quot;a7668ed3-db54-4310-a74e-574241f5b195&quot;\r\n  }\r\n}</component>\r\n  <component name=\"ProjectColorInfo\">{\r\n  &quot;associatedIndex&quot;: 6\r\n}</component>\r\n  <component name=\"ProjectId\" id=\"2yNjR0HNKzYRkOXdRng7SQ7hkzU\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\"><![CDATA[{\r\n  \"keyToString\": {\r\n    \"DefaultHtmlFileTemplate\": \"HTML File\",\r\n    \"ModuleVcsDetector.initialDetectionPerformed\": \"true\",\r\n    \"Python tests.Python tests for api_test.TestUserAPI.executor\": \"Run\",\r\n    \"Python tests.Python tests for complete_backend_solution.tests.scorer_test.executor\": \"Run\",\r\n    \"Python tests.Python tests for conftest.test_db.executor\": \"Run\",\r\n    \"Python tests.Python tests for scorer_test.GenericScorerTest.executor\": \"Run\",\r\n    \"Python tests.Python tests for scorer_test.NumberScorerTest.executor\": \"Run\",\r\n    \"Python tests.Python tests for scorer_test.TestListScorer.test_score.executor\": \"Debug\",\r\n    \"Python tests.Python tests for scorer_test.TestNumberScorer.executor\": \"Run\",\r\n    \"Python tests.Python tests for scorer_test.TestTupleScorer.executor\": \"Debug\",\r\n    \"Python tests.Python tests for setup_for_all_database_test.test_db.executor\": \"Run\",\r\n    \"Python tests.Python tests for storage_test.test_caching_curveballs.executor\": \"Run\",\r\n    \"Python tests.Python tests for storage_test.test_roundtrip_caching.executor\": \"Run\",\r\n    \"Python tests.Python tests for storage_test.test_save_load_all.executor\": \"Run\",\r\n    \"Python tests.Python tests in api_test.py.executor\": \"Run\",\r\n    \"Python tests.Python tests in conftest.py.executor\": \"Run\",\r\n    \"Python tests.Python tests in scorer_test.py.executor\": \"Run\",\r\n    \"Python tests.Python tests in storage_test.py.executor\": \"Run\",\r\n    \"Python.api.executor\": \"Run\",\r\n    \"Python.api_test.executor\": \"Run\",\r\n    \"Python.data_loader.executor\": \"Run\",\r\n    \"Python.scorer.executor\": \"Debug\",\r\n    \"Python.storage.executor\": \"Run\",\r\n    \"Python.storage_test.executor\": \"Run\",\r\n    \"Python.test.executor\": \"Run\",\r\n    \"Python.upload_table.executor\": \"Run\",\r\n    \"Python.vector_optimization_algo.executor\": \"Run\",\r\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\r\n    \"RunOnceActivity.git.unshallow\": \"true\",\r\n    \"git-widget-placeholder\": \"main\",\r\n    \"ignore.virus.scanning.warn.message\": \"true\",\r\n    \"last_opened_file_path\": \"C:/Users/felix/PycharmProjects/cubesat_component_matcher\",\r\n    \"list.type.of.created.stylesheet\": \"CSS\",\r\n    \"node.js.detected.package.eslint\": \"true\",\r\n    \"node.js.detected.package.tslint\": \"true\",\r\n    \"node.js.selected.package.eslint\": \"(autodetect)\",\r\n    \"node.js.selected.package.tslint\": \"(autodetect)\",\r\n    \"nodejs_package_manager_path\": \"npm\",\r\n    \"settings.editor.selected.configurable\": \"com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable\",\r\n    \"vue.rearranger.settings.migration\": \"true\"\r\n  },\r\n  \"keyToStringList\": {\r\n    \"DatabaseDriversLRU\": [\r\n      \"postgresql\"\r\n    ]\r\n  }\r\n}]]></component>\r\n  <component name=\"RecentsManager\">\r\n    <key name=\"CopyFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\felix\\PycharmProjects\\cubesat_component_matcher\" />\r\n    </key>\r\n    <key name=\"MoveFile.RECENT_KEYS\">\r\n      <recent name=\"C:\\Users\\powel\\PycharmProjects\\cubesat_component_matcher\\complete_backend_solution\" />\r\n      <recent name=\"C:\\Users\\powel\\PycharmProjects\\cubesat_component_matcher\\obsolete\" />\r\n      <recent name=\"C:\\Users\\powel\\PycharmProjects\\cubesat_component_matcher\\complete_backend_solution\\tests\" />\r\n      <recent name=\"C:\\Users\\powel\\PycharmProjects\\cubesat_component_matcher\\aiden_halfstack_solution\\src\" />\r\n      <recent name=\"C:\\Users\\powel\\PycharmProjects\\cubesat_component_matcher\\test_files\" />\r\n    </key>\r\n  </component>\r\n  <component name=\"RunManager\">\r\n    <configuration name=\"Python tests for api_test.TestUserAPI\" type=\"tests\" factoryName=\"Autodetect\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <module name=\"cubesat_component_matcher\" />\r\n      <option name=\"ENV_FILES\" value=\"\" />\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$/complete_backend_solution/tests\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"_new_additionalArguments\" value=\"&quot;&quot;\" />\r\n      <option name=\"_new_target\" value=\"&quot;api_test.TestUserAPI&quot;\" />\r\n      <option name=\"_new_targetType\" value=\"&quot;PYTHON&quot;\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <configuration name=\"Python tests for conftest.test_db\" type=\"tests\" factoryName=\"Autodetect\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <module name=\"cubesat_component_matcher\" />\r\n      <option name=\"ENV_FILES\" value=\"\" />\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$/complete_backend_solution/tests\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"_new_additionalArguments\" value=\"&quot;-o postgresql_exec\\u003d\\&quot;C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\pg_ctl.exe\\&quot; -o postgresql_pg_config\\u003d\\&quot;C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\pg_config.exe\\&quot;&quot;\" />\r\n      <option name=\"_new_target\" value=\"&quot;conftest.test_db&quot;\" />\r\n      <option name=\"_new_targetType\" value=\"&quot;PYTHON&quot;\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <configuration name=\"Python tests for storage_test.test_caching_curveballs\" type=\"tests\" factoryName=\"Autodetect\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <module name=\"cubesat_component_matcher\" />\r\n      <option name=\"ENV_FILES\" value=\"\" />\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$/complete_backend_solution/tests\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"_new_additionalArguments\" value=\"&quot;&quot;\" />\r\n      <option name=\"_new_target\" value=\"&quot;storage_test.test_caching_curveballs&quot;\" />\r\n      <option name=\"_new_targetType\" value=\"&quot;PYTHON&quot;\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <configuration name=\"Python tests for storage_test.test_roundtrip_caching\" type=\"tests\" factoryName=\"Autodetect\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <module name=\"cubesat_component_matcher\" />\r\n      <option name=\"ENV_FILES\" value=\"\" />\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$/complete_backend_solution/src\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"_new_additionalArguments\" value=\"&quot;&quot;\" />\r\n      <option name=\"_new_target\" value=\"&quot;storage_test.test_roundtrip_caching&quot;\" />\r\n      <option name=\"_new_targetType\" value=\"&quot;PYTHON&quot;\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <configuration name=\"Python tests for storage_test.test_save_load_all\" type=\"tests\" factoryName=\"Autodetect\" temporary=\"true\" nameIsGenerated=\"true\">\r\n      <module name=\"cubesat_component_matcher\" />\r\n      <option name=\"ENV_FILES\" value=\"\" />\r\n      <option name=\"INTERPRETER_OPTIONS\" value=\"\" />\r\n      <option name=\"PARENT_ENVS\" value=\"true\" />\r\n      <option name=\"SDK_HOME\" value=\"\" />\r\n      <option name=\"WORKING_DIRECTORY\" value=\"$PROJECT_DIR$/complete_backend_solution/tests\" />\r\n      <option name=\"IS_MODULE_SDK\" value=\"true\" />\r\n      <option name=\"ADD_CONTENT_ROOTS\" value=\"true\" />\r\n      <option name=\"ADD_SOURCE_ROOTS\" value=\"true\" />\r\n      <EXTENSION ID=\"PythonCoverageRunConfigurationExtension\" runner=\"coverage.py\" />\r\n      <option name=\"_new_additionalArguments\" value=\"&quot;&quot;\" />\r\n      <option name=\"_new_target\" value=\"&quot;storage_test.test_save_load_all&quot;\" />\r\n      <option name=\"_new_targetType\" value=\"&quot;PYTHON&quot;\" />\r\n      <method v=\"2\" />\r\n    </configuration>\r\n    <list>\r\n      <item itemvalue=\"Python tests.Python tests for api_test.TestUserAPI\" />\r\n      <item itemvalue=\"Python tests.Python tests for conftest.test_db\" />\r\n      <item itemvalue=\"Python tests.Python tests for storage_test.test_caching_curveballs\" />\r\n      <item itemvalue=\"Python tests.Python tests for storage_test.test_roundtrip_caching\" />\r\n      <item itemvalue=\"Python tests.Python tests for storage_test.test_save_load_all\" />\r\n    </list>\r\n    <recent_temporary>\r\n      <list>\r\n        <item itemvalue=\"Python tests.Python tests for storage_test.test_roundtrip_caching\" />\r\n        <item itemvalue=\"Python tests.Python tests for storage_test.test_caching_curveballs\" />\r\n        <item itemvalue=\"Python tests.Python tests for api_test.TestUserAPI\" />\r\n        <item itemvalue=\"Python tests.Python tests for storage_test.test_save_load_all\" />\r\n        <item itemvalue=\"Python tests.Python tests for conftest.test_db\" />\r\n      </list>\r\n    </recent_temporary>\r\n  </component>\r\n  <component name=\"SharedIndexes\">\r\n    <attachedChunks>\r\n      <set>\r\n        <option value=\"bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159\" />\r\n        <option value=\"bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159\" />\r\n      </set>\r\n    </attachedChunks>\r\n  </component>\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"c04d87e7-d48a-4bbe-b83a-4bc2139bda5f\" name=\"Changes\" comment=\"\" />\r\n      <created>1749681912724</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1749681912724</updated>\r\n      <workItem from=\"1749681913785\" duration=\"8139000\" />\r\n      <workItem from=\"1749770831558\" duration=\"1128000\" />\r\n      <workItem from=\"1749924521257\" duration=\"6779000\" />\r\n      <workItem from=\"1750093223838\" duration=\"4098000\" />\r\n      <workItem from=\"1750280248063\" duration=\"10601000\" />\r\n      <workItem from=\"1750702310978\" duration=\"626000\" />\r\n      <workItem from=\"1750702959948\" duration=\"20752000\" />\r\n      <workItem from=\"1751052934294\" duration=\"26617000\" />\r\n      <workItem from=\"1751733384474\" duration=\"1952000\" />\r\n      <workItem from=\"1752340256490\" duration=\"22224000\" />\r\n      <workItem from=\"1752436399382\" duration=\"1758000\" />\r\n      <workItem from=\"1752513537355\" duration=\"11649000\" />\r\n      <workItem from=\"1752529232159\" duration=\"5470000\" />\r\n      <workItem from=\"1752542945134\" duration=\"1255000\" />\r\n      <workItem from=\"1752544371240\" duration=\"841000\" />\r\n      <workItem from=\"1752545229119\" duration=\"17696000\" />\r\n      <workItem from=\"1753490316075\" duration=\"11272000\" />\r\n      <workItem from=\"1753657672700\" duration=\"2807000\" />\r\n      <workItem from=\"1753896747357\" duration=\"18005000\" />\r\n      <workItem from=\"1754413060012\" duration=\"24878000\" />\r\n      <workItem from=\"1755105879588\" duration=\"6809000\" />\r\n      <workItem from=\"1755628905533\" duration=\"11866000\" />\r\n    </task>\r\n    <task id=\"LOCAL-00001\">\r\n      <option name=\"closed\" value=\"true\" />\r\n      <created>1751736957084</created>\r\n      <option name=\"number\" value=\"00001\" />\r\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\r\n      <option name=\"project\" value=\"LOCAL\" />\r\n      <updated>1751736957084</updated>\r\n    </task>\r\n    <option name=\"localTasksCounter\" value=\"2\" />\r\n    <servers />\r\n  </component>\r\n  <component name=\"TypeScriptGeneratedFilesManager\">\r\n    <option name=\"version\" value=\"3\" />\r\n  </component>\r\n  <component name=\"Vcs.Log.Tabs.Properties\">\r\n    <option name=\"TAB_STATES\">\r\n      <map>\r\n        <entry key=\"MAIN\">\r\n          <value>\r\n            <State />\r\n          </value>\r\n        </entry>\r\n      </map>\r\n    </option>\r\n  </component>\r\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$data_loader.coverage\" NAME=\"data_loader Coverage Results\" MODIFIED=\"1752344403311\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/aiden_halfstack_solution/src\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$test.coverage\" NAME=\"test Coverage Results\" MODIFIED=\"1750710457331\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/test_files\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$storage_test.coverage\" NAME=\"storage_test Coverage Results\" MODIFIED=\"1752515003148\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/complete_backend_solution/tests\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$.coverage\" NAME=\" Coverage Results\" MODIFIED=\"1755630813090\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/complete_backend_solution/tests\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$api_test.coverage\" NAME=\"api_test Coverage Results\" MODIFIED=\"1750705107473\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$api.coverage\" NAME=\"api Coverage Results\" MODIFIED=\"1755106798795\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/complete_backend_solution/src\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$upload_table.coverage\" NAME=\"upload_table Coverage Results\" MODIFIED=\"1755114973929\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$storage.coverage\" NAME=\"storage Coverage Results\" MODIFIED=\"1752436552447\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/complete_backend_solution/src\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$scorer.coverage\" NAME=\"scorer Coverage Results\" MODIFIED=\"1751756890057\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/aiden_halfstack_solution/src\" />\r\n    <SUITE FILE_PATH=\"coverage/cubesat_component_matcher$vector_optimization_algo.coverage\" NAME=\"vector_optimization_algo Coverage Results\" MODIFIED=\"1750705134035\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/.idea/workspace.xml	(date 1755968418630)
+@@ -5,10 +5,12 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="">
+-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/README_backend.md" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/README_backend.md" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/data_loader.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/data_loader.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/engine.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/api.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/database.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/json_types.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/json_types.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/complete_backend_solution/src/scorer.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/src/scorer.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/api_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/api_test.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/complete_backend_solution/tests/component_matcher.html" beforeDir="false" afterPath="$PROJECT_DIR$/complete_backend_solution/tests/component_matcher.html" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -89,7 +91,7 @@
+     "Python.vector_optimization_algo.executor": "Run",
+     "RunOnceActivity.ShowReadmeOnStart": "true",
+     "RunOnceActivity.git.unshallow": "true",
+-    "git-widget-placeholder": "main",
++    "git-widget-placeholder": "Merging main",
+     "ignore.virus.scanning.warn.message": "true",
+     "last_opened_file_path": "C:/Users/felix/PycharmProjects/cubesat_component_matcher",
+     "list.type.of.created.stylesheet": "CSS",
+@@ -253,7 +255,7 @@
+       <workItem from="1753896747357" duration="18005000" />
+       <workItem from="1754413060012" duration="24878000" />
+       <workItem from="1755105879588" duration="6809000" />
+-      <workItem from="1755628905533" duration="11866000" />
++      <workItem from="1755628905533" duration="12669000" />
+     </task>
+     <task id="LOCAL-00001">
+       <option name="closed" value="true" />
+Index: complete_backend_solution/tests/component_matcher.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><!DOCTYPE html>\r\n<html lang=\"en\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>Component Matcher</title>\r\n    <style>\r\n        * {\r\n            margin: 0;\r\n            padding: 0;\r\n            box-sizing: border-box;\r\n        }\r\n\r\n        body {\r\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\r\n            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\r\n            min-height: 100vh;\r\n            padding: 20px;\r\n        }\r\n\r\n        .container {\r\n            max-width: 1200px;\r\n            margin: 0 auto;\r\n            background: white;\r\n            border-radius: 16px;\r\n            box-shadow: 0 20px 40px rgba(0,0,0,0.1);\r\n            overflow: hidden;\r\n        }\r\n\r\n        .header {\r\n            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);\r\n            color: white;\r\n            padding: 2rem;\r\n            text-align: center;\r\n        }\r\n\r\n        .header h1 {\r\n            font-size: 2.5rem;\r\n            font-weight: 700;\r\n            margin-bottom: 0.5rem;\r\n        }\r\n\r\n        .header p {\r\n            opacity: 0.9;\r\n            font-size: 1.1rem;\r\n        }\r\n\r\n        .content {\r\n            padding: 2rem;\r\n        }\r\n\r\n        .section {\r\n            margin-bottom: 2rem;\r\n            padding: 1.5rem;\r\n            border: 1px solid #e5e7eb;\r\n            border-radius: 12px;\r\n            background: #f9fafb;\r\n        }\r\n\r\n        .section h2 {\r\n            color: #1f2937;\r\n            margin-bottom: 1rem;\r\n            font-size: 1.5rem;\r\n        }\r\n\r\n        .form-group {\r\n            margin-bottom: 1rem;\r\n        }\r\n\r\n        label {\r\n            display: block;\r\n            margin-bottom: 0.5rem;\r\n            font-weight: 600;\r\n            color: #374151;\r\n        }\r\n\r\n        select, input, button {\r\n            width: 100%;\r\n            padding: 0.75rem;\r\n            border: 2px solid #d1d5db;\r\n            border-radius: 8px;\r\n            font-size: 1rem;\r\n            transition: all 0.2s;\r\n        }\r\n\r\n        select:focus, input:focus {\r\n            outline: none;\r\n            border-color: #4f46e5;\r\n            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);\r\n        }\r\n\r\n        button {\r\n            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);\r\n            color: white;\r\n            border: none;\r\n            font-weight: 600;\r\n            cursor: pointer;\r\n            transform: translateY(0);\r\n        }\r\n\r\n        button:hover {\r\n            transform: translateY(-2px);\r\n            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);\r\n        }\r\n\r\n        button:disabled {\r\n            opacity: 0.6;\r\n            cursor: not-allowed;\r\n            transform: none;\r\n        }\r\n\r\n        .specs-container {\r\n            border: 1px solid #d1d5db;\r\n            border-radius: 8px;\r\n            padding: 1rem;\r\n            background: white;\r\n        }\r\n\r\n        .spec-item {\r\n            display: grid;\r\n            grid-template-columns: 2fr 1fr 1fr auto;\r\n            gap: 0.5rem;\r\n            margin-bottom: 0.5rem;\r\n            align-items: end;\r\n        }\r\n\r\n        .remove-btn {\r\n            width: auto;\r\n            padding: 0.5rem;\r\n            background: #ef4444;\r\n            font-size: 0.8rem;\r\n        }\r\n\r\n        .add-btn {\r\n            background: #10b981;\r\n            margin-top: 0.5rem;\r\n        }\r\n\r\n        .results {\r\n            margin-top: 2rem;\r\n        }\r\n\r\n        .score-cell {\r\n            font-weight: bold;\r\n            color: #059669;\r\n            background-color: #ecfdf5;\r\n        }\r\n\r\n        .loading-indicator {\r\n            display: none;\r\n            text-align: center;\r\n            padding: 1rem;\r\n            color: #6b7280;\r\n            font-style: italic;\r\n        }\r\n\r\n        .loading-indicator.show {\r\n            display: block;\r\n        }\r\n\r\n        .spec-value-container {\r\n            position: relative;\r\n        }\r\n\r\n        .spec-search-input {\r\n            width: 100%;\r\n            padding: 0.75rem;\r\n            border: 2px solid #d1d5db;\r\n            border-radius: 8px;\r\n            font-size: 1rem;\r\n        }\r\n\r\n        .spec-search-input:focus {\r\n            outline: none;\r\n            border-color: #4f46e5;\r\n            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);\r\n        }\r\n\r\n        .spec-multi-select {\r\n            position: absolute;\r\n            top: 100%;\r\n            left: 0;\r\n            right: 0;\r\n            z-index: 100;\r\n            background: white;\r\n            border: 1px solid #d1d5db;\r\n            border-top: none;\r\n            border-radius: 0 0 8px 8px;\r\n            max-height: 200px;\r\n            overflow-y: auto;\r\n            box-shadow: 0 4px 6px rgba(0,0,0,0.1);\r\n            display: none;\r\n        }\r\n\r\n        .spec-multi-option {\r\n            padding: 0.5rem;\r\n            cursor: pointer;\r\n            border-bottom: 1px solid #f3f4f6;\r\n            display: flex;\r\n            align-items: center;\r\n            gap: 0.5rem;\r\n        }\r\n\r\n        .spec-multi-option:hover {\r\n            background: #f3f4f6;\r\n        }\r\n\r\n        .spec-multi-option:last-child {\r\n            border-bottom: none;\r\n        }\r\n\r\n        .spec-multi-option input[type=\"checkbox\"] {\r\n            width: auto;\r\n            height: auto;\r\n            padding: 0;\r\n            margin: 0;\r\n        }\r\n\r\n        .spec-selected-items {\r\n            display: none;\r\n        }\r\n\r\n        .spec-selected-tag {\r\n            background: #e0e7ff;\r\n            color: #3730a3;\r\n            padding: 0.25rem 0.5rem;\r\n            border-radius: 4px;\r\n            font-size: 0.8rem;\r\n            display: flex;\r\n            align-items: center;\r\n            gap: 0.25rem;\r\n        }\r\n\r\n        .spec-selected-tag button {\r\n            background: none;\r\n            border: none;\r\n            color: #3730a3;\r\n            cursor: pointer;\r\n            padding: 0;\r\n            width: auto;\r\n            font-size: 0.7rem;\r\n            line-height: 1;\r\n        }\r\n\r\n        .results-table-container {\r\n            overflow-x: auto;\r\n            overflow-y: visible;\r\n            border: 1px solid #e5e7eb;\r\n            border-radius: 8px;\r\n            background: white;\r\n            box-shadow: 0 4px 6px rgba(0,0,0,0.05);\r\n            width: 100%;\r\n        }\r\n\r\n        .results-table {\r\n            width: max-content;\r\n            min-width: 100%;\r\n            border-collapse: collapse;\r\n            background: white;\r\n            margin: 0;\r\n        }\r\n\r\n        .results-table th,\r\n        .results-table td {\r\n            padding: 1rem;\r\n            text-align: left;\r\n            border-bottom: 1px solid #e5e7eb;\r\n        }\r\n\r\n        .results-table th {\r\n            background: #f3f4f6;\r\n            font-weight: 600;\r\n            color: #374151;\r\n        }\r\n\r\n        .results-table tr:hover {\r\n            background: #f9fafb;\r\n        }\r\n\r\n        .loading {\r\n            text-align: center;\r\n            padding: 2rem;\r\n            color: #6b7280;\r\n        }\r\n\r\n        .error {\r\n            background: #fef2f2;\r\n            border: 1px solid #fecaca;\r\n            color: #dc2626;\r\n            padding: 1rem;\r\n            border-radius: 8px;\r\n            margin: 1rem 0;\r\n        }\r\n\r\n        .success {\r\n            background: #f0fdf4;\r\n            border: 1px solid #bbf7d0;\r\n            color: #16a34a;\r\n            padding: 1rem;\r\n            border-radius: 8px;\r\n            margin: 1rem 0;\r\n        }\r\n\r\n        .hidden {\r\n            display: none;\r\n        }\r\n\r\n        .grid {\r\n            display: grid;\r\n            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));\r\n            gap: 1rem;\r\n        }\r\n\r\n        .filter-item {\r\n            margin-bottom: 1rem;\r\n        }\r\n\r\n        .filter-controls-row {\r\n            display: flex;\r\n            gap: 0.5rem;\r\n            margin-top: 0.5rem;\r\n            align-items: center;\r\n        }\r\n\r\n        .filter-controls-row input[type=\"number\"] {\r\n            flex: 1;\r\n        }\r\n\r\n        .filter-controls-row button {\r\n            width: auto;\r\n            padding: 0.5rem;\r\n            background: #ef4444;\r\n            font-size: 0.8rem;\r\n            color: white;\r\n            border: none;\r\n            border-radius: 4px;\r\n            cursor: pointer;\r\n        }\r\n\r\n        .kwargs-item {\r\n            display: grid;\r\n            grid-template-columns: 2fr 2fr 1fr auto;\r\n            gap: 0.5rem;\r\n            margin-bottom: 0.5rem;\r\n            align-items: end;\r\n        }\r\n\r\n        .kwargs-container {\r\n            border: 1px solid #d1d5db;\r\n            border-radius: 8px;\r\n            padding: 1rem;\r\n            background: white;\r\n            margin-bottom: 1rem;\r\n        }\r\n\r\n        @media (max-width: 768px) {\r\n            .spec-item {\r\n                grid-template-columns: 1fr;\r\n            }\r\n\r\n            .header h1 {\r\n                font-size: 2rem;\r\n            }\r\n\r\n            .content {\r\n                padding: 1rem;\r\n            }\r\n        }\r\n    </style>\r\n</head>\r\n<body>\r\n    <div class=\"container\">\r\n        <div class=\"header\">\r\n            <h1>Component Matcher</h1>\r\n            <p>Find and score components based on your specifications</p>\r\n        </div>\r\n\r\n        <div class=\"content\">\r\n            <!-- Step 1: Select Solution -->\r\n            <div class=\"section\">\r\n                <h2>1. Select Solution Type</h2>\r\n                <div class=\"form-group\">\r\n                    <label for=\"solutionSelect\">Choose a solution category:</label>\r\n                    <select id=\"solutionSelect\">\r\n                        <option value=\"\">Loading solutions...</option>\r\n                    </select>\r\n                </div>\r\n            </div>\r\n\r\n            <!-- Step 2: Select System -->\r\n            <div class=\"section hidden\" id=\"systemSection\">\r\n                <h2>2. Select System Type</h2>\r\n                <div class=\"loading-indicator\" id=\"systemLoadingIndicator\">Loading systems...</div>\r\n                <div class=\"form-group\">\r\n                    <label for=\"systemSelect\">Choose a system:</label>\r\n                    <select id=\"systemSelect\">\r\n                        <option value=\"\">Select a solution first</option>\r\n                    </select>\r\n                </div>\r\n            </div>\r\n\r\n            <!-- Step 3: Configure Specifications -->\r\n            <div class=\"section hidden\" id=\"specsSection\">\r\n                <h2>3. Configure Specifications</h2>\r\n                <div class=\"loading-indicator\" id=\"specsLoadingIndicator\">Loading parameters...</div>\r\n                <div class=\"specs-container\">\r\n                    <div id=\"specsContainer\">\r\n                        <!-- Specs will be added here dynamically -->\r\n                    </div>\r\n                    <button type=\"button\" class=\"add-btn\" id=\"addSpecBtn\">Add Specification</button>\r\n                </div>\r\n                <button type=\"button\" id=\"searchBtn\" style=\"margin-top: 1rem;\">Search Components</button>\r\n            </div>\r\n\r\n            <!-- Step 4: Configure Scoring Parameters (Optional) -->\r\n            <div class=\"section hidden\" id=\"kwargsSection\">\r\n                <h2>4. Configure Scoring Parameters (Optional)</h2>\r\n                <div class=\"grid\" style=\"margin-bottom: 1rem;\">\r\n                    <div>\r\n                        <h3>Global Type Parameters</h3>\r\n                        <div id=\"typeKwargsContainer\">\r\n                            <!-- Type-wide kwargs will be added here -->\r\n                        </div>\r\n                        <button type=\"button\" class=\"add-btn\" id=\"addTypeKwargBtn\">Add Type Parameter</button>\r\n                    </div>\r\n                    <div>\r\n                        <h3>Column-Specific Parameters</h3>\r\n                        <div id=\"colKwargsContainer\">\r\n                            <!-- Column-specific kwargs will be added here -->\r\n                        </div>\r\n                        <button type=\"button\" class=\"add-btn\" id=\"addColKwargBtn\">Add Column Parameter</button>\r\n                    </div>\r\n                </div>\r\n            </div>\r\n\r\n            <!-- Results Section -->\r\n            <div class=\"section hidden\" id=\"resultsSection\">\r\n                <h2>Results</h2>\r\n\r\n                <!-- Filters and Sorting Controls -->\r\n                <div class=\"hidden\" id=\"resultControls\">\r\n                    <div class=\"grid\" style=\"margin-bottom: 1rem;\">\r\n                        <div>\r\n                            <h3>Filter Results</h3>\r\n                            <div id=\"filtersContainer\">\r\n                                <!-- Filters will be added here -->\r\n                            </div>\r\n                            <button type=\"button\" class=\"add-btn\" id=\"addFilterBtn\">Add Filter</button>\r\n                        </div>\r\n\r\n                        <div>\r\n                            <h3>Sort Results</h3>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"sortBySelect\">Sort by:</label>\r\n                                <select id=\"sortBySelect\">\r\n                                    <option value=\"overall_score\">Overall Score</option>\r\n                                </select>\r\n                            </div>\r\n                            <div class=\"form-group\" style=\"display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;\">\r\n                                <label for=\"sortAscCheckbox\" style=\"margin: 0;\">Sort ascending</label>\r\n                                <input type=\"checkbox\" id=\"sortAscCheckbox\">\r\n                            </div>\r\n                            <div class=\"form-group\" style=\"display: flex; align-items: center; gap: 0.3rem; white-space: nowrap;\">\r\n                                <label for=\"scoreCouplingCheckbox\" style=\"margin: 0;\">Score coupling</label>\r\n                                <input type=\"checkbox\" id=\"scoreCouplingCheckbox\">\r\n                            </div>\r\n                        </div>\r\n\r\n                        <div>\r\n                            <h3>Pagination</h3>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"pageInput\">Page:</label>\r\n                                <input type=\"number\" id=\"pageInput\" value=\"1\" min=\"1\">\r\n                            </div>\r\n                            <div class=\"form-group\">\r\n                                <label for=\"perPageSelect\">Results per page:</label>\r\n                                <select id=\"perPageSelect\">\r\n                                    <option value=\"10\">10</option>\r\n                                    <option value=\"25\">25</option>\r\n                                    <option value=\"50\">50</option>\r\n                                    <option value=\"100\">100</option>\r\n                                </select>\r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n\r\n                    <button type=\"button\" id=\"applyFiltersBtn\">Apply Filters & Sorting</button>\r\n                </div>\r\n\r\n                <div class=\"results-container\" id=\"resultsContainer\">\r\n                    <!-- Results will be displayed here -->\r\n                </div>\r\n            </div>\r\n        </div>\r\n    </div>\r\n\r\n    <script>\r\n        const API_BASE = 'http://localhost:8000'; // Change this to your API URL\r\n\r\n        let currentSolution = '';\r\n        let currentSystem = '';\r\n        let availableColumns = [];\r\n        let currentSessionId = '';\r\n        let allResultColumns = [];\r\n        let availableDataTypes = new Set();\r\n\r\n        // Initialize the application\r\n        async function init() {\r\n            await loadSolutions();\r\n        }\r\n\r\n        // Load available solutions\r\n        async function loadSolutions() {\r\n            try {\r\n                const response = await fetch(`${API_BASE}/options`);\r\n                const data = await response.json();\r\n\r\n                const select = document.getElementById('solutionSelect');\r\n                select.innerHTML = '<option value=\"\">Select a solution...</option>';\r\n\r\n                data.schemas.forEach(schema => {\r\n                    // Filter out metadata and pg_toast schemas\r\n                    if (schema !== 'metadata' && schema !== 'pg_toast') {\r\n                        const option = document.createElement('option');\r\n                        option.value = schema;\r\n                        option.textContent = schema;\r\n                        select.appendChild(option);\r\n                    }\r\n                });\r\n            } catch (error) {\r\n                showError('Failed to load solutions: ' + error.message);\r\n            }\r\n        }\r\n\r\n        // Load systems for selected solution\r\n        async function loadSystems(solution) {\r\n            try {\r\n                // Reset subsequent sections when solution changes\r\n                resetSystemAndBelow();\r\n\r\n                // Show loading indicator\r\n                document.getElementById('systemSection').classList.remove('hidden');\r\n                document.getElementById('systemLoadingIndicator').classList.add('show');\r\n\r\n                const response = await fetch(`${API_BASE}/options/${solution}`);\r\n                const data = await response.json();\r\n\r\n                const select = document.getElementById('systemSelect');\r\n                select.innerHTML = '<option value=\"\">Select a system...</option>';\r\n\r\n                data.tables.forEach(table => {\r\n                    const option = document.createElement('option');\r\n                    option.value = table;\r\n                    option.textContent = table;\r\n                    select.appendChild(option);\r\n                });\r\n\r\n                // Hide loading indicator\r\n                document.getElementById('systemLoadingIndicator').classList.remove('show');\r\n\r\n            } catch (error) {\r\n                document.getElementById('systemLoadingIndicator').classList.remove('show');\r\n                showError('Failed to load systems: ' + error.message);\r\n            }\r\n        }\r\n\r\n        // Reset system selection and everything below it\r\n        function resetSystemAndBelow() {\r\n            document.getElementById('systemSelect').innerHTML = '<option value=\"\">Select a system...</option>';\r\n            document.getElementById('specsSection').classList.add('hidden');\r\n            document.getElementById('kwargsSection').classList.add('hidden');\r\n            resetResultsAndBelow();\r\n            currentSystem = '';\r\n            availableColumns = [];\r\n            availableDataTypes.clear();\r\n        }\r\n\r\n        // Load parameters for selected system\r\n        async function loadParameters(solution, system) {\r\n            try {\r\n                // Reset everything below this level\r\n                resetResultsAndBelow();\r\n\r\n                // Show loading indicator\r\n                document.getElementById('specsSection').classList.remove('hidden');\r\n                document.getElementById('specsLoadingIndicator').classList.add('show');\r\n\r\n                const response = await fetch(`${API_BASE}/options/${solution}/${system}`);\r\n                const data = await response.json();\r\n\r\n                availableColumns = data.columns;\r\n\r\n                // Collect unique data types\r\n                availableDataTypes.clear();\r\n                data.columns.forEach(col => {\r\n                    availableDataTypes.add(col.dtype);\r\n                });\r\n\r\n                setupSpecsSection();\r\n                setupKwargsSection();\r\n\r\n                // Hide loading indicator\r\n                document.getElementById('specsLoadingIndicator').classList.remove('show');\r\n\r\n            } catch (error) {\r\n                document.getElementById('specsLoadingIndicator').classList.remove('show');\r\n                showError('Failed to load parameters: ' + error.message);\r\n            }\r\n        }\r\n\r\n        // Reset results and everything below\r\n        function resetResultsAndBelow() {\r\n            document.getElementById('resultsSection').classList.add('hidden');\r\n            document.getElementById('resultControls').classList.add('hidden');\r\n            currentSessionId = '';\r\n            allResultColumns = [];\r\n        }\r\n\r\n        // Setup specifications section\r\n        function setupSpecsSection() {\r\n            // Reset results when specs change\r\n            resetResultsAndBelow();\r\n\r\n            const container = document.getElementById('specsContainer');\r\n            container.innerHTML = '';\r\n            addSpecificationRow();\r\n        }\r\n\r\n        // Setup kwargs section\r\n        function setupKwargsSection() {\r\n            document.getElementById('kwargsSection').classList.remove('hidden');\r\n\r\n            const typeContainer = document.getElementById('typeKwargsContainer');\r\n            const colContainer = document.getElementById('colKwargsContainer');\r\n\r\n            typeContainer.innerHTML = '';\r\n            colContainer.innerHTML = '';\r\n        }\r\n\r\n        // Add a specification row\r\n        function addSpecificationRow() {\r\n            const container = document.getElementById('specsContainer');\r\n            const specItem = document.createElement('div');\r\n            specItem.className = 'spec-item';\r\n\r\n            // Get already used parameters to prevent duplicates\r\n            const usedParams = Array.from(container.querySelectorAll('.spec-item select')).map(select => select.value).filter(val => val);\r\n\r\n            const paramSelect = document.createElement('select');\r\n            paramSelect.innerHTML = '<option value=\"\">Select parameter...</option>';\r\n            availableColumns.forEach(col => {\r\n                // Only add if not already used\r\n                if (!usedParams.includes(col.name)) {\r\n                    const option = document.createElement('option');\r\n                    option.value = col.name;\r\n                    option.textContent = `${col.name} (${col.dtype})`;\r\n                    paramSelect.appendChild(option);\r\n                }\r\n            });\r\n\r\n            const valueContainer = document.createElement('div');\r\n            valueContainer.className = 'spec-value-container';\r\n\r\n            const valueInput = document.createElement('input');\r\n            valueInput.type = 'text';\r\n            valueInput.placeholder = 'Value';\r\n            valueInput.className = 'spec-search-input';\r\n            valueInput.readOnly = true; // Make it read-only for multi-select\r\n\r\n            const multiSelectDiv = document.createElement('div');\r\n            multiSelectDiv.className = 'spec-multi-select';\r\n\r\n            const selectedItemsDiv = document.createElement('div');\r\n            selectedItemsDiv.className = 'spec-selected-items';\r\n\r\n            valueContainer.appendChild(valueInput);\r\n            valueContainer.appendChild(selectedItemsDiv);\r\n            valueContainer.appendChild(multiSelectDiv);\r\n\r\n            // Setup search functionality\r\n            let currentOptions = [];\r\n            let selectedValues = [];\r\n            let isMultiSelect = false;\r\n\r\n            // Update options when parameter changes\r\n            paramSelect.addEventListener('change', function() {\r\n                const selectedParam = availableColumns.find(col => col.name === this.value);\r\n                currentOptions = selectedParam?.options || [];\r\n                selectedValues = [];\r\n\r\n                // Check parameter type for input mode\r\n                if (selectedParam && selectedParam.dtype === 'boolean') {\r\n                    // Boolean parameters get a true/false dropdown\r\n                    isMultiSelect = false;\r\n                    currentOptions = ['true', 'false'];\r\n                    valueInput.placeholder = 'Click to select true/false';\r\n                    valueInput.readOnly = true;\r\n                } else if (selectedParam && selectedParam.dtype === 'list' && currentOptions.length > 0) {\r\n                    // List parameters get multi-select checkboxes\r\n                    isMultiSelect = true;\r\n                    valueInput.placeholder = 'Click to select options';\r\n                    valueInput.readOnly = true;\r\n                } else if (currentOptions.length > 0) {\r\n                    // String parameters with options get single-select dropdown\r\n                    isMultiSelect = false;\r\n                    valueInput.placeholder = 'Value (click to see options)';\r\n                    valueInput.readOnly = false;\r\n                } else {\r\n                    // Parameters without options get regular text input\r\n                    isMultiSelect = false;\r\n                    valueInput.placeholder = 'Value';\r\n                    valueInput.readOnly = false;\r\n                }\r\n\r\n                valueInput.value = '';\r\n                multiSelectDiv.style.display = 'none';\r\n                updateSelectedItems();\r\n\r\n                // Update other dropdowns to remove this selection\r\n                updateParameterDropdowns();\r\n            });\r\n\r\n            // Show multi-select when clicking on input (for multi-select mode)\r\n            valueInput.addEventListener('click', function() {\r\n                const selectedParam = availableColumns.find(col => col.name === paramSelect.value);\r\n\r\n                if (selectedParam && selectedParam.dtype === 'boolean') {\r\n                    // Show true/false dropdown for boolean parameters\r\n                    showBooleanSelect();\r\n                } else if (isMultiSelect && currentOptions.length > 0) {\r\n                    showMultiSelect();\r\n                } else if (!isMultiSelect && currentOptions.length > 0) {\r\n                    showSingleSelect();\r\n                }\r\n            });\r\n\r\n            // Allow typing for single-value inputs\r\n            valueInput.addEventListener('input', function() {\r\n                if (!isMultiSelect && currentOptions.length > 0) {\r\n                    showSingleSelect(this.value);\r\n                }\r\n            });\r\n\r\n            function showSingleSelect(query = '') {\r\n                multiSelectDiv.innerHTML = '';\r\n\r\n                if (currentOptions.length === 0) {\r\n                    multiSelectDiv.style.display = 'none';\r\n                    return;\r\n                }\r\n\r\n                const filteredOptions = query === '' ?\r\n                    currentOptions :\r\n                    currentOptions.filter(option =>\r\n                        option.toString().toLowerCase().includes(query.toLowerCase())\r\n                    );\r\n\r\n                if (filteredOptions.length === 0) {\r\n                    multiSelectDiv.style.display = 'none';\r\n                    return;\r\n                }\r\n\r\n                // Sort filtered options alphabetically\r\n                const sortedOptions = filteredOptions.sort((a, b) =>\r\n                    a.toString().localeCompare(b.toString())\r\n                );\r\n\r\n                sortedOptions.forEach(option => {\r\n                    const optionDiv = document.createElement('div');\r\n                    optionDiv.className = 'spec-multi-option';\r\n                    optionDiv.style.justifyContent = 'flex-start';\r\n\r\n                    const label = document.createElement('span');\r\n                    label.textContent = option;\r\n                    label.style.cursor = 'pointer';\r\n\r\n                    optionDiv.appendChild(label);\r\n\r\n                    optionDiv.addEventListener('click', function() {\r\n                        valueInput.value = option;\r\n                        multiSelectDiv.style.display = 'none';\r\n                    });\r\n\r\n                    multiSelectDiv.appendChild(optionDiv);\r\n                });\r\n\r\n                multiSelectDiv.style.display = 'block';\r\n            }\r\n\r\n            function showBooleanSelect() {\r\n                multiSelectDiv.innerHTML = '';\r\n\r\n                ['false', 'true'].forEach(option => {\r\n                    const optionDiv = document.createElement('div');\r\n                    optionDiv.className = 'spec-multi-option';\r\n                    optionDiv.style.justifyContent = 'flex-start';\r\n\r\n                    const label = document.createElement('span');\r\n                    label.textContent = option;\r\n                    label.style.cursor = 'pointer';\r\n\r\n                    optionDiv.appendChild(label);\r\n\r\n                    optionDiv.addEventListener('click', function() {\r\n                        valueInput.value = option;\r\n                        multiSelectDiv.style.display = 'none';\r\n                    });\r\n\r\n                    multiSelectDiv.appendChild(optionDiv);\r\n                });\r\n\r\n                multiSelectDiv.style.display = 'block';\r\n            }\r\n\r\n            function showMultiSelect() {\r\n                multiSelectDiv.innerHTML = '';\r\n\r\n                // Sort options alphabetically\r\n                const sortedOptions = [...currentOptions].sort((a, b) =>\r\n                    a.toString().localeCompare(b.toString())\r\n                );\r\n\r\n                sortedOptions.forEach(option => {\r\n                    const optionDiv = document.createElement('div');\r\n                    optionDiv.className = 'spec-multi-option';\r\n\r\n                    const checkbox = document.createElement('input');\r\n                    checkbox.type = 'checkbox';\r\n                    checkbox.checked = selectedValues.includes(option);\r\n\r\n                    const label = document.createElement('span');\r\n                    label.textContent = option;\r\n\r\n                    optionDiv.appendChild(checkbox);\r\n                    optionDiv.appendChild(label);\r\n\r\n                    optionDiv.addEventListener('click', function(e) {\r\n                        if (e.target.type !== 'checkbox') {\r\n                            checkbox.checked = !checkbox.checked;\r\n                        }\r\n                        toggleOption(option, checkbox.checked);\r\n                    });\r\n\r\n                    checkbox.addEventListener('change', function() {\r\n                        toggleOption(option, this.checked);\r\n                    });\r\n\r\n                    multiSelectDiv.appendChild(optionDiv);\r\n                });\r\n\r\n                multiSelectDiv.style.display = 'block';\r\n            }\r\n\r\n            function toggleOption(option, isSelected) {\r\n                if (isSelected) {\r\n                    if (!selectedValues.includes(option)) {\r\n                        selectedValues.push(option);\r\n                    }\r\n                } else {\r\n                    selectedValues = selectedValues.filter(val => val !== option);\r\n                }\r\n                updateSelectedItems();\r\n                updateInputValue();\r\n            }\r\n\r\n            function updateSelectedItems() {\r\n                // Hidden for now to clean up the interface\r\n                selectedItemsDiv.innerHTML = '';\r\n            }\r\n\r\n            function updateInputValue() {\r\n                if (isMultiSelect) {\r\n                    valueInput.value = selectedValues.join(', ');\r\n                }\r\n            }\r\n\r\n            // Hide multi-select when clicking outside\r\n            document.addEventListener('click', function(e) {\r\n                if (!valueContainer.contains(e.target)) {\r\n                    multiSelectDiv.style.display = 'none';\r\n                }\r\n            });\r\n\r\n            const weightInput = document.createElement('input');\r\n            weightInput.type = 'number';\r\n            weightInput.placeholder = 'Weight';\r\n            weightInput.value = '1';\r\n            weightInput.step = '0.1';\r\n            weightInput.min = '0.1';\r\n\r\n            const removeBtn = document.createElement('button');\r\n            removeBtn.textContent = '×';\r\n            removeBtn.className = 'remove-btn';\r\n            removeBtn.onclick = () => specItem.remove();\r\n\r\n            specItem.appendChild(paramSelect);\r\n            specItem.appendChild(valueContainer);\r\n            specItem.appendChild(weightInput);\r\n            specItem.appendChild(removeBtn);\r\n\r\n            container.appendChild(specItem);\r\n        }\r\n\r\n        // Update parameter dropdowns to prevent duplicates\r\n        function updateParameterDropdowns() {\r\n            const container = document.getElementById('specsContainer');\r\n            const allSelects = container.querySelectorAll('.spec-item select');\r\n            const usedParams = Array.from(allSelects).map(select => select.value).filter(val => val);\r\n\r\n            allSelects.forEach(select => {\r\n                const currentValue = select.value;\r\n                select.innerHTML = '<option value=\"\">Select parameter...</option>';\r\n\r\n                availableColumns.forEach(col => {\r\n                    // Add option if it's not used elsewhere OR it's the current selection\r\n                    if (!usedParams.includes(col.name) || col.name === currentValue) {\r\n                        const option = document.createElement('option');\r\n                        option.value = col.name;\r\n                        option.textContent = `${col.name} (${col.dtype})`;\r\n                        if (col.name === currentValue) option.selected = true;\r\n                        select.appendChild(option);\r\n                    }\r\n                });\r\n            });\r\n        }\r\n\r\n        // Add a type-wide kwargs row\r\n        function addTypeKwargRow() {\r\n            const container = document.getElementById('typeKwargsContainer');\r\n            const kwargsItem = document.createElement('div');\r\n            kwargsItem.className = 'kwargs-item';\r\n\r\n            // Data type select\r\n            const typeSelect = document.createElement('select');\r\n            typeSelect.innerHTML = '<option value=\"\">Select data type...</option>';\r\n            Array.from(availableDataTypes).sort().forEach(dtype => {\r\n                const option = document.createElement('option');\r\n                option.value = dtype;\r\n                option.textContent = dtype;\r\n                typeSelect.appendChild(option);\r\n            });\r\n\r\n            // Parameter name input\r\n            const paramInput = document.createElement('input');\r\n            paramInput.type = 'text';\r\n            paramInput.placeholder = 'Parameter name';\r\n\r\n            // Parameter value input\r\n            const valueInput = document.createElement('input');\r\n            valueInput.type = 'text';\r\n            valueInput.placeholder = 'Parameter value';\r\n\r\n            // Remove button\r\n            const removeBtn = document.createElement('button');\r\n            removeBtn.textContent = '×';\r\n            removeBtn.className = 'remove-btn';\r\n            removeBtn.onclick = () => kwargsItem.remove();\r\n\r\n            kwargsItem.appendChild(typeSelect);\r\n            kwargsItem.appendChild(paramInput);\r\n            kwargsItem.appendChild(valueInput);\r\n            kwargsItem.appendChild(removeBtn);\r\n\r\n            container.appendChild(kwargsItem);\r\n        }\r\n\r\n        // Add a column-specific kwargs row\r\n        function addColKwargRow() {\r\n            const container = document.getElementById('colKwargsContainer');\r\n            const kwargsItem = document.createElement('div');\r\n            kwargsItem.className = 'kwargs-item';\r\n\r\n            // Column select\r\n            const colSelect = document.createElement('select');\r\n            colSelect.innerHTML = '<option value=\"\">Select column...</option>';\r\n            availableColumns.forEach(col => {\r\n                const option = document.createElement('option');\r\n                option.value = col.name;\r\n                option.textContent = `${col.name} (${col.dtype})`;\r\n                colSelect.appendChild(option);\r\n            });\r\n\r\n            // Parameter name input with dropdown if kwargs available\r\n            const paramContainer = document.createElement('div');\r\n            paramContainer.style.position = 'relative';\r\n\r\n            const paramInput = document.createElement('input');\r\n            paramInput.type = 'text';\r\n            paramInput.placeholder = 'Parameter name';\r\n\r\n            const paramDropdown = document.createElement('div');\r\n            paramDropdown.className = 'spec-multi-select';\r\n            paramDropdown.style.display = 'none';\r\n\r\n            paramContainer.appendChild(paramInput);\r\n            paramContainer.appendChild(paramDropdown);\r\n\r\n            // Update parameter suggestions when column changes\r\n            colSelect.addEventListener('change', function() {\r\n                const selectedCol = availableColumns.find(col => col.name === this.value);\r\n                if (selectedCol && selectedCol.kwargs) {\r\n                    // Show available kwargs for this column\r\n                    updateParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);\r\n                } else {\r\n                    paramDropdown.style.display = 'none';\r\n                }\r\n            });\r\n\r\n            // Show suggestions when clicking on parameter input\r\n            paramInput.addEventListener('click', function() {\r\n                const selectedCol = availableColumns.find(col => col.name === colSelect.value);\r\n                if (selectedCol && selectedCol.kwargs) {\r\n                    showParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);\r\n                }\r\n            });\r\n\r\n            // Parameter value input\r\n            const valueInput = document.createElement('input');\r\n            valueInput.type = 'text';\r\n            valueInput.placeholder = 'Parameter value';\r\n\r\n            // Remove button\r\n            const removeBtn = document.createElement('button');\r\n            removeBtn.textContent = '×';\r\n            removeBtn.className = 'remove-btn';\r\n            removeBtn.onclick = () => kwargsItem.remove();\r\n\r\n            kwargsItem.appendChild(colSelect);\r\n            kwargsItem.appendChild(paramContainer);\r\n            kwargsItem.appendChild(valueInput);\r\n            kwargsItem.appendChild(removeBtn);\r\n\r\n            container.appendChild(kwargsItem);\r\n        }\r\n\r\n        // Update parameter suggestions for column kwargs\r\n        function updateParamSuggestions(paramInput, paramDropdown, kwargs) {\r\n            if (!kwargs || Object.keys(kwargs).length === 0) {\r\n                paramDropdown.style.display = 'none';\r\n                return;\r\n            }\r\n\r\n            paramDropdown.innerHTML = '';\r\n\r\n            Object.keys(kwargs).forEach(paramName => {\r\n                const optionDiv = document.createElement('div');\r\n                optionDiv.className = 'spec-multi-option';\r\n                optionDiv.style.justifyContent = 'flex-start';\r\n\r\n                const label = document.createElement('span');\r\n                label.textContent = `${paramName}: ${kwargs[paramName]}`;\r\n                label.style.cursor = 'pointer';\r\n\r\n                optionDiv.appendChild(label);\r\n\r\n                optionDiv.addEventListener('click', function() {\r\n                    paramInput.value = paramName;\r\n                    paramDropdown.style.display = 'none';\r\n                });\r\n\r\n                paramDropdown.appendChild(optionDiv);\r\n            });\r\n        }\r\n\r\n        // Show parameter suggestions\r\n        function showParamSuggestions(paramInput, paramDropdown, kwargs) {\r\n            if (!kwargs || Object.keys(kwargs).length === 0) {\r\n                return;\r\n            }\r\n\r\n            updateParamSuggestions(paramInput, paramDropdown, kwargs);\r\n            paramDropdown.style.display = 'block';\r\n\r\n            // Hide dropdown when clicking outside\r\n            const hideDropdown = (e) => {\r\n                if (!paramInput.parentElement.contains(e.target)) {\r\n                    paramDropdown.style.display = 'none';\r\n                    document.removeEventListener('click', hideDropdown);\r\n                }\r\n            };\r\n\r\n            setTimeout(() => {\r\n                document.addEventListener('click', hideDropdown);\r\n            }, 0);\r\n        }\r\n\r\n        // Perform search\r\n        async function performSearch() {\r\n            const specs = [];\r\n            const specItems = document.querySelectorAll('.spec-item');\r\n\r\n            for (let item of specItems) {\r\n                const param = item.children[0].value;\r\n                const value = item.children[1].querySelector('input').value;\r\n                const weight = parseFloat(item.children[2].value);\r\n\r\n                if (param && value && weight) {\r\n                    // Try to parse value as number if possible\r\n                    let parsedValue = value;\r\n                    if (!isNaN(value) && !isNaN(parseFloat(value))) {\r\n                        parsedValue = parseFloat(value);\r\n                    }\r\n\r\n                    specs.push({\r\n                        name: param,\r\n                        value: parsedValue,\r\n                        weight: weight\r\n                    });\r\n                }\r\n            }\r\n\r\n            if (specs.length === 0) {\r\n                showError('Please add at least one specification');\r\n                return;\r\n            }\r\n\r\n            // Collect kwargs\r\n            const kwargs = {\r\n                col_kwargs: {},\r\n                type_kwargs: {}\r\n            };\r\n\r\n            // Collect type-wide kwargs\r\n            const typeKwargItems = document.querySelectorAll('#typeKwargsContainer .kwargs-item');\r\n            typeKwargItems.forEach(item => {\r\n                const dataType = item.children[0].value;\r\n                const paramName = item.children[1].value;\r\n                const paramValue = item.children[2].value;\r\n\r\n                if (dataType && paramName && paramValue) {\r\n                    if (!kwargs.type_kwargs[dataType]) {\r\n                        kwargs.type_kwargs[dataType] = {};\r\n                    }\r\n\r\n                    // Try to parse value as number if possible\r\n                    let parsedValue = paramValue;\r\n                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {\r\n                        parsedValue = parseFloat(paramValue);\r\n                    } else if (paramValue.toLowerCase() === 'true') {\r\n                        parsedValue = true;\r\n                    } else if (paramValue.toLowerCase() === 'false') {\r\n                        parsedValue = false;\r\n                    }\r\n\r\n                    kwargs.type_kwargs[dataType][paramName] = parsedValue;\r\n                }\r\n            });\r\n\r\n            // Collect column-specific kwargs\r\n            const colKwargItems = document.querySelectorAll('#colKwargsContainer .kwargs-item');\r\n            colKwargItems.forEach(item => {\r\n                const colName = item.children[0].value;\r\n                const paramName = item.children[1].querySelector('input').value;\r\n                const paramValue = item.children[2].value;\r\n\r\n                if (colName && paramName && paramValue) {\r\n                    if (!kwargs.col_kwargs[colName]) {\r\n                        kwargs.col_kwargs[colName] = {};\r\n                    }\r\n\r\n                    // Try to parse value as number if possible\r\n                    let parsedValue = paramValue;\r\n                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {\r\n                        parsedValue = parseFloat(paramValue);\r\n                    } else if (paramValue.toLowerCase() === 'true') {\r\n                        parsedValue = true;\r\n                    } else if (paramValue.toLowerCase() === 'false') {\r\n                        parsedValue = false;\r\n                    }\r\n\r\n                    kwargs.col_kwargs[colName][paramName] = parsedValue;\r\n                }\r\n            });\r\n\r\n            // Only include kwargs if there are any\r\n            const hasKwargs = Object.keys(kwargs.col_kwargs).length > 0 || Object.keys(kwargs.type_kwargs).length > 0;\r\n\r\n            const searchRequest = {\r\n                location: {\r\n                    schema: currentSolution,\r\n                    table: currentSystem\r\n                },\r\n                specs: specs,\r\n                session_id: currentSessionId || null,\r\n                kwargs: hasKwargs ? kwargs : null\r\n            };\r\n\r\n            try {\r\n                document.getElementById('searchBtn').disabled = true;\r\n                document.getElementById('searchBtn').textContent = 'Searching...';\r\n\r\n                const response = await fetch(`${API_BASE}/search`, {\r\n                    method: 'POST',\r\n                    headers: {\r\n                        'Content-Type': 'application/json'\r\n                    },\r\n                    body: JSON.stringify(searchRequest)\r\n                });\r\n\r\n                const data = await response.json();\r\n                currentSessionId = data.session_id;\r\n                // FIXED: Changed from data.results to data.values\r\n                displayResults(data.values);\r\n\r\n            } catch (error) {\r\n                showError('Search failed: ' + error.message);\r\n            } finally {\r\n                document.getElementById('searchBtn').disabled = false;\r\n                document.getElementById('searchBtn').textContent = 'Search Components';\r\n            }\r\n        }\r\n\r\n        // Display search results\r\n        function displayResults(results) {\r\n            const container = document.getElementById('resultsContainer');\r\n\r\n            if (!results || results.length === 0) {\r\n                container.innerHTML = '<p>No results found.</p>';\r\n                document.getElementById('resultsSection').classList.remove('hidden');\r\n                return;\r\n            }\r\n\r\n            // Store all available columns for filtering/sorting\r\n            allResultColumns = Object.keys(results[0]);\r\n            setupResultControls();\r\n\r\n            const table = document.createElement('table');\r\n            table.className = 'results-table';\r\n\r\n            // Create header\r\n            const thead = document.createElement('thead');\r\n            const headerRow = document.createElement('tr');\r\n\r\n            allResultColumns.forEach(key => {\r\n                const th = document.createElement('th');\r\n                th.textContent = key.replace('_', ' ').toUpperCase();\r\n                headerRow.appendChild(th);\r\n            });\r\n\r\n            thead.appendChild(headerRow);\r\n            table.appendChild(thead);\r\n\r\n            // Create body\r\n            const tbody = document.createElement('tbody');\r\n\r\n            results.forEach(result => {\r\n                const row = document.createElement('tr');\r\n\r\n                allResultColumns.forEach(key => {\r\n                    const td = document.createElement('td');\r\n                    const value = result[key];\r\n                    td.textContent = value !== null && value !== undefined ? value : 'N/A';\r\n\r\n                    // Highlight score columns\r\n                    if (key.toLowerCase().includes('score')) {\r\n                        td.className = 'score-cell';\r\n                    }\r\n\r\n                    row.appendChild(td);\r\n                });\r\n\r\n                tbody.appendChild(row);\r\n            });\r\n\r\n            table.appendChild(tbody);\r\n\r\n            // Create dedicated table container\r\n            const tableContainer = document.createElement('div');\r\n            tableContainer.className = 'results-table-container';\r\n            tableContainer.appendChild(table);\r\n\r\n            container.innerHTML = '';\r\n            container.appendChild(tableContainer);\r\n\r\n            document.getElementById('resultsSection').classList.remove('hidden');\r\n            document.getElementById('resultControls').classList.remove('hidden');\r\n            showSuccess(`Found ${results.length} results (Session ID: ${currentSessionId})`);\r\n        }\r\n\r\n        // Setup result controls (filters, sorting, pagination)\r\n        function setupResultControls() {\r\n            // Store current values before updating\r\n            const currentSortBy = document.getElementById('sortBySelect').value;\r\n            const currentSortAsc = document.getElementById('sortAscCheckbox').checked;\r\n            const currentScoreCoupling = document.getElementById('scoreCouplingCheckbox').checked;\r\n            const currentPage = document.getElementById('pageInput').value;\r\n            const currentPerPage = document.getElementById('perPageSelect').value;\r\n\r\n            // Populate sort dropdown\r\n            const sortSelect = document.getElementById('sortBySelect');\r\n            sortSelect.innerHTML = '';\r\n            allResultColumns.forEach(col => {\r\n                const option = document.createElement('option');\r\n                option.value = col;\r\n                option.textContent = col.replace('_', ' ').toUpperCase();\r\n                // Restore previous selection or default to overall_score\r\n                if (col === currentSortBy || (col === 'overall_score' && !currentSortBy)) {\r\n                    option.selected = true;\r\n                }\r\n                sortSelect.appendChild(option);\r\n            });\r\n\r\n            // Only clear filters and reset controls on initial search (not when applying filters)\r\n            if (!document.getElementById('resultControls').classList.contains('hidden')) {\r\n                // This is a filter application, preserve current settings\r\n                document.getElementById('sortAscCheckbox').checked = currentSortAsc;\r\n                document.getElementById('scoreCouplingCheckbox').checked = currentScoreCoupling;\r\n                document.getElementById('pageInput').value = currentPage;\r\n                document.getElementById('perPageSelect').value = currentPerPage;\r\n            } else {\r\n                // This is a new search, reset everything\r\n                document.getElementById('filtersContainer').innerHTML = '';\r\n                document.getElementById('sortAscCheckbox').checked = false;\r\n                document.getElementById('scoreCouplingCheckbox').checked = false;\r\n                document.getElementById('pageInput').value = '1';\r\n                document.getElementById('perPageSelect').value = '10';\r\n            }\r\n        }\r\n\r\n        // Add a filter row\r\n        function addFilterRow() {\r\n            const container = document.getElementById('filtersContainer');\r\n            const filterItem = document.createElement('div');\r\n            filterItem.className = 'filter-item';\r\n\r\n            // Get already used parameters to prevent duplicates\r\n            const usedParams = Array.from(container.querySelectorAll('.filter-item select')).map(select => select.value).filter(val => val);\r\n\r\n            const paramSelect = document.createElement('select');\r\n            paramSelect.innerHTML = '<option value=\"\">Select parameter...</option>';\r\n            allResultColumns.forEach(col => {\r\n                // Only add if not already used\r\n                if (!usedParams.includes(col)) {\r\n                    const option = document.createElement('option');\r\n                    option.value = col;\r\n                    option.textContent = col.replace('_', ' ').toUpperCase();\r\n                    paramSelect.appendChild(option);\r\n                }\r\n            });\r\n\r\n            // Update other filter dropdowns when this one changes\r\n            paramSelect.addEventListener('change', function() {\r\n                updateFilterDropdowns();\r\n            });\r\n\r\n            const minInput = document.createElement('input');\r\n            minInput.type = 'number';\r\n            minInput.placeholder = 'Min value';\r\n\r\n            const maxInput = document.createElement('input');\r\n            maxInput.type = 'number';\r\n            maxInput.placeholder = 'Max value';\r\n\r\n            const removeBtn = document.createElement('button');\r\n            removeBtn.textContent = '×';\r\n            removeBtn.onclick = () => filterItem.remove();\r\n\r\n            filterItem.appendChild(paramSelect);\r\n\r\n            const controlRow = document.createElement('div');\r\n            controlRow.className = 'filter-controls-row';\r\n\r\n            controlRow.appendChild(minInput);\r\n            controlRow.appendChild(maxInput);\r\n            controlRow.appendChild(removeBtn);\r\n\r\n            filterItem.appendChild(controlRow);\r\n\r\n            container.appendChild(filterItem);\r\n        }\r\n\r\n        // Update filter dropdowns to prevent duplicates\r\n        function updateFilterDropdowns() {\r\n            const container = document.getElementById('filtersContainer');\r\n            const allSelects = container.querySelectorAll('.filter-item select');\r\n            const usedParams = Array.from(allSelects).map(select => select.value).filter(val => val);\r\n\r\n            allSelects.forEach(select => {\r\n                const currentValue = select.value;\r\n                select.innerHTML = '<option value=\"\">Select parameter...</option>';\r\n\r\n                allResultColumns.forEach(col => {\r\n                    // Add option if it's not used elsewhere OR it's the current selection\r\n                    if (!usedParams.includes(col) || col === currentValue) {\r\n                        const option = document.createElement('option');\r\n                        option.value = col;\r\n                        option.textContent = col.replace('_', ' ').toUpperCase();\r\n                        if (col === currentValue) option.selected = true;\r\n                        select.appendChild(option);\r\n                    }\r\n                });\r\n            });\r\n        }\r\n\r\n        // Apply filters, sorting, and pagination\r\n        async function applyFilters() {\r\n            if (!currentSessionId) {\r\n                showError('No search session found. Please perform a search first.');\r\n                return;\r\n            }\r\n\r\n            // Collect filters\r\n            const filters = [];\r\n            const filterItems = document.querySelectorAll('.filter-item');\r\n\r\n            filterItems.forEach(item => {\r\n                const param = item.children[0].value;  // paramSelect still first child\r\n\r\n                const controls = item.querySelector('.filter-controls-row'); // find controls row\r\n                const minVal = controls.children[0].value;  // minInput is first child of controls\r\n                const maxVal = controls.children[1].value;  // maxInput second child\r\n\r\n                if (param && (minVal || maxVal)) {\r\n                    const filter = { name: param };\r\n                    if (minVal) filter.min_val = parseFloat(minVal);\r\n                    if (maxVal) filter.max_val = parseFloat(maxVal);\r\n                    filters.push(filter);\r\n                }\r\n            });\r\n\r\n            // Collect sorting\r\n            const sortBy = document.getElementById('sortBySelect').value;\r\n            const sortAsc = document.getElementById('sortAscCheckbox').checked;\r\n            const scoreCoupling = document.getElementById('scoreCouplingCheckbox').checked;\r\n\r\n            // Collect pagination\r\n            const page = parseInt(document.getElementById('pageInput').value) || 1;\r\n            const perPage = parseInt(document.getElementById('perPageSelect').value) || 10;\r\n\r\n            const retrieveRequest = {\r\n                session_id: currentSessionId,\r\n                filters: filters,\r\n                sort: {\r\n                    by: sortBy,\r\n                    asc: sortAsc,\r\n                    score_coupling: scoreCoupling\r\n                },\r\n                pagination: {\r\n                    page: page,\r\n                    per_page: perPage\r\n                }\r\n            };\r\n\r\n            try {\r\n                document.getElementById('applyFiltersBtn').disabled = true;\r\n                document.getElementById('applyFiltersBtn').textContent = 'Applying...';\r\n\r\n                const response = await fetch(`${API_BASE}/search/${currentSessionId}`, {\r\n                    method: 'POST',\r\n                    headers: {\r\n                        'Content-Type': 'application/json'\r\n                    },\r\n                    body: JSON.stringify(retrieveRequest)\r\n                });\r\n\r\n                const data = await response.json();\r\n                // FIXED: Changed from data.results to data.values\r\n                displayResults(data.values);\r\n\r\n            } catch (error) {\r\n                showError('Failed to apply filters: ' + error.message);\r\n            } finally {\r\n                document.getElementById('applyFiltersBtn').disabled = false;\r\n                document.getElementById('applyFiltersBtn').textContent = 'Apply Filters & Sorting';\r\n            }\r\n        }\r\n\r\n        // Utility functions\r\n        function showError(message) {\r\n            const existing = document.querySelector('.error');\r\n            if (existing) existing.remove();\r\n\r\n            const error = document.createElement('div');\r\n            error.className = 'error';\r\n            error.textContent = message;\r\n            document.querySelector('.content').prepend(error);\r\n\r\n            setTimeout(() => error.remove(), 5000);\r\n        }\r\n\r\n        function showSuccess(message) {\r\n            const existing = document.querySelector('.success');\r\n            if (existing) existing.remove();\r\n\r\n            const success = document.createElement('div');\r\n            success.className = 'success';\r\n            success.textContent = message;\r\n            document.querySelector('.content').prepend(success);\r\n\r\n            setTimeout(() => success.remove(), 5000);\r\n        }\r\n\r\n        // Event listeners\r\n        document.getElementById('solutionSelect').addEventListener('change', function(e) {\r\n            currentSolution = e.target.value;\r\n            if (currentSolution) {\r\n                loadSystems(currentSolution);\r\n            } else {\r\n                resetSystemAndBelow();\r\n            }\r\n        });\r\n\r\n        document.getElementById('systemSelect').addEventListener('change', function(e) {\r\n            currentSystem = e.target.value;\r\n            if (currentSystem) {\r\n                loadParameters(currentSolution, currentSystem);\r\n            } else {\r\n                resetResultsAndBelow();\r\n            }\r\n        });\r\n\r\n        document.getElementById('addSpecBtn').addEventListener('click', addSpecificationRow);\r\n        document.getElementById('addTypeKwargBtn').addEventListener('click', addTypeKwargRow);\r\n        document.getElementById('addColKwargBtn').addEventListener('click', addColKwargRow);\r\n        document.getElementById('searchBtn').addEventListener('click', performSearch);\r\n        document.getElementById('addFilterBtn').addEventListener('click', addFilterRow);\r\n        document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);\r\n\r\n        // Initialize the app\r\n        init();\r\n    </script>\r\n</body>\r\n</html>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/complete_backend_solution/tests/component_matcher.html b/complete_backend_solution/tests/component_matcher.html
+--- a/complete_backend_solution/tests/component_matcher.html	(revision 36865ef324d8db67c28c3780622be4081b3e31ea)
++++ b/complete_backend_solution/tests/component_matcher.html	(date 1755968355754)
+@@ -339,18 +339,68 @@
+ 
+         .kwargs-item {
+             display: grid;
+-            grid-template-columns: 2fr 2fr 1fr auto;
++            grid-template-columns: 1.5fr 2fr 2fr 1.5fr auto;
+             gap: 0.5rem;
+             margin-bottom: 0.5rem;
+             align-items: end;
+         }
+ 
+-        .kwargs-container {
+-            border: 1px solid #d1d5db;
+-            border-radius: 8px;
+-            padding: 1rem;
+-            background: white;
+-            margin-bottom: 1rem;
++        .info-icon {
++            display: inline-block;
++            width: 16px;
++            height: 16px;
++            background: #6b7280;
++            border-radius: 50%;
++            color: white;
++            text-align: center;
++            font-size: 12px;
++            line-height: 16px;
++            cursor: help;
++            margin-left: 4px;
++            position: relative;
++        }
++
++        .info-tooltip {
++            position: absolute;
++            bottom: 100%;
++            left: 0;
++            right: 0;
++            margin-bottom: 5px;
++            background: #1f2937;
++            color: white;
++            padding: 8px 12px;
++            border-radius: 6px;
++            font-size: 12px;
++            white-space: normal;
++            z-index: 1000;
++            opacity: 0;
++            pointer-events: none;
++            transition: opacity 0.2s;
++            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
++            width: 100%;
++            box-sizing: border-box;
++        }
++
++        .info-tooltip::before {
++            content: '';
++            position: absolute;
++            top: 100%;
++            left: 50%;
++            transform: translateX(-50%);
++            border: 5px solid transparent;
++            border-top-color: #1f2937;
++        }
++
++        .param-option-with-info {
++            position: relative;
++            display: flex;
++            align-items: center;
++            justify-content: space-between;
++            width: 100%;
++        }
++
++        .param-option-with-info:hover .info-tooltip {
++            opacity: 1;
+         }
+ 
+         @media (max-width: 768px) {
+@@ -366,6 +416,31 @@
+                 padding: 1rem;
+             }
+         }
++
++        // Helper function to get value from value container (handles different input types)
++        function getValueFromContainer(container) {
++            // Check for additional select elements (boolean dropdown or options dropdown)
++            // Look for selects that are not the first 3 main selects in the kwargs item
++            const parentItem = container.closest('.kwargs-item');
++            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
++
++            if (extraSelects.length > 0 && extraSelects[0].style.display !== 'none') {
++                const value = extraSelects[0].value;
++                if (value === 'true') return true;
++                if (value === 'false') return false;
++                return value || null;
++            }
++
++            // Check for regular input (if it's the valueInput itself)
++            if (container.tagName === 'INPUT' && container.style.display !== 'none') {
++                if (container.type === 'number') {
++                    return container.value ? parseFloat(container.value) : null;
++                }
++                return container.value || null;
++            }
++
++            return null;
++        }
+     </style>
+ </head>
+ <body>
+@@ -415,21 +490,11 @@
+             <!-- Step 4: Configure Scoring Parameters (Optional) -->
+             <div class="section hidden" id="kwargsSection">
+                 <h2>4. Configure Scoring Parameters (Optional)</h2>
+-                <div class="grid" style="margin-bottom: 1rem;">
+-                    <div>
+-                        <h3>Global Type Parameters</h3>
+-                        <div id="typeKwargsContainer">
+-                            <!-- Type-wide kwargs will be added here -->
+-                        </div>
+-                        <button type="button" class="add-btn" id="addTypeKwargBtn">Add Type Parameter</button>
++                <div class="kwargs-container">
++                    <div id="kwargsContainer">
++                        <!-- Kwargs will be added here -->
+                     </div>
+-                    <div>
+-                        <h3>Column-Specific Parameters</h3>
+-                        <div id="colKwargsContainer">
+-                            <!-- Column-specific kwargs will be added here -->
+-                        </div>
+-                        <button type="button" class="add-btn" id="addColKwargBtn">Add Column Parameter</button>
+-                    </div>
++                    <button type="button" class="add-btn" id="addKwargBtn">Add Scoring Parameter</button>
+                 </div>
+             </div>
+ 
+@@ -503,10 +568,13 @@
+         let currentSessionId = '';
+         let allResultColumns = [];
+         let availableDataTypes = new Set();
++        let globalKwargProfiles = {}; // kwargs organized by data type
++        let selectedSpecs = new Set(); // track which columns are being scored
+ 
+         // Initialize the application
+         async function init() {
+             await loadSolutions();
++            await loadGlobalKwargProfiles();
+         }
+ 
+         // Load available solutions
+@@ -532,6 +600,18 @@
+             }
+         }
+ 
++        // Load global kwargs profiles
++        async function loadGlobalKwargProfiles() {
++            try {
++                const response = await fetch(`${API_BASE}/kwargs`);
++                const data = await response.json();
++                globalKwargProfiles = data;
++            } catch (error) {
++                console.warn('Failed to load global kwargs profiles:', error.message);
++                globalKwargProfiles = {};
++            }
++        }
++
+         // Load systems for selected solution
+         async function loadSystems(solution) {
+             try {
+@@ -630,11 +710,8 @@
+         function setupKwargsSection() {
+             document.getElementById('kwargsSection').classList.remove('hidden');
+ 
+-            const typeContainer = document.getElementById('typeKwargsContainer');
+-            const colContainer = document.getElementById('colKwargsContainer');
+-
+-            typeContainer.innerHTML = '';
+-            colContainer.innerHTML = '';
++            const container = document.getElementById('kwargsContainer');
++            container.innerHTML = '';
+         }
+ 
+         // Add a specification row
+@@ -718,6 +795,7 @@
+ 
+                 // Update other dropdowns to remove this selection
+                 updateParameterDropdowns();
++                updateKwargsAvailability();
+             });
+ 
+             // Show multi-select when clicking on input (for multi-select mode)
+@@ -734,14 +812,28 @@
+                 }
+             });
+ 
+-            // Allow typing for single-value inputs
++            // Handle comma-separated input for contains_any functionality
+             valueInput.addEventListener('input', function() {
+                 if (!isMultiSelect && currentOptions.length > 0) {
+-                    showSingleSelect(this.value);
++                    // Get the current input value
++                    const fullValue = this.value;
++
++                    // Check if this might be a comma-separated list (for contains_any)
++                    const lastCommaIndex = fullValue.lastIndexOf(',');
++                    let searchTerm = fullValue;
++                    let prefix = '';
++
++                    if (lastCommaIndex !== -1) {
++                        // Split at last comma
++                        prefix = fullValue.substring(0, lastCommaIndex + 1).trim() + ' ';
++                        searchTerm = fullValue.substring(lastCommaIndex + 1).trim();
++                    }
++
++                    showSingleSelect(searchTerm, prefix);
+                 }
+             });
+ 
+-            function showSingleSelect(query = '') {
++            function showSingleSelect(query = '', prefix = '') {
+                 multiSelectDiv.innerHTML = '';
+ 
+                 if (currentOptions.length === 0) {
+@@ -777,7 +869,13 @@
+                     optionDiv.appendChild(label);
+ 
+                     optionDiv.addEventListener('click', function() {
+-                        valueInput.value = option;
++                        if (prefix) {
++                            // For comma-separated lists, append to existing content
++                            valueInput.value = prefix + option;
++                        } else {
++                            // Normal single selection
++                            valueInput.value = option;
++                        }
+                         multiSelectDiv.style.display = 'none';
+                     });
+ 
+@@ -891,7 +989,10 @@
+             const removeBtn = document.createElement('button');
+             removeBtn.textContent = '×';
+             removeBtn.className = 'remove-btn';
+-            removeBtn.onclick = () => specItem.remove();
++            removeBtn.onclick = () => {
++                specItem.remove();
++                updateKwargsAvailability();
++            };
+ 
+             specItem.appendChild(paramSelect);
+             specItem.appendChild(valueContainer);
+@@ -924,109 +1025,313 @@
+             });
+         }
+ 
+-        // Add a type-wide kwargs row
+-        function addTypeKwargRow() {
+-            const container = document.getElementById('typeKwargsContainer');
+-            const kwargsItem = document.createElement('div');
+-            kwargsItem.className = 'kwargs-item';
++        // Update kwargs availability based on selected specs - now refreshes existing dropdowns
++        function updateKwargsAvailability() {
++            // Refresh all existing type and column selection dropdowns in kwargs
++            const kwargItems = document.querySelectorAll('#kwargsContainer .kwargs-item');
++
++            kwargItems.forEach(item => {
++                const typeSelect = item.children[0];  // kwarg type select
++                const selectionSelect = item.children[1];  // selection dropdown
++
++                const currentKwargType = typeSelect.value;
++                const currentSelection = selectionSelect.value;
++
++                // Only update if a kwarg type is selected
++                if (currentKwargType === 'type') {
++                    // Refresh with available data types
++                    populateSelectionWithTypes(selectionSelect);
++                    // Restore selection if it still exists
++                    if (currentSelection) {
++                        const optionExists = Array.from(selectionSelect.options).some(opt => opt.value === currentSelection);
++                        if (optionExists) {
++                            selectionSelect.value = currentSelection;
++                        }
++                    }
++                } else if (currentKwargType === 'column') {
++                    // Refresh with available columns
++                    populateSelectionWithColumns(selectionSelect);
++                    // Restore selection if it still exists
++                    if (currentSelection) {
++                        const optionExists = Array.from(selectionSelect.options).some(opt => opt.value === currentSelection);
++                        if (optionExists) {
++                            selectionSelect.value = currentSelection;
++                        }
++                    }
++                }
++            });
++
++            console.log('Kwargs dropdowns refreshed with current specifications');
++        }
++
++        // Helper function to get value from value container (handles different input types)
++        function getValueFromContainer(container) {
++            // Check for additional select elements (boolean dropdown or options dropdown)
++            // Look for selects that are not the first 3 main selects in the kwargs item
++            const parentItem = container.closest('.kwargs-item');
++            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
++
++            if (extraSelects.length > 0 && extraSelects[0].style.display !== 'none') {
++                const value = extraSelects[0].value;
++                if (value === 'true') return true;
++                if (value === 'false') return false;
++                return value || null;
++            }
+ 
+-            // Data type select
+-            const typeSelect = document.createElement('select');
+-            typeSelect.innerHTML = '<option value="">Select data type...</option>';
+-            Array.from(availableDataTypes).sort().forEach(dtype => {
++            // Check for regular input (if it's the valueInput itself)
++            if (container.tagName === 'INPUT' && container.style.display !== 'none') {
++                if (container.type === 'number') {
++                    return container.value ? parseFloat(container.value) : null;
++                }
++                return container.value || null;
++            }
++
++            return null;
++        }
++
++        // Helper function to populate selection with data types
++        function populateSelectionWithTypes(selectionSelect) {
++            const currentSpecs = getCurrentSelectedSpecs();
++            const usedDtypes = new Set();
++
++            currentSpecs.forEach(colName => {
++                const col = availableColumns.find(c => c.name === colName);
++                if (col) {
++                    usedDtypes.add(col.dtype);
++                }
++            });
++
++            selectionSelect.innerHTML = '<option value="">Select data type...</option>';
++            if (usedDtypes.size === 0) {
+                 const option = document.createElement('option');
+-                option.value = dtype;
+-                option.textContent = dtype;
+-                typeSelect.appendChild(option);
+-            });
+-
+-            // Parameter name input
+-            const paramInput = document.createElement('input');
+-            paramInput.type = 'text';
+-            paramInput.placeholder = 'Parameter name';
+-
+-            // Parameter value input
+-            const valueInput = document.createElement('input');
+-            valueInput.type = 'text';
+-            valueInput.placeholder = 'Parameter value';
+-
+-            // Remove button
+-            const removeBtn = document.createElement('button');
+-            removeBtn.textContent = '×';
+-            removeBtn.className = 'remove-btn';
+-            removeBtn.onclick = () => kwargsItem.remove();
+-
+-            kwargsItem.appendChild(typeSelect);
+-            kwargsItem.appendChild(paramInput);
+-            kwargsItem.appendChild(valueInput);
+-            kwargsItem.appendChild(removeBtn);
+-
+-            container.appendChild(kwargsItem);
++                option.value = '';
++                option.textContent = 'No specifications selected';
++                option.disabled = true;
++                selectionSelect.appendChild(option);
++            } else {
++                Array.from(usedDtypes).sort().forEach(dtype => {
++                    const option = document.createElement('option');
++                    option.value = dtype;
++                    option.textContent = dtype;
++                    selectionSelect.appendChild(option);
++                });
++            }
+         }
+ 
+-        // Add a column-specific kwargs row
+-        function addColKwargRow() {
+-            const container = document.getElementById('colKwargsContainer');
+-            const kwargsItem = document.createElement('div');
+-            kwargsItem.className = 'kwargs-item';
++        // Helper function to populate selection with columns
++        function populateSelectionWithColumns(selectionSelect) {
++            const currentSpecs = getCurrentSelectedSpecs();
+ 
+-            // Column select
+-            const colSelect = document.createElement('select');
+-            colSelect.innerHTML = '<option value="">Select column...</option>';
+-            availableColumns.forEach(col => {
++            selectionSelect.innerHTML = '<option value="">Select column...</option>';
++            if (currentSpecs.length === 0) {
+                 const option = document.createElement('option');
+-                option.value = col.name;
+-                option.textContent = `${col.name} (${col.dtype})`;
+-                colSelect.appendChild(option);
+-            });
++                option.value = '';
++                option.textContent = 'No specifications selected';
++                option.disabled = true;
++                selectionSelect.appendChild(option);
++            } else {
++                currentSpecs.forEach(colName => {
++                    const col = availableColumns.find(c => c.name === colName);
++                    if (col) {
++                        const option = document.createElement('option');
++                        option.value = col.name;
++                        option.textContent = `${col.name} (${col.dtype})`;
++                        option.dataset.columnData = JSON.stringify(col);
++                        selectionSelect.appendChild(option);
++                    }
++                });
++            }
++        }
++
++        // Helper function to populate parameters based on type and selection
++        function populateParameters(paramSelect, kwargType, selectedItem, selectionElement) {
++            paramSelect.innerHTML = '<option value="">Select parameter...</option>';
++
++            if (kwargType === 'type') {
++                // Type-wide: selectedItem is a dtype, show type-wide parameters
++                if (globalKwargProfiles[selectedItem]) {
++                    globalKwargProfiles[selectedItem].forEach(kwargProfile => {
++                        const option = document.createElement('option');
++                        option.value = kwargProfile.name;
++                        option.textContent = kwargProfile.name;
++                        option.dataset.kwargProfile = JSON.stringify(kwargProfile);
++                        paramSelect.appendChild(option);
++                    });
++                }
++            } else if (kwargType === 'column') {
++                // Column-specific: selectedItem is a column name
++                const selectedColData = JSON.parse(selectionElement.selectedOptions[0]?.dataset.columnData || '{}');
+ 
+-            // Parameter name input with dropdown if kwargs available
++                // Use a Set to track parameter names and avoid duplicates
++                const addedParams = new Set();
++
++                // First priority: column-specific kwargs if available
++                if (selectedColData.kwargs && selectedColData.kwargs.length > 0) {
++                    selectedColData.kwargs.forEach(kwargProfile => {
++                        if (!addedParams.has(kwargProfile.name)) {
++                            const option = document.createElement('option');
++                            option.value = kwargProfile.name;
++                            option.textContent = kwargProfile.name;
++                            option.dataset.kwargProfile = JSON.stringify(kwargProfile);
++                            paramSelect.appendChild(option);
++                            addedParams.add(kwargProfile.name);
++                        }
++                    });
++                }
++
++                // Second priority: type-wide kwargs for this column's data type (only if not already added)
++                if (selectedColData.dtype && globalKwargProfiles[selectedColData.dtype]) {
++                    globalKwargProfiles[selectedColData.dtype].forEach(kwargProfile => {
++                        if (!addedParams.has(kwargProfile.name)) {
++                            const option = document.createElement('option');
++                            option.value = kwargProfile.name;
++                            option.textContent = kwargProfile.name;
++                            option.dataset.kwargProfile = JSON.stringify(kwargProfile);
++                            paramSelect.appendChild(option);
++                            addedParams.add(kwargProfile.name);
++                        }
++                    });
++                }
++            }
++        }
++
++        // Helper function to get currently selected specs from the page
++        function getCurrentSelectedSpecs() {
++            const specs = [];
++            const specItems = document.querySelectorAll('.spec-item');
++            specItems.forEach(item => {
++                const param = item.children[0].value;
++                if (param) {
++                    specs.push(param);
++                }
++            });
++            return specs;
++        }
++
++        // Add a unified kwargs row
++        function addKwargRow() {
++            const container = document.getElementById('kwargsContainer');
++            const kwargsItem = document.createElement('div');
++            kwargsItem.className = 'kwargs-item';
++
++            // 1. Kwarg Type select (Type-wide vs Column-specific)
++            const typeSelect = document.createElement('select');
++            typeSelect.innerHTML = `
++                <option value="">Select type...</option>
++                <option value="type">Type-wide</option>
++                <option value="column">Column-specific</option>
++            `;
++
++            // 2. Selection dropdown (dtype or column based on type selection)
++            const selectionSelect = document.createElement('select');
++            selectionSelect.innerHTML = '<option value="">Select...</option>';
++            selectionSelect.disabled = true;
++
++            // 3. Parameter select
+             const paramContainer = document.createElement('div');
+             paramContainer.style.position = 'relative';
+ 
+-            const paramInput = document.createElement('input');
+-            paramInput.type = 'text';
+-            paramInput.placeholder = 'Parameter name';
+-
+-            const paramDropdown = document.createElement('div');
+-            paramDropdown.className = 'spec-multi-select';
+-            paramDropdown.style.display = 'none';
++            const paramSelect = document.createElement('select');
++            paramSelect.innerHTML = '<option value="">Select parameter...</option>';
++            paramSelect.disabled = true;
+ 
+-            paramContainer.appendChild(paramInput);
+-            paramContainer.appendChild(paramDropdown);
++            // Add tooltip div that will show on hover
++            const paramTooltip = document.createElement('div');
++            paramTooltip.className = 'info-tooltip';
++            paramTooltip.style.display = 'none';
++            paramContainer.appendChild(paramSelect);
++            paramContainer.appendChild(paramTooltip);
+ 
+-            // Update parameter suggestions when column changes
+-            colSelect.addEventListener('change', function() {
+-                const selectedCol = availableColumns.find(col => col.name === this.value);
+-                if (selectedCol && selectedCol.kwargs) {
+-                    // Show available kwargs for this column
+-                    updateParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);
+-                } else {
+-                    paramDropdown.style.display = 'none';
+-                }
+-            });
+-
+-            // Show suggestions when clicking on parameter input
+-            paramInput.addEventListener('click', function() {
+-                const selectedCol = availableColumns.find(col => col.name === colSelect.value);
+-                if (selectedCol && selectedCol.kwargs) {
+-                    showParamSuggestions(paramInput, paramDropdown, selectedCol.kwargs);
+-                }
+-            });
+-
+-            // Parameter value input
++            // 4. Value input
+             const valueInput = document.createElement('input');
+             valueInput.type = 'text';
+             valueInput.placeholder = 'Parameter value';
++            valueInput.disabled = true;
+ 
+-            // Remove button
++            // 5. Remove button
+             const removeBtn = document.createElement('button');
+             removeBtn.textContent = '×';
+             removeBtn.className = 'remove-btn';
+             removeBtn.onclick = () => kwargsItem.remove();
+ 
+-            kwargsItem.appendChild(colSelect);
+-            kwargsItem.appendChild(paramContainer);
++            // Event listeners for cascading dropdowns
++            typeSelect.addEventListener('change', function() {
++                const selectedType = this.value;
++
++                // Reset dependent dropdowns
++                selectionSelect.innerHTML = '<option value="">Select...</option>';
++                paramSelect.innerHTML = '<option value="">Select parameter...</option>';
++                valueInput.value = '';
++
++                if (selectedType === 'type') {
++                    // Populate with dtypes
++                    selectionSelect.disabled = false;
++                    populateSelectionWithTypes(selectionSelect);
++                } else if (selectedType === 'column') {
++                    // Populate with columns
++                    selectionSelect.disabled = false;
++                    populateSelectionWithColumns(selectionSelect);
++                } else {
++                    selectionSelect.disabled = true;
++                    paramSelect.disabled = true;
++                    valueInput.disabled = true;
++                }
++            });
++
++            selectionSelect.addEventListener('change', function() {
++                const kwargType = typeSelect.value;
++                const selectedItem = this.value;
++
++                // Reset dependent dropdowns
++                paramSelect.innerHTML = '<option value="">Select parameter...</option>';
++                valueInput.value = '';
++
++                if (selectedItem) {
++                    paramSelect.disabled = false;
++                    populateParameters(paramSelect, kwargType, selectedItem, this);
++                } else {
++                    paramSelect.disabled = true;
++                    valueInput.disabled = true;
++                }
++            });
++
++            paramSelect.addEventListener('change', function() {
++                if (this.value) {
++                    valueInput.disabled = false;
++                    updateValueInputForKwarg(this, valueInput);
++
++                    // Update tooltip with parameter description
++                    const selectedOption = this.selectedOptions[0];
++                    if (selectedOption && selectedOption.dataset.kwargProfile) {
++                        const kwargProfile = JSON.parse(selectedOption.dataset.kwargProfile);
++                        paramTooltip.textContent = `Default: ${kwargProfile.default} | ${kwargProfile.description}`;
++                        paramTooltip.style.display = 'block';
++                    }
++                } else {
++                    valueInput.disabled = true;
++                    paramTooltip.style.display = 'none';
++                    // Remove any extra select elements
++                    const existingSelect = valueInput.parentElement.querySelector('select:not([id]):not(.kwargs-item select)');
++                    if (existingSelect) {
++                        existingSelect.remove();
++                    }
++                }
++            });
++
++            // Show/hide tooltip on hover
++            paramContainer.addEventListener('mouseenter', function() {
++                if (paramSelect.value && paramTooltip.textContent) {
++                    paramTooltip.style.opacity = '1';
++                }
++            });
++
++            paramContainer.addEventListener('mouseleave', function() {
++                paramTooltip.style.opacity = '0';
++            });
++
++            kwargsItem.appendChild(typeSelect);
++            kwargsItem.appendChild(selectionSelect);
++            kwargsItem.appendChild(paramContainer);  // Use container instead of paramSelect directly
+             kwargsItem.appendChild(valueInput);
+             kwargsItem.appendChild(removeBtn);
+ 
+@@ -1084,6 +1389,84 @@
+             }, 0);
+         }
+ 
++        // Update value input based on selected kwarg profile
++        function updateValueInputForKwarg(paramSelect, valueInput) {
++            const selectedOption = paramSelect.selectedOptions[0];
++            if (!selectedOption || !selectedOption.dataset.kwargProfile) {
++                valueInput.type = 'text';
++                valueInput.placeholder = 'Parameter value';
++                valueInput.value = '';
++                // Remove any existing additional select elements (but not the main selects)
++                const parentItem = valueInput.closest('.kwargs-item');
++                const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
++                extraSelects.forEach(select => select.remove());
++                valueInput.style.display = 'block';
++                return;
++            }
++
++            const kwargProfile = JSON.parse(selectedOption.dataset.kwargProfile);
++            const dtype = kwargProfile.dtype.toLowerCase();
++
++            // Remove any existing additional select elements (but keep the main 3 selects)
++            const parentItem = valueInput.closest('.kwargs-item');
++            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
++            extraSelects.forEach(select => select.remove());
++
++            // If there are options, create a dropdown
++            if (kwargProfile.options && kwargProfile.options.length > 0) {
++                valueInput.style.display = 'none';
++
++                const optionsSelect = document.createElement('select');
++                optionsSelect.innerHTML = '<option value="">Select option...</option>';
++
++                kwargProfile.options.forEach(option => {
++                    const optionElement = document.createElement('option');
++                    optionElement.value = option;
++                    optionElement.textContent = option;
++                    if (option === kwargProfile.default) {
++                        optionElement.selected = true;
++                    }
++                    optionsSelect.appendChild(optionElement);
++                });
++
++                // Insert after the valueInput (4th position)
++                valueInput.parentNode.insertBefore(optionsSelect, valueInput.nextSibling);
++                return;
++            }
++
++            // Show the input and configure it based on type
++            valueInput.style.display = 'block';
++
++            if (dtype === 'boolean') {
++                // Create true/false dropdown for booleans
++                valueInput.style.display = 'none';
++
++                const boolSelect = document.createElement('select');
++                boolSelect.innerHTML = `
++                    <option value="">Select...</option>
++                    <option value="true" ${kwargProfile.default === true ? 'selected' : ''}>true</option>
++                    <option value="false" ${kwargProfile.default === false ? 'selected' : ''}>false</option>
++                `;
++
++                // Insert after the valueInput (4th position)
++                valueInput.parentNode.insertBefore(boolSelect, valueInput.nextSibling);
++            } else if (dtype === 'int' || dtype === 'integer') {
++                valueInput.type = 'number';
++                valueInput.step = '1';
++                valueInput.value = kwargProfile.default || '';
++                valueInput.placeholder = `Default: ${kwargProfile.default}`;
++            } else if (dtype === 'float' || dtype === 'number') {
++                valueInput.type = 'number';
++                valueInput.step = 'any';
++                valueInput.value = kwargProfile.default || '';
++                valueInput.placeholder = `Default: ${kwargProfile.default}`;
++            } else {
++                valueInput.type = 'text';
++                valueInput.value = kwargProfile.default || '';
++                valueInput.placeholder = `Default: ${kwargProfile.default}`;
++            }
++        }
++
+         // Perform search
+         async function performSearch() {
+             const specs = [];
+@@ -1120,57 +1503,48 @@
+                 type_kwargs: {}
+             };
+ 
+-            // Collect type-wide kwargs
+-            const typeKwargItems = document.querySelectorAll('#typeKwargsContainer .kwargs-item');
+-            typeKwargItems.forEach(item => {
+-                const dataType = item.children[0].value;
+-                const paramName = item.children[1].value;
+-                const paramValue = item.children[2].value;
++            // Collect kwargs from unified structure
++            const kwargItems = document.querySelectorAll('#kwargsContainer .kwargs-item');
++            console.log('Found kwargs items:', kwargItems.length);
+ 
+-                if (dataType && paramName && paramValue) {
+-                    if (!kwargs.type_kwargs[dataType]) {
+-                        kwargs.type_kwargs[dataType] = {};
+-                    }
++            kwargItems.forEach((item, index) => {
++                const kwargType = item.children[0].value;      // 'type' or 'column'
++                const selection = item.children[1].value;      // dtype or column name
++                const paramName = item.children[2].querySelector('select').value;  // parameter name (now in container)
++                const valueContainer = item.children[3];       // value input/select
+ 
+-                    // Try to parse value as number if possible
+-                    let parsedValue = paramValue;
+-                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {
+-                        parsedValue = parseFloat(paramValue);
+-                    } else if (paramValue.toLowerCase() === 'true') {
+-                        parsedValue = true;
+-                    } else if (paramValue.toLowerCase() === 'false') {
+-                        parsedValue = false;
+-                    }
+-
+-                    kwargs.type_kwargs[dataType][paramName] = parsedValue;
+-                }
+-            });
++                console.log(`Kwarg ${index}:`, {
++                    kwargType,
++                    selection,
++                    paramName,
++                    valueContainer: valueContainer.tagName
++                });
+ 
+-            // Collect column-specific kwargs
+-            const colKwargItems = document.querySelectorAll('#colKwargsContainer .kwargs-item');
+-            colKwargItems.forEach(item => {
+-                const colName = item.children[0].value;
+-                const paramName = item.children[1].querySelector('input').value;
+-                const paramValue = item.children[2].value;
++                if (kwargType && selection && paramName) {
++                    // Get value from appropriate input element
++                    let paramValue = getValueFromContainer(valueContainer);
++                    console.log(`Kwarg ${index} value:`, paramValue);
+ 
+-                if (colName && paramName && paramValue) {
+-                    if (!kwargs.col_kwargs[colName]) {
+-                        kwargs.col_kwargs[colName] = {};
+-                    }
+-
+-                    // Try to parse value as number if possible
+-                    let parsedValue = paramValue;
+-                    if (!isNaN(paramValue) && !isNaN(parseFloat(paramValue))) {
+-                        parsedValue = parseFloat(paramValue);
+-                    } else if (paramValue.toLowerCase() === 'true') {
+-                        parsedValue = true;
+-                    } else if (paramValue.toLowerCase() === 'false') {
+-                        parsedValue = false;
++                    // Only add if we have a value
++                    if (paramValue !== null && paramValue !== '' && paramValue !== undefined) {
++                        if (kwargType === 'type') {
++                            // Type-wide kwargs
++                            if (!kwargs.type_kwargs[selection]) {
++                                kwargs.type_kwargs[selection] = {};
++                            }
++                            kwargs.type_kwargs[selection][paramName] = paramValue;
++                        } else if (kwargType === 'column') {
++                            // Column-specific kwargs
++                            if (!kwargs.col_kwargs[selection]) {
++                                kwargs.col_kwargs[selection] = {};
++                            }
++                            kwargs.col_kwargs[selection][paramName] = paramValue;
++                        }
+                     }
+-
+-                    kwargs.col_kwargs[colName][paramName] = parsedValue;
+                 }
+             });
++
++            console.log('Final kwargs object:', kwargs);
+ 
+             // Only include kwargs if there are any
+             const hasKwargs = Object.keys(kwargs.col_kwargs).length > 0 || Object.keys(kwargs.type_kwargs).length > 0;
+@@ -1248,7 +1622,18 @@
+ 
+                 allResultColumns.forEach(key => {
+                     const td = document.createElement('td');
+-                    const value = result[key];
++                    let value = result[key];
++
++                    // Convert boolean values (0/1) to true/false for boolean columns
++                    const column = availableColumns.find(col => col.name === key);
++                    if (column && column.dtype === 'boolean') {
++                        if (value === 1 || value === '1' || value === true) {
++                            value = 'true';
++                        } else if (value === 0 || value === '0' || value === false) {
++                            value = 'false';
++                        }
++                    }
++
+                     td.textContent = value !== null && value !== undefined ? value : 'N/A';
+ 
+                     // Highlight score columns
+@@ -1510,8 +1895,7 @@
+         });
+ 
+         document.getElementById('addSpecBtn').addEventListener('click', addSpecificationRow);
+-        document.getElementById('addTypeKwargBtn').addEventListener('click', addTypeKwargRow);
+-        document.getElementById('addColKwargBtn').addEventListener('click', addColKwargRow);
++        document.getElementById('addKwargBtn').addEventListener('click', addKwargRow);
+         document.getElementById('searchBtn').addEventListener('click', performSearch);
+         document.getElementById('addFilterBtn').addEventListener('click', addFilterRow);
+         document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
