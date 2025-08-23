@@ -3,6 +3,7 @@ from math import prod
 from abc import ABC, abstractmethod
 import numpy as np
 from rapidfuzz import fuzz
+import complete_backend_solution.src.json_types as jt
 
 
 # Additional config options must be added in
@@ -271,21 +272,58 @@ SCORING_CONFIG = {
 }
 
 SCORING_KWARGS = {
-    "number": {
-        "use_global_max": "Default true. Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min.",
-        "max_val": "Default auto calculated. Global max value used in use global max config",
-        "min_val": "Default auto calculated. Global min value used in use global max config"},
-    "string": {
-        "threshold": "Default 80. Minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]",
-        "exact_match": "Default false. Toggle for only succeeding the string match if they are identical. Equivalent to threshold=100",
-        "contains_any": "Default false. Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match"},
-    "tuple": {
-        "product_scoring": "Default false. Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume",
-        "normalize_to_max": "Default true. Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode"},
-    "list": {
-        "match_mode": "Default 'overlap'. 'jaccard' more heavily penalizes differences between sets, while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences"},
-    "boolean": {
-    },
-    "range": {
-        "decay_factor": "Default 1.0. values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)"}
+    "number": [
+        jt.KwargProfile(
+            name="use_global_max", dtype="Boolean", default=True,
+            description="Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min."
+        ),
+        jt.KwargProfile(
+            name="max_val", dtype="Float", default="auto calculated",
+            description="Global max value used in use global max config"
+        ),
+        jt.KwargProfile(
+            name="min_val", dtype="Float", default="auto calculated",
+            description="Global min value used in use global max config"
+        )
+    ],
+    "string": [
+        jt.KwargProfile(
+            name="threshold", dtype="Int", default=80,
+            description="Minimum fuzz ratio [0..100] for scoring; ratios above the threshold are linearly mapped onto [0..1]"
+        ),
+        jt.KwargProfile(
+            name="exact_match", dtype="Boolean", default=False,
+            description="Toggle for only succeeding the string match if they are identical. Equivalent to threshold=100"
+        ),
+        jt.KwargProfile(
+            name="contains_any", dtype="Boolean", default=False,
+            description="Returns full match if the request contains the candidate in its list. Request must be comma-separated list. Must be exact match"
+        )
+    ],
+    "tuple": [
+        jt.KwargProfile(
+            name="product_scoring", dtype="Boolean", default=False,
+            description="Combines tuple components multiplicatively and computes single representative values, otherwise computes piecewise and averages. Useful when product is significant, e.g. volume"
+        ),
+        jt.KwargProfile(
+            name="normalize_to_max", dtype="Boolean", default=True,
+            description="Scoring models frame themselves using the input data's maximum value to normalize, useful when all values are near each other/on the same scale. Has no effect on product_scoring mode"
+        )
+    ],
+    "list": [
+        jt.KwargProfile(
+            name="match_mode", dtype="String", default="overlap",
+            description="'jaccard' more heavily penalizes differences between sets, while 'overlap' mode is based only on the inclusion in the requested set. 'contains' returns a true/false for inclusion of ANY element, good for multiselect preferences",
+            options=["overlap", "jaccard", "contains"]
+        )
+    ],
+    "boolean": [
+        # No kwargs listed for "boolean" type; empty list
+    ],
+    "range": [
+        jt.KwargProfile(
+            name="decay_factor", dtype="Float", default=1.0,
+            description="Values between 0 and 1 make the score outside of the range decay more rapidly (less tolerant), values over 1 slow it down (more tolerant)"
+        )
+    ]
 }
