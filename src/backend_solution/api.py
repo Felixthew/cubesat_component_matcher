@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
 
 from src.backend_solution.json_types import KwargProfile
 from src.backend_solution.scorer import SCORING_KWARGS
@@ -12,7 +13,7 @@ import src.backend_solution.data_loader as dl
 import json
 
 app = FastAPI(title="Component Matcher")
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,6 +21,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/")
+def root_redirect():
+    return RedirectResponse(url="/static/index.html")
 
 @app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
