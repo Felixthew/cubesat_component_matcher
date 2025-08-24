@@ -38,24 +38,23 @@ class TestNumberScorer(GenericScorerTester):
         _case((None, 10), {}, 0.0),
         _case((10, None), {}, 0.0),
 
-        # global max rescales results
-        _case((5, 15), {"use_global_max": True, "max_val": 20}, 0.5),
-        _case((5, 15), {"use_global_max": False, "max_val": 20}, 0.33),
+        # global extrema rescales results
+        _case((5, 15), {"use_global_extrema": True, "max_val": 20, "min_val": 0}, 0.5),
+        _case((5, 15), {"use_global_extrema": False, "max_val": 20, "min_val": 0}, 0.33),
 
         # same but downshift into negatives
-        _case((-5, 5), {"use_global_max": True, "max_val": 10}, 0.5),
-        _case((-5, 5), {"use_global_max": False, "max_val": 10}, 0.33),
+        _case((-5, 5), {"use_global_extrema": True, "max_val": 10, "min_val": -10}, 0.66),
+        _case((-5, 5), {"use_global_extrema": False, "max_val": 10, "min_val": -10}, 0.33),
 
-        # upshift with magnitude
-        # TODO using some really ugly techniques (see _normalize_negatives() in scorer.py)... seeking advice
-        _case((-100, 100), {"use_global_max": True, "max_val": 150}, 0.43),
-        _case((-100, 100), {"use_global_max": False, "max_val": 150}, 0.33),
+        # magnify
+        _case((-100, 100), {"use_global_extrema": True, "max_val": 150, "min_val": -150}, 0.55),
+        _case((-100, 100), {"use_global_extrema": False, "max_val": 150, "min_val": -150}, 0.33),
 
         # perfect match
         _case((10, 10), {}, 1.0),
 
         # edge
-        _case((0, 0), {"use_global_max": True, "max_val": 0}, 1.0)
+        _case((0, 0), {"use_global_extrema": True, "max_val": 0}, 1.0)
     ]
 
     @pytest.mark.parametrize("case", CASES)

@@ -246,9 +246,9 @@ def _normalize_negatives(
 ) -> tuple[int | float, int | float, int | float]:
     if min < 0:
         delta = abs(min)
-        val1 += delta
-        val2 += delta
-        max += delta
+        val1 += 2*delta
+        val2 += 2*delta
+        max += 2*delta
     return val1, val2, max
 
 
@@ -264,7 +264,7 @@ SCORING_REGISTRY = {
 
 # add new default configs here
 SCORING_CONFIG = {
-    "number": {"use_global_max": True},
+    "number": {"use_global_extrema": True},
     "string": {"threshold": 80, "exact_match": False},
     "tuple": {"product_scoring": False, "normalize_to_max": True},
     "list": {"match_mode": "overlap"},
@@ -275,7 +275,7 @@ SCORING_CONFIG = {
 SCORING_KWARGS = {
     "number": [
         jt.KwargProfile(
-            name="use_global_max", dtype="Boolean", default=True,
+            name="use_global_extrema", dtype="Boolean", default=True,
             description="Normalize values against the max and min value in the dataset, otherwise against each other. Must also pass global max and min."
         ),
         jt.KwargProfile(
