@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.backend_solution.json_types import KwargProfile
 from src.backend_solution.scorer import SCORING_KWARGS
@@ -11,7 +12,7 @@ import src.backend_solution.data_loader as dl
 import json
 
 app = FastAPI(title="Component Matcher")
-
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

@@ -416,31 +416,6 @@
                 padding: 1rem;
             }
         }
-
-        // Helper function to get value from value container (handles different input types)
-        function getValueFromContainer(container) {
-            // Check for additional select elements (boolean dropdown or options dropdown)
-            // Look for selects that are not the first 3 main selects in the kwargs item
-            const parentItem = container.closest('.kwargs-item');
-            const extraSelects = parentItem.querySelectorAll('select:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3))');
-
-            if (extraSelects.length > 0 && extraSelects[0].style.display !== 'none') {
-                const value = extraSelects[0].value;
-                if (value === 'true') return true;
-                if (value === 'false') return false;
-                return value || null;
-            }
-
-            // Check for regular input (if it's the valueInput itself)
-            if (container.tagName === 'INPUT' && container.style.display !== 'none') {
-                if (container.type === 'number') {
-                    return container.value ? parseFloat(container.value) : null;
-                }
-                return container.value || null;
-            }
-
-            return null;
-        }
     </style>
 </head>
 <body>
