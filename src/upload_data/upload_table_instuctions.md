@@ -20,6 +20,8 @@ python3 -m pip install pandas openpyxl sqlalchemy psycopg2-binary
 py -m pip install pandas openpyxl sqlalchemy psycopg2-binary
 ```
 
+Note: these are also in the requirements.txt.
+
 ## Running the program
 
 Open the **upload_table.py** file in your chosen ide (notepad works too), look through the pydoc,
@@ -44,23 +46,13 @@ install from the ide window with your project.
 
 ## Accessing the database
 
-Once you've uploaded your tables you wil probably want to view the database. The simplest way to do
-this is through the [server's webpage](https://railway.com/invite/r62rQ4B5bRp). From the project
-window, you can select "Main Postgres Database" and then the "data" tab. This will let you see all
-the tables in the default "public" schema. As for viewing custom schema, I don't think the website
-will let you. If you want to be able to see a more comprehensive view with the custom schema and be
-able to write sql files, open the repo in pycharm, go to the database tab (on the far right), and
-you should see a postgres database there. After clicking on it, you will probably be prompted to
-download drivers and configure the credentials, where you will need to paste the pg password that
-can be found in the variables tab on the server webpage. If that doesn't work, or you want to
-configure it from the start (maybe in a new project),
-follow [this tutorial](https://drive.google.com/file/d/14kWCtERpuQngLhAijG-0SPWGUsqPhfTT/view?usp=sharing)
-which will show you how to connect a pycharm or datagrip project to the database.
+At this point you would need to create your own posgresql database which you can easily do locally,
+on your own computer, use a website (like railway which I used in the tutorial), or on a server,
+like I later did with oracle cloud. However you make it though, [this tutorial](https://drive.google.com/file/d/14kWCtERpuQngLhAijG-0SPWGUsqPhfTT/view?usp=sharing)
+will show you how to access that database through pycharm, all you need is the url.
 
 **Note**: After uploading data, if you want to view your changes in an ide, make sure you refresh
-the database in the ide. Also note that data will not be uploaded immediately if the server is
-sleeping. Instead, the upload wil be queued until the server wakes up. You can see and or control
-this from the [server's webpage](https://railway.com/invite/r62rQ4B5bRp).
+the database in the ide.
 
 ## Excel Formatting
 
@@ -69,8 +61,7 @@ this from the [server's webpage](https://railway.com/invite/r62rQ4B5bRp).
 * Only one table per sheet
 * Do not use (put values) in any cells not being used for the table.
 * The sheet name will be used as the table name
-    * except if there is only one sheet, then the file name will be the table name.
-* This list may change (this is just a start, feel free to suggest additions/changes)
+* for a comprehensive styleguide check [here.](https://docs.google.com/document/d/11T_ZlRI-ynXiog7w2_ZTOiBS0SRInuRN_kZEVmbFIS0/edit?tab=t.nuv6wc3ir3w8)
 
 To avoid running into any unforeseen errors stick to xlsx files only. This should not be a problem
 unless you are doing weird things with Excel.

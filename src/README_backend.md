@@ -175,6 +175,8 @@ otherwise. This overrides any other threshold input.
 values (e.g. "LEO, MEO, GEO") and run a contains() to see if the candidate value is one of those. As of now, this has to
 be an exact match. The intention was to make it easier for users to, for example, search for components sold by one of 
 several partner organizations.
+* Example(contains_any=False): request "abc, xyz" candidate "xyz" score: 0. 
+* Example(contains_any=True): request "abc, xyz" candidate "xyz" score: 1.
 
 #### Tuple
 Comma-separated string series of numbers, often seen with physical dimensions. Ex: "10, 10, 10", "0.232, 1.12, 5"

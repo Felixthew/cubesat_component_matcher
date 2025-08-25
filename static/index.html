@@ -337,6 +337,10 @@
             cursor: pointer;
         }
 
+        .filter-controls-row button:hover {
+            background: #dc2626;
+        }
+
         .kwargs-item {
             display: grid;
             grid-template-columns: 1.5fr 2fr 2fr 1.5fr auto;
@@ -1122,15 +1126,21 @@
         function populateParameters(paramSelect, kwargType, selectedItem, selectionElement) {
             paramSelect.innerHTML = '<option value="">Select parameter...</option>';
 
+            // Get already used kwarg parameters for this specific type+selection combination
+            const usedKwargsForThisCombo = getUsedKwargParametersForCombo(kwargType, selectedItem);
+
             if (kwargType === 'type') {
                 // Type-wide: selectedItem is a dtype, show type-wide parameters
                 if (globalKwargProfiles[selectedItem]) {
                     globalKwargProfiles[selectedItem].forEach(kwargProfile => {
-                        const option = document.createElement('option');
-                        option.value = kwargProfile.name;
-                        option.textContent = kwargProfile.name;
-                        option.dataset.kwargProfile = JSON.stringify(kwargProfile);
-                        paramSelect.appendChild(option);
+                        // Only add if not already used for this specific type+selection
+                        if (!usedKwargsForThisCombo.has(kwargProfile.name)) {
+                            const option = document.createElement('option');
+                            option.value = kwargProfile.name;
+                            option.textContent = kwargProfile.name;
+                            option.dataset.kwargProfile = JSON.stringify(kwargProfile);
+                            paramSelect.appendChild(option);
+                        }
                     });
                 }
             } else if (kwargType === 'column') {
@@ -1143,7 +1153,7 @@
                 // First priority: column-specific kwargs if available
                 if (selectedColData.kwargs && selectedColData.kwargs.length > 0) {
                     selectedColData.kwargs.forEach(kwargProfile => {
-                        if (!addedParams.has(kwargProfile.name)) {
+                        if (!addedParams.has(kwargProfile.name) && !usedKwargsForThisCombo.has(kwargProfile.name)) {
                             const option = document.createElement('option');
                             option.value = kwargProfile.name;
                             option.textContent = kwargProfile.name;
@@ -1157,7 +1167,7 @@
                 // Second priority: type-wide kwargs for this column's data type (only if not already added)
                 if (selectedColData.dtype && globalKwargProfiles[selectedColData.dtype]) {
                     globalKwargProfiles[selectedColData.dtype].forEach(kwargProfile => {
-                        if (!addedParams.has(kwargProfile.name)) {
+                        if (!addedParams.has(kwargProfile.name) && !usedKwargsForThisCombo.has(kwargProfile.name)) {
                             const option = document.createElement('option');
                             option.value = kwargProfile.name;
                             option.textContent = kwargProfile.name;
@@ -1168,6 +1178,25 @@
                     });
                 }
             }
+        }
+
+        // Get used kwarg parameters for a specific type+selection combination
+        function getUsedKwargParametersForCombo(kwargType, selection) {
+            const usedParams = new Set();
+            const kwargItems = document.querySelectorAll('#kwargsContainer .kwargs-item');
+
+            kwargItems.forEach(item => {
+                const itemKwargType = item.children[0].value;      // 'type' or 'column'
+                const itemSelection = item.children[1].value;      // dtype or column name
+                const paramName = item.children[2].querySelector('select').value;  // parameter name
+
+                // Only count as used if it's the same type AND same selection
+                if (itemKwargType === kwargType && itemSelection === selection && paramName) {
+                    usedParams.add(paramName);
+                }
+            });
+
+            return usedParams;
         }
 
         // Helper function to get currently selected specs from the page
@@ -1227,7 +1256,10 @@
             const removeBtn = document.createElement('button');
             removeBtn.textContent = '×';
             removeBtn.className = 'remove-btn';
-            removeBtn.onclick = () => kwargsItem.remove();
+            removeBtn.onclick = () => {
+                kwargsItem.remove();
+                updateKwargsDropdowns(); // Update other kwargs when one is removed
+            };
 
             // Event listeners for cascading dropdowns
             typeSelect.addEventListener('change', function() {
@@ -1291,6 +1323,7 @@
                         existingSelect.remove();
                     }
                 }
+                updateKwargsDropdowns(); // Move this outside the if/else
             });
 
             // Show/hide tooltip on hover
@@ -1688,13 +1721,25 @@
 
             const paramSelect = document.createElement('select');
             paramSelect.innerHTML = '<option value="">Select parameter...</option>';
+
+            // Only show numeric columns for filtering
             allResultColumns.forEach(col => {
-                // Only add if not already used
+                // Only add if not already used AND is a numeric column
                 if (!usedParams.includes(col)) {
-                    const option = document.createElement('option');
-                    option.value = col;
-                    option.textContent = col.replace('_', ' ').toUpperCase();
-                    paramSelect.appendChild(option);
+                    const column = availableColumns.find(c => c.name === col);
+                    const isNumeric = column && (
+                        column.dtype === 'number' ||
+                        column.dtype === 'float' ||
+                        column.dtype === 'int' ||
+                        column.dtype === 'integer'
+                    ) || col.toLowerCase().includes('score'); // Always include score columns even if dtype check fails
+
+                    if (isNumeric) {
+                        const option = document.createElement('option');
+                        option.value = col;
+                        option.textContent = col.replace('_', ' ').toUpperCase();
+                        paramSelect.appendChild(option);
+                    }
                 }
             });
 
@@ -1741,12 +1786,23 @@
 
                 allResultColumns.forEach(col => {
                     // Add option if it's not used elsewhere OR it's the current selection
+                    // AND it's a numeric column
                     if (!usedParams.includes(col) || col === currentValue) {
-                        const option = document.createElement('option');
-                        option.value = col;
-                        option.textContent = col.replace('_', ' ').toUpperCase();
-                        if (col === currentValue) option.selected = true;
-                        select.appendChild(option);
+                        const column = availableColumns.find(c => c.name === col);
+                        const isNumeric = column && (
+                            column.dtype === 'number' ||
+                            column.dtype === 'float' ||
+                            column.dtype === 'int' ||
+                            column.dtype === 'integer'
+                        ) || col.toLowerCase().includes('score'); // Always include score columns even if dtype check fails
+
+                        if (isNumeric) {
+                            const option = document.createElement('option');
+                            option.value = col;
+                            option.textContent = col.replace('_', ' ').toUpperCase();
+                            if (col === currentValue) option.selected = true;
+                            select.appendChild(option);
+                        }
                     }
                 });
             });
