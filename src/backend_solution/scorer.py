@@ -145,7 +145,6 @@ class ListScorer(Scorer):
             "contains" returns a true/false for inclusion of ANY element, good for multiselect preferences
         :param jaccard_softener: slightly increases jaccard scores for fairness. NOT EXPOSED AS A CONFIG OPTION
         """
-        print(match_mode)
 
         # return 0 for empty inputs
         if request_val is None or candidate_val is None:
