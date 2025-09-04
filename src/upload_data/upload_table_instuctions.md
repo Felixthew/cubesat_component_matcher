@@ -30,6 +30,8 @@ indentation level 0.
 Then run the file and all should work. If no errors are thrown then it has most likely worked, but
 the only way to know for sure is to check the database (**Note**: the database UI only shows the "
 public" schema).
+The database connection string ("DB_URL") can be found in src\backend_solution\database.py. Edit the string there to
+upload the database to your intended location.
 
 ### **Common Errors**
 
@@ -61,7 +63,7 @@ the database in the ide.
 * Only one table per sheet
 * Do not use (put values) in any cells not being used for the table.
 * The sheet name will be used as the table name
-* for a comprehensive styleguide check [here.](https://docs.google.com/document/d/11T_ZlRI-ynXiog7w2_ZTOiBS0SRInuRN_kZEVmbFIS0/edit?tab=t.nuv6wc3ir3w8)
+* For a comprehensive styleguide check [here.](https://docs.google.com/document/d/11T_ZlRI-ynXiog7w2_ZTOiBS0SRInuRN_kZEVmbFIS0/edit?tab=t.nuv6wc3ir3w8)
 
 To avoid running into any unforeseen errors stick to xlsx files only. This should not be a problem
 unless you are doing weird things with Excel.
