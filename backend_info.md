@@ -121,7 +121,7 @@ data in api.py via data_loader.load_candidates().
 metadata.data_types table, generated during file upload. data_loader.get_dtypes() retrieves this dict from the database.
 This method has built-in caching to reduce query costs with functools' lru_cache.
 - scoring_configs: json_types.SearchKwarg containing two properties: col_kwargs and type_kwargs. These are passed in
-directly from the request payload as well. More detailed info on configs will be below and in README_frontend.md.
+directly from the request payload as well. More detailed info on configs will be below and in frontend_info.md.
 
 #### Properties
 - specs: the request argument. This is iterated through in _score_row() to each individual _score_single() call.

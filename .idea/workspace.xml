@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="" />
+    <list default="true" id="c04d87e7-d48a-4bbe-b83a-4bc2139bda5f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -251,6 +253,8 @@
       <workItem from="1755628905533" duration="11866000" />
       <workItem from="1756057527369" duration="1834000" />
       <workItem from="1757000420949" duration="3270000" />
+      <workItem from="1757633130844" duration="726000" />
+      <workItem from="1772238870759" duration="24000" />
     </task>
     <task id="LOCAL-00001">
       <option name="closed" value="true" />
@@ -276,17 +280,6 @@
         </entry>
       </map>
     </option>
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/src/backend_solution/scorer.py</url>
-          <line>41</line>
-          <option name="timeStamp" value="2" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/cubesat_component_matcher$data_loader.coverage" NAME="data_loader Coverage Results" MODIFIED="1752344403311" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/aiden_halfstack_solution/src" />
