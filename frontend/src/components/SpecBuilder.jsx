@@ -16,7 +16,7 @@ export default function SpecBuilder({ state, dispatch }) {
     <div className="sidebar-section">
       <div className="section-title">Match Specifications</div>
       <div className="section-hint">
-        Define parameters and target values to score against. Adjust weight to control each parameter's contribution.
+        Define the parameters and target values to score against. Adjust weight to control each parameter's contribution to the overall score.
       </div>
 
       {loadingColumns ? (

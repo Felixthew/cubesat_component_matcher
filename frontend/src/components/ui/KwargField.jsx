@@ -42,7 +42,6 @@ export default function KwargField({ kwarg, value, onChange }) {
           step="1"
           value={displayVal ?? ''}
           onChange={e => onChange(parseInt(e.target.value, 10))}
-          placeholder={`Default: ${kwarg.default}`}
         />
       ) : (
         <input
@@ -50,8 +49,10 @@ export default function KwargField({ kwarg, value, onChange }) {
           step="any"
           value={displayVal ?? ''}
           onChange={e => onChange(parseFloat(e.target.value))}
-          placeholder={`Default: ${kwarg.default}`}
         />
+      )}
+      {kwarg.default !== null && kwarg.default !== undefined && (
+        <div className="kwarg-default">Default: {kwarg.default.toString()}</div>
       )}
     </div>
   );

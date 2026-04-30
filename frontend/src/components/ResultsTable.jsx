@@ -42,8 +42,12 @@ function BreakdownPanel({ row, specs, columns, colSpan }) {
               return (
                 <div key={spec.column} className="breakdown-item">
                   <div className="breakdown-param">{spec.column}</div>
-                  <div className="breakdown-val" title={`Requested: ${reqDisplay}`}>→ {reqDisplay}</div>
-                  <div className="breakdown-val" title={`Candidate: ${candDisplay}`}>{candDisplay}</div>
+                  <div className="breakdown-val">
+                    <span className="bd-label">Requested:</span> <span className="bd-val">{reqDisplay}</span>
+                  </div>
+                  <div className="breakdown-val">
+                    <span className="bd-label">Candidate:</span> <span className="bd-val">{candDisplay}</span>
+                  </div>
                   <div className="breakdown-score-cell">
                     <ScoreChip value={scoreVal} />
                     <div className="breakdown-bar">
@@ -100,6 +104,8 @@ export default function ResultsTable({ state, dispatch, onApply }) {
 
   function renderCell(col, row) {
     const val = row[col];
+    const colProfile = columns.find(c => c.name === col);
+    const dtype = colProfile?.dtype;
 
     if (col === 'overall_score') {
       return (
@@ -113,9 +119,6 @@ export default function ResultsTable({ state, dispatch, onApply }) {
       return <td key={col} className="score-col"><ScoreChip value={val} /></td>;
     }
 
-    const colProfile = columns.find(c => c.name === col);
-    const dtype = colProfile?.dtype;
-
     if (dtype === 'boolean') {
       return <td key={col}><BoolCell val={val} /></td>;
     }
@@ -124,7 +127,7 @@ export default function ResultsTable({ state, dispatch, onApply }) {
       return <td key={col} style={{ color: 'var(--text-muted)' }}>—</td>;
     }
 
-    if (typeof val === 'number') {
+    if (dtype === 'number' || dtype === 'range' || dtype === 'tuple' || typeof val === 'number') {
       return <td key={col} className="num">{val}</td>;
     }
 

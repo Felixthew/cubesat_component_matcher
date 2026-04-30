@@ -216,7 +216,7 @@ The value input occupies its own full-width line, giving it maximum available sp
   - `"int"` dtype → integer number input, `step="1"`
   - `"float"` dtype → float number input, `step="any"`
 - Show description as a `(?)` tooltip on each kwarg label.
-- Show the default value in the placeholder or as "Default: X" below the input.
+- Show "Default: X" as small muted text below the input (not in the placeholder). Implemented via `.kwarg-default` style.
 - If any kwarg differs from the default, show a small filled dot `●` on the "⚙ Advanced" label when collapsed.
 
 **Remove button (✕):**
@@ -292,7 +292,7 @@ Scored on: Mass (kg) ×2, Orbit Type ×1, Manufacturer ×0.5
 - Breadcrumb shows selected solution and system (replace underscores with spaces, sentence case).
 - "X components scored against Y specifications" — X is the total result count (all pages).
 - Spec summary line: "Scored on: Col ×weight, …" — weight formatted without trailing `.0` for whole numbers.
-- "Modify Search" link scrolls back to the sidebar / collapses the sidebar on narrow viewports.
+- "Modify Search" link focuses the first input in the sidebar to return the user's attention to the spec builder. (Mobile drawer collapse is out of scope for v1 — the tool targets 1280px+ desktop.)
 
 ### Sticky Toolbar
 
@@ -304,7 +304,7 @@ Sticks to the top of the main content area when scrolling down. Background match
 
 **Sort by:**
 - Dropdown. Pre-populate with `overall_score` selected.
-- Options: all columns from the derived column order (see §12). Score columns appear at the top with friendly labels (e.g. "Company %" not "company_score"). Data columns below, separated by a thin divider.
+- Options grouped with `<optgroup>`: **Score Columns** at the top with friendly labels (e.g. "Company %" not "company_score"), then **Data Columns** below. Use `<optgroup>` — not a disabled separator option.
 - On change: do not auto-apply. User clicks Apply.
 
 **Sort direction:**
@@ -324,6 +324,7 @@ Sticks to the top of the main content area when scrolling down. Background match
 - Triggers `POST /search/{session_id}` with current sort, filters, and pagination state.
 - Shows a brief "Updating…" loading state inline (don't replace the whole table, just show a subtle progress bar above it).
 - Label: "Apply" — not "Search". This distinction matters — Apply is fast, Search is slow.
+- **Style: secondary/outlined** (`transparent` background, `border: 1px solid rgba(255,255,255,0.22)`). The Search button keeps the filled blue primary style. This visual separation is required to communicate the two-speed workflow.
 
 ### Filter Panel
 
@@ -337,7 +338,7 @@ FILTERS
 ```
 
 The column dropdown has two optgroups:
-- **Score Columns** — `overall_score` plus all `*_score` columns. Min/max inputs constrained 0–1, step 0.01.
+- **Score Columns** — `overall_score` ("Overall Score") plus all `*_score` columns shown with friendly labels (e.g. "Company %"). Deduplicate: `overall_score` must appear exactly once. Min/max inputs constrained 0–1, step 0.01.
 - **Data Columns** — all columns with dtype `number` or `range`. Min/max inputs unconstrained (`step="any"`), no 0/1 bounds. Changing the selected column resets min/max to avoid carrying over stale bounds.
 
 Both `min` and `max` are optional. Leaving a field blank omits that bound from the filter.
@@ -370,7 +371,7 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
 
 **Data columns:**
 - Regular cell, no special treatment.
-- Numbers: right-aligned, monospace font.
+- Numbers (`number`, `range`, `tuple` dtypes): right-aligned, monospace font. Apply the `.num` class based on **column dtype**, not `typeof value` — API responses may return numeric values as JS strings.
 - Strings: left-aligned.
 - Booleans: show as "Yes" / "No" pill (not 0/1).
 
@@ -392,7 +393,7 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
   Orbit Type        Requested: LEO     Candidate: LEO     [1.000 ████████████]
   Manufacturer      Requested: Surrey  Candidate: SSTL    [0.890 ██████████░░]
   ```
-  One row per spec, showing: parameter name, requested value, candidate value, score chip with inline bar.
+  One row per spec, showing: parameter name, then explicit **"Requested: X"** and **"Candidate: X"** labels as visible text (not tooltips), then score chip with inline bar. Use `.bd-label` (secondary color) and `.bd-val` (monospace) within each cell.
 
 ---
 
@@ -406,7 +407,7 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
 | < 0.40 | `score-poor` | Poor | `#ef4444` |
 | null | `score-null` | — | `rgba(255,255,255,0.25)` |
 
-Apply this color system consistently across: progress bars, score chips, expanded breakdown rows.
+Apply this color system consistently across: progress bars, score chips, expanded breakdown rows. Score bar fill must render at **full tier color opacity** — do not apply `opacity` to the fill element.
 
 ---
 
@@ -632,8 +633,12 @@ The following discrete UI components should be built and reused:
 - **CORS:** Already configured with `allow_origins=["*"]`. No changes needed.
 - **Dev proxy:** Configure Vite's `server.proxy` to forward `/options`, `/search`, and `/kwargs` to `http://localhost:8000` during development.
 - **Pagination total count:** `POST /search` returns all scored rows with no pagination — use `values.length` as `totalResults`. Then immediately call `POST /search/{session_id}` with page 1 to get the first page. All subsequent pagination uses the session endpoint.
-- **Score column identification:** `col.endsWith('_score')` — use this everywhere. Never hardcode column names.
+- **Score column identification:** `col.endsWith('_score')` — use this everywhere. Never hardcode column names. Note: `overall_score` also ends with `_score`, so it is caught by this check; guard for it explicitly where `overall_score` needs separate treatment.
 - **Column display order:** See §12. Always derive from `Object.keys(values[0])` after a retrieve call, not from `response.order`. This is the most important implementation subtlety in the entire frontend.
 - **Kwarg dtype normalization:** Always call `.toLowerCase()` on `kwarg.dtype` before comparing. `SCORING_KWARGS` uses capitalized strings.
 - **Score coupling:** Hardcoded `true` in every `RetrieveRequest`. Never expose as a toggle.
 - **Weight values:** Any positive float. Backend normalizes. Default 1.0 in `newSpec()`.
+- **Numeric cell rendering:** Use column dtype (`number`, `range`, `tuple`) — not `typeof value` — to decide whether a table cell gets monospace/right-aligned treatment. JSON responses can return numeric values as JS strings for certain column types.
+- **Score bar fill:** Do not apply `opacity` to the `.score-bar-fill` element. Render at full tier color intensity. Use `rgba(...)` color values directly if a muted variant is needed.
+- **Kwarg default display:** Show "Default: X" as `.kwarg-default` text below each kwarg input, not as a placeholder. Placeholders are cleared on interaction; the default hint should remain visible.
+- **Apply vs Search button styles:** Apply uses `.btn-secondary` (transparent background, outlined). Search uses `.btn-primary` (filled blue). Never swap these — the visual distinction communicates the two-speed workflow.

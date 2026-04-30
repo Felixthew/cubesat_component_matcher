@@ -1,5 +1,9 @@
 const NUMERIC_DTYPES = new Set(['number', 'range']);
 
+function scoreColLabel(col) {
+  return col.replace(/_score$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' %';
+}
+
 export default function FilterPanel({ state, dispatch }) {
   const { filters, columnOrder, columns } = state;
 
@@ -7,7 +11,10 @@ export default function FilterPanel({ state, dispatch }) {
     (columnOrder || []).filter(c => c.endsWith('_score') || c === 'overall_score')
   );
 
-  const scoreFilterCols = ['overall_score', ...(columnOrder || []).filter(c => c.endsWith('_score'))];
+  const scoreFilterCols = [
+    'overall_score',
+    ...(columnOrder || []).filter(c => c.endsWith('_score') && c !== 'overall_score'),
+  ];
 
   const numericDataCols = (columns || [])
     .filter(c => NUMERIC_DTYPES.has(c.dtype) && !scoreColSet.has(c.name))
@@ -33,7 +40,7 @@ export default function FilterPanel({ state, dispatch }) {
                 <option value="">Column…</option>
                 <optgroup label="Score Columns">
                   {scoreFilterCols.map(c => (
-                    <option key={c} value={c}>{c === 'overall_score' ? 'Overall Score' : c}</option>
+                    <option key={c} value={c}>{c === 'overall_score' ? 'Overall Score' : scoreColLabel(c)}</option>
                   ))}
                 </optgroup>
                 {numericDataCols.length > 0 && (

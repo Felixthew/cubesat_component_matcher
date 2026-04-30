@@ -101,7 +101,16 @@ export default function App() {
       });
     } catch (err) {
       dispatch({ type: 'SET_LOADING', key: 'searching', value: false });
-      const msg = err.status === 500 ? 'Server error — try again in a moment.' : `Search failed: ${err.detail || err.message}`;
+      let msg;
+      if (!err.status) {
+        msg = 'Failed to connect — check your network and try again.';
+      } else if (err.status === 404) {
+        msg = 'The requested data was not found. Try selecting a different system.';
+      } else if (err.status === 500) {
+        msg = 'Server error — try again in a moment.';
+      } else {
+        msg = err.detail || err.message || 'Search failed. Please try again.';
+      }
       dispatch({ type: 'ADD_ERROR', message: msg });
     }
   }

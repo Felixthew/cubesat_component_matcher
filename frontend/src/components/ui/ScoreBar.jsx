@@ -12,7 +12,7 @@ export default function ScoreBar({ value }) {
   const label = value != null ? value.toFixed(3) : '—';
   return (
     <div className="score-bar">
-      <div className="score-bar-fill" style={{ width: `${pct}%`, background: color, opacity: 0.7 }} />
+      <div className="score-bar-fill" style={{ width: `${pct}%`, background: color }} />
       <div className="score-bar-label">{label}</div>
     </div>
   );

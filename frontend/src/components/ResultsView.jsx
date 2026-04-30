@@ -15,8 +15,12 @@ export default function ResultsView({ state, dispatch, onApply }) {
   const activeFilterCount = filters.filter(f => f.name).length;
 
   const scoreColumns = (columnOrder || []).filter(c => c.endsWith('_score') || c === 'overall_score');
-  const dataColumns = (columnOrder || []).filter(c => !c.endsWith('_score'));
-  const sortOptions = [...scoreColumns, ...dataColumns];
+  const dataColumns = (columnOrder || []).filter(c => !c.endsWith('_score') && c !== 'overall_score');
+
+  function handleModifySearch() {
+    const firstInput = document.querySelector('.sidebar select, .sidebar input');
+    firstInput?.focus();
+  }
 
   function handleApply(overrides = {}) {
     const merged = {
@@ -43,13 +47,20 @@ export default function ResultsView({ state, dispatch, onApply }) {
   return (
     <div>
       <div className="results-header">
-        <div className="results-breadcrumb">
-          <strong>{fmt(solution)}</strong>
-          <span className="results-breadcrumb-sep">/</span>
-          <span>{fmt(system)}</span>
-        </div>
-        <div className="results-count">
-          <strong>{totalResults ?? 0}</strong> components scored against {specs.filter(s => s.column).length} specification{specs.filter(s => s.column).length !== 1 ? 's' : ''}
+        <div className="results-header-top">
+          <div>
+            <div className="results-breadcrumb">
+              <strong>{fmt(solution)}</strong>
+              <span className="results-breadcrumb-sep">/</span>
+              <span>{fmt(system)}</span>
+            </div>
+            <div className="results-count">
+              <strong>{totalResults ?? 0}</strong> components scored against {specs.filter(s => s.column).length} specification{specs.filter(s => s.column).length !== 1 ? 's' : ''}
+            </div>
+          </div>
+          <button className="modify-search-link" type="button" onClick={handleModifySearch}>
+            ▶ Modify Search
+          </button>
         </div>
         {specSummary && <div className="results-spec-summary">Scored on: {specSummary}</div>}
       </div>
@@ -62,13 +73,18 @@ export default function ResultsView({ state, dispatch, onApply }) {
               value={sort.by}
               onChange={e => dispatch({ type: 'SET_SORT', patch: { by: e.target.value } })}
             >
-              {scoreColumns.map(c => (
-                <option key={c} value={c}>
-                  {c === 'overall_score' ? 'Overall Score' : `${scoreColLabel(c)} %`}
-                </option>
-              ))}
-              {dataColumns.length > 0 && <option disabled>──────</option>}
-              {dataColumns.map(c => <option key={c} value={c}>{c}</option>)}
+              <optgroup label="Score Columns">
+                {scoreColumns.map(c => (
+                  <option key={c} value={c}>
+                    {c === 'overall_score' ? 'Overall Score' : `${scoreColLabel(c)} %`}
+                  </option>
+                ))}
+              </optgroup>
+              {dataColumns.length > 0 && (
+                <optgroup label="Data Columns">
+                  {dataColumns.map(c => <option key={c} value={c}>{c}</option>)}
+                </optgroup>
+              )}
             </select>
             <select
               value={sort.asc ? 'asc' : 'desc'}
@@ -118,7 +134,7 @@ export default function ResultsView({ state, dispatch, onApply }) {
           </div>
 
           <button
-            className="btn btn-primary"
+            className="btn btn-secondary"
             type="button"
             disabled={applying}
             onClick={() => handleApply()}

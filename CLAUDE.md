@@ -76,3 +76,6 @@ The `metadata.data_types` table drives all type dispatch; a column's dtype must 
 2. Add a config entry to `SCORING_CONFIG`
 3. Register it in `SCORING_REGISTRY`
 4. Add a dtype string to `data_loader.get_dtypes()` if needed
+
+## General Notes
+- The database is currently incomplete, and it causes internal server errors (500) occasionally to be thrown by the API on certain solutions. If this happens in testing, just try another solution (example: avionics won't work right now but power will).
