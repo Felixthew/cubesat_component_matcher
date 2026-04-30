@@ -1,7 +1,12 @@
 const NUMERIC_DTYPES = new Set(['number', 'range']);
 
 function scoreColLabel(col) {
-  return col.replace(/_score$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' %';
+  const base = col.replace(/_score$/, '').replace(/_/g, ' ');
+  const parenIdx = base.indexOf('(');
+  if (parenIdx === -1) return base.replace(/\b\w/g, c => c.toUpperCase()) + ' %';
+  const prefix = base.slice(0, parenIdx).trim();
+  const paren = base.slice(parenIdx);
+  return prefix.replace(/\b\w/g, c => c.toUpperCase()) + ' ' + paren + ' %';
 }
 
 export default function FilterPanel({ state, dispatch }) {

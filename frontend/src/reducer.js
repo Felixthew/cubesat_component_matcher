@@ -14,6 +14,7 @@ export const initialState = {
   currentResults: [],
   columnOrder: [],
   lastSearchRequest: null,
+  searchedSpecs: null,
 
   sort: { by: 'overall_score', asc: false },
   filters: [],
@@ -66,7 +67,7 @@ export function reducer(state, action) {
         specs: [], globalTypeKwargs: {},
         sessionId: null, totalResults: null, currentResults: [], columnOrder: [],
         sort: initialState.sort, filters: [], pagination: initialState.pagination,
-        lastSearchRequest: null,
+        lastSearchRequest: null, searchedSpecs: null,
       };
 
     case 'SET_SYSTEM':
@@ -76,7 +77,7 @@ export function reducer(state, action) {
         columns: [], specs: [], globalTypeKwargs: {},
         sessionId: null, totalResults: null, currentResults: [], columnOrder: [],
         sort: initialState.sort, filters: [], pagination: initialState.pagination,
-        lastSearchRequest: null,
+        lastSearchRequest: null, searchedSpecs: null,
       };
 
     case 'ADD_SPEC':
@@ -110,6 +111,7 @@ export function reducer(state, action) {
         currentResults: action.results,
         columnOrder: action.columnOrder,
         lastSearchRequest: action.searchRequest ?? state.lastSearchRequest,
+        searchedSpecs: action.searchedSpecs ?? state.searchedSpecs,
         searching: false,
         applying: false,
         sort: action.resetSort ? initialState.sort : state.sort,

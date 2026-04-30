@@ -5,9 +5,15 @@ import { scoreColor } from './ui/ScoreBar';
 
 const isScoreCol = c => c === 'overall_score' || c.endsWith('_score');
 
-// "panel_weight_score" → "Panel Weight"
+// "specific_power_(w/kg)_score" → "Specific Power (w/kg)"
+// Preserves content inside parentheses verbatim to avoid corrupting SI unit notation
 function scoreColLabel(col) {
-  return col.replace(/_score$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const base = col.replace(/_score$/, '').replace(/_/g, ' ');
+  const parenIdx = base.indexOf('(');
+  if (parenIdx === -1) return base.replace(/\b\w/g, c => c.toUpperCase());
+  const prefix = base.slice(0, parenIdx).trim();
+  const paren = base.slice(parenIdx);
+  return prefix.replace(/\b\w/g, c => c.toUpperCase()) + ' ' + paren;
 }
 
 function BoolCell({ val }) {
@@ -16,37 +22,65 @@ function BoolCell({ val }) {
   return <span className={`bool-pill ${yes ? 'bool-yes' : 'bool-no'}`}>{yes ? 'Yes' : 'No'}</span>;
 }
 
+function fmtSpecVal(val, dtype) {
+  if (val === null || val === undefined) return '—';
+  if (dtype === 'boolean') return (val === 1 || val === 'True' || val === true) ? 'Yes' : 'No';
+  return String(val);
+}
+
+function fmtCandVal(val, dtype) {
+  if (val === null || val === undefined) return '—';
+  if (dtype === 'boolean') return (val === 1 || val === true) ? 'Yes' : 'No';
+  return String(val);
+}
+
+// Score chip with a compact hover tooltip showing target → component values
+function ScoreChipWithTooltip({ value, targetDisplay, componentDisplay }) {
+  return (
+    <div className="sc-tip-wrap">
+      <ScoreChip value={value} />
+      <div className="sc-tip">
+        <div className="sc-tip-row">
+          <span className="sc-tip-label">Target</span>
+          <span className="sc-tip-val">{targetDisplay}</span>
+        </div>
+        <div className="sc-tip-row">
+          <span className="sc-tip-label">Component</span>
+          <span className="sc-tip-val">{componentDisplay}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BreakdownPanel({ row, specs, columns, colSpan }) {
+  const activeSpecs = specs.filter(s => s.column);
+  if (activeSpecs.length === 0) return null;
   return (
     <tr>
       <td className="breakdown-td" colSpan={colSpan}>
         <div className="breakdown-panel">
-          <div className="breakdown-title">Specification Breakdown</div>
+          <div className="breakdown-title">Score Breakdown</div>
           <div className="breakdown-items">
-            {specs.filter(s => s.column).map(spec => {
+            {activeSpecs.map(spec => {
               const colProfile = columns.find(c => c.name === spec.column);
               const dtype = colProfile?.dtype;
               const candidateVal = row[spec.column];
               const scoreVal = row[`${spec.column}_score`];
-
-              let reqDisplay = String(spec.value ?? '—');
-              let candDisplay = String(candidateVal ?? '—');
-              if (dtype === 'boolean') {
-                reqDisplay = (spec.value === 1 || spec.value === 'True') ? 'Yes' : 'No';
-                candDisplay = (candidateVal === 1 || candidateVal === true) ? 'Yes' : 'No';
-              }
-
+              const targetDisplay = fmtSpecVal(spec.value, dtype);
+              const componentDisplay = fmtCandVal(candidateVal, dtype);
               const color = scoreColor(scoreVal);
               const pct = scoreVal != null ? Math.round(scoreVal * 100) : 0;
 
               return (
                 <div key={spec.column} className="breakdown-item">
-                  <div className="breakdown-param">{spec.column}</div>
-                  <div className="breakdown-val">
-                    <span className="bd-label">Requested:</span> <span className="bd-val">{reqDisplay}</span>
-                  </div>
-                  <div className="breakdown-val">
-                    <span className="bd-label">Candidate:</span> <span className="bd-val">{candDisplay}</span>
+                  <div className="breakdown-param">{spec.column.replace(/_/g, ' ')}</div>
+                  <div className="breakdown-vals">
+                    <span className="bd-label">Target</span>
+                    <span className="bd-val">{targetDisplay}</span>
+                    <span className="bd-arrow">→</span>
+                    <span className="bd-label">Component</span>
+                    <span className="bd-val">{componentDisplay}</span>
                   </div>
                   <div className="breakdown-score-cell">
                     <ScoreChip value={scoreVal} />
@@ -69,6 +103,11 @@ export default function ResultsTable({ state, dispatch, onApply }) {
   const [expandedRow, setExpandedRow] = useState(null);
 
   if (!columnOrder || columnOrder.length === 0) return null;
+
+  // Map data column name → spec, so score chip tooltips can show target values
+  const specMap = Object.fromEntries(
+    (specs || []).filter(s => s.column).map(s => [s.column, s])
+  );
 
   const notesColumns = columnOrder.filter(c => c.toLowerCase().startsWith('notes'));
   const hasNotes = notesColumns.length > 0;
@@ -116,6 +155,18 @@ export default function ResultsTable({ state, dispatch, onApply }) {
     }
 
     if (isScoreCol(col)) {
+      const dataCol = col.replace(/_score$/, '');
+      const spec = specMap[dataCol];
+      if (spec) {
+        const dataProfile = columns.find(c => c.name === dataCol);
+        const targetDisplay = fmtSpecVal(spec.value, dataProfile?.dtype);
+        const componentDisplay = fmtCandVal(row[dataCol], dataProfile?.dtype);
+        return (
+          <td key={col} className="score-col score-col-tip">
+            <ScoreChipWithTooltip value={val} targetDisplay={targetDisplay} componentDisplay={componentDisplay} />
+          </td>
+        );
+      }
       return <td key={col} className="score-col"><ScoreChip value={val} /></td>;
     }
 
@@ -131,7 +182,8 @@ export default function ResultsTable({ state, dispatch, onApply }) {
       return <td key={col} className="num">{val}</td>;
     }
 
-    return <td key={col}>{String(val)}</td>;
+    const strVal = String(val);
+    return <td key={col} title={strVal}>{strVal}</td>;
   }
 
   if (currentResults.length === 0) {

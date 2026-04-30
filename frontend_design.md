@@ -115,7 +115,7 @@ Use Lucide or Heroicons (MIT license, SVG). Keep icons 16px in most contexts, 14
 **Sidebar:**
 - **Resizable.** Default width 400px. Drag range 280–620px. A 6px drag handle sits at the right edge; it glows accent-blue on hover. The handle must be positioned outside the sidebar's scroll overflow (use a wrapper `div` with `position: relative` as the sizing container, keeping the sidebar itself as `overflow-y: auto` inside it).
 - Separated from main by a 1px border (`rgba(255,255,255,0.08)`).
-- Stacks three sections vertically (see §4–6).
+- Stacks three sections vertically (see §4–6). Each section has a `border-bottom: 1px solid rgba(255,255,255,0.07)`. The Spec Builder section (Step 2) additionally carries an explicit `border-top: 1px solid rgba(255,255,255,0.10)` to provide a slightly more prominent visual separator between Step 1 and Step 2.
 - The Search button is pinned to the sidebar's bottom (sticky within sidebar scroll, `position: sticky; bottom: 0`).
 - Sidebar background: `rgba(0,0,0,0.25)`.
 
@@ -186,13 +186,14 @@ The value input occupies its own full-width line, giving it maximum available sp
 - Exclude: columns whose name starts with "notes" (case-insensitive), columns ending in "_score".
 - Already-selected parameters are removed from the available options in every other row's dropdown.
 - On selection: dynamically update the value input to the correct type-aware input (see below).
+- **Dtype subtitle:** When a parameter is selected, show a small muted line directly below the dropdown: `Type: <dtype>` (e.g. `Type: number`). The dtype is rendered in monospace via `.spec-dtype-tag`. This gives users context for interpreting the value input and advanced scoring options without requiring them to open anything.
 
 **Value input — per dtype:**
 
 | dtype | Input type | Notes |
 |-------|-----------|-------|
 | `number` | `<input type="number">` | If the column name contains a parenthetical unit (e.g. "Mass (kg)"), show the unit as a right-aligned hint inside the input. |
-| `string` with options | Searchable combobox | Shows all options alphabetically. User types to filter. Selecting replaces the text. No free-text unless options list is empty. |
+| `string` with options | Searchable combobox | Shows all options alphabetically. User types to filter. Selecting an option commits it and appends `", "` so the user can immediately type the next search token. Typing a comma resets the live search while preserving committed tokens; leading spaces after a comma are ignored. On blur the field normalises to a clean `"option1, option2"` string. Already-committed options are excluded from the dropdown. If the tail already exactly matches an option (e.g., user clicked back into a completed field), the dropdown shows all remaining unselected options rather than filtering by the tail. This comma-separated format is consumed by the `contains_any` advanced kwarg for string scoring. |
 | `string` without options | `<input type="text">` | Plain text entry. |
 | `boolean` | Pill toggle | Two pills: "True" / "False". One is always selected (default False). No text input. |
 | `list` | Tag multi-select | Renders a dropdown with checkboxes. Each selected item becomes a dismissible tag. The field builds the comma-separated string for the API. |
@@ -229,7 +230,7 @@ The value input occupies its own full-width line, giving it maximum available sp
 - Adds a new blank row (parameter unselected).
 
 ### Empty Spec State
-If no specs exist, show a subtle hint card inside the spec builder: "Add at least one specification above to enable search."
+If no specs exist, show a subtle hint card inside the spec builder: "Add at least one specification to enable search." (No directional word — the layout may change and "above"/"below" is fragile.)
 
 ---
 
@@ -283,7 +284,7 @@ Occupies the entire main content area. Replaces the empty state on first search.
 ### Results Header (non-sticky)
 
 ```
-propulsion  /  chemical_propulsion                           [▶ Modify Search]
+propulsion  /  chemical_propulsion
 ─────────────────────────────────────────────────────────────────────────────
 42 components scored against 3 specifications
 Scored on: Mass (kg) ×2, Orbit Type ×1, Manufacturer ×0.5
@@ -292,7 +293,8 @@ Scored on: Mass (kg) ×2, Orbit Type ×1, Manufacturer ×0.5
 - Breadcrumb shows selected solution and system (replace underscores with spaces, sentence case).
 - "X components scored against Y specifications" — X is the total result count (all pages).
 - Spec summary line: "Scored on: Col ×weight, …" — weight formatted without trailing `.0` for whole numbers.
-- "Modify Search" link focuses the first input in the sidebar to return the user's attention to the spec builder. (Mobile drawer collapse is out of scope for v1 — the tool targets 1280px+ desktop.)
+- **Both the count line and the spec summary are frozen at search time** — they reflect `state.searchedSpecs` (snapshotted when Search is pressed), not the live sidebar specs. Editing specs in the sidebar after a search does not update these lines. They only update when Search is pressed again.
+- There is no "Modify Search" button — it is redundant on a desktop layout where the sidebar is always visible.
 
 ### Sticky Toolbar
 
@@ -325,6 +327,7 @@ Sticks to the top of the main content area when scrolling down. Background match
 - Shows a brief "Updating…" loading state inline (don't replace the whole table, just show a subtle progress bar above it).
 - Label: "Apply" — not "Search". This distinction matters — Apply is fast, Search is slow.
 - **Style: secondary/outlined** (`transparent` background, `border: 1px solid rgba(255,255,255,0.22)`). The Search button keeps the filled blue primary style. This visual separation is required to communicate the two-speed workflow.
+- **Stays on the same toolbar row** as Sort / Direction / Per-page / Pagination / Filters. The toolbar row uses `flex-wrap: nowrap` to prevent Apply from wrapping to a second line, which would visually disconnect it from the controls it acts upon. If items feel crowded, reduce internal padding on selects rather than allowing wrapping.
 
 ### Filter Panel
 
@@ -367,13 +370,14 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
 - Fixed width ~64px.
 - Round to 3 decimal places.
 - Null scores: display "—" in muted text.
-- **Column header:** strip the `_score` suffix, title-case, append a small `%` superscript — e.g. `company_score` → "Company %", `specific_power_score` → "Specific Power %". Never show the raw underscore name.
+- **Column header:** strip the `_score` suffix, title-case only the portion before the first `(`, then re-append the parenthesized unit verbatim — e.g. `company_score` → "Company %", `specific_power_(w/kg)_score` → "Specific Power (w/kg) %". Never title-case content inside parentheses (SI unit notation like "W/kg" must not become "W/Kg"). Never show the raw underscore name.
 
 **Data columns:**
 - Regular cell, no special treatment.
 - Numbers (`number`, `range`, `tuple` dtypes): right-aligned, monospace font. Apply the `.num` class based on **column dtype**, not `typeof value` — API responses may return numeric values as JS strings.
-- Strings: left-aligned.
+- Strings: left-aligned. Add `title={value}` on the `<td>` so the native browser tooltip reveals the full value when the cell truncates via CSS ellipsis. No custom tooltip library needed.
 - Booleans: show as "Yes" / "No" pill (not 0/1).
+- In the **expanded row breakdown panel**, show string values in full — no truncation. Use `white-space: normal; word-break: break-word` on breakdown value cells.
 
 **Notes columns:**
 - Columns with names starting with "notes" (case-insensitive): hidden from the table by default.
@@ -386,14 +390,20 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
 
 **Row interaction:**
 - Row hover: `background-elevated` tint, `cursor: pointer`.
-- Clicking a row expands it (accordion) to show a score detail panel:
+- **Score chip tooltips (inline, no click required):** Each `{col}_score` chip that corresponds to a user-specified column shows a compact hover tooltip:
   ```
-  ─ Specification Breakdown ───────────────────────────────────
-  Mass (kg)         Requested: 12.5    Candidate: 14.2    [0.842 ██████████░░]
-  Orbit Type        Requested: LEO     Candidate: LEO     [1.000 ████████████]
-  Manufacturer      Requested: Surrey  Candidate: SSTL    [0.890 ██████████░░]
+  Target     12.5
+  Component  14.2
   ```
-  One row per spec, showing: parameter name, then explicit **"Requested: X"** and **"Candidate: X"** labels as visible text (not tooltips), then score chip with inline bar. Use `.bd-label` (secondary color) and `.bd-val` (monospace) within each cell.
+  Implemented via `.sc-tip-wrap` / `.sc-tip`. The `td.score-col-tip` cell sets `overflow: visible` so the tooltip escapes the table cell bounds.
+- **Clicking a row** expands a compact "Score Breakdown" panel below it. The panel has `max-width: 600px` and does not stretch across the full table width. One row per spec in a tight 3-column grid:
+  ```
+  ─ Score Breakdown ──────────────────────────────────
+  mass (kg)     TARGET 12.5 → COMPONENT 14.2    [0.842 ███░]
+  orbit type    TARGET LEO  → COMPONENT LEO     [1.000 ████]
+  manufacturer  TARGET Surrey → COMPONENT SSTL  [0.890 ████]
+  ```
+  Columns: parameter name (140px, capitalize) | "Target X → Component Y" (flex) | score chip + mini bar (130px). Use `.bd-label` (muted, uppercase) and `.bd-val` (monospace) within the values cell. The expand row is titled "Score Breakdown" (not "Specification Breakdown").
 
 ---
 
@@ -480,6 +490,7 @@ Track the following in a single state object:
   globalTypeKwargs: Record<string,Record<string,any>>, // type-wide overrides
   sessionId: string | null,
   totalResults: number | null,    // for pagination display
+  searchedSpecs: Spec[] | null,   // snapshot of specs at last search — drives results header
   sort: { by: string, asc: boolean },
   filters: Array<{ name: string, min_val: number|null, max_val: number|null }>,
   pagination: { page: number, perPage: number },
@@ -617,7 +628,8 @@ The following discrete UI components should be built and reused:
 | `WeightSlider` | Range slider 0.1–5.0 with live numeric display. Click-to-type allows any positive float. Default 1.0. |
 | `SpecRow` | Full spec row: parameter select (full width), value input (full width, own line), weight slider + remove button (shared line below). |
 | `KwargField` | Generic kwarg input renderer. Reads `dtype` from `KwargProfile` and normalizes to lowercase before dispatch. Renders PillToggle for boolean, select for string-with-options, number input for int/float. |
-| `ScoreBreakdownRow` | Single row in the expanded score detail panel: param name, requested, candidate, score chip + bar. |
+| `ScoreBreakdownRow` | Single row in the compact "Score Breakdown" panel: param name, "Target X → Component Y", score chip + mini bar. |
+| `ScoreChipWithTooltip` | Score chip wrapper that shows a hover tooltip with "Target / Component" values when the column corresponds to a user spec. Only renders for spec-matched score columns. |
 | `ErrorBanner` | Dismissible error message at top of main area. Auto-dismisses after 8s. |
 | `Toast` | Non-blocking bottom notification. Auto-dismisses after 4s. |
 | `FilterRow` | Single filter entry: column select (optgrouped by score/data), min input, max input, remove button. |

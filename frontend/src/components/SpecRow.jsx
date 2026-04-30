@@ -151,6 +151,9 @@ export default function SpecRow({ spec, columns, usedColumns, dispatch }) {
         <option value="">Select parameter…</option>
         {availableColumns.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
       </select>
+      {profile && (
+        <div className="spec-dtype-hint">Type: <span className="spec-dtype-tag">{profile.dtype}</span></div>
+      )}
 
       {/* Row 2: Value input — full width */}
       <div className="spec-value-section">

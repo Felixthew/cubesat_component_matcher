@@ -95,6 +95,7 @@ export default function App() {
         results: pageRes.values,
         columnOrder,
         searchRequest: searchReq,
+        searchedSpecs: state.specs.filter(s => s.column),
         resetSort: true,
         resetFilters: true,
         resetPagination: true,

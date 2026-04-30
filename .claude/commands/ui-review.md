@@ -11,13 +11,15 @@ Walk through the full CubeSat Component Matcher UI as a professional UX/UI revie
 
 ## Before you start
 
-Read all three reference files before touching the browser:
+Read **all four** reference sources before touching the browser:
 
 1. **`frontend_design.md`** — intended design, layout, component behavior, color system, API integration map. Use this to understand what the team was trying to build. Where the current UI deviates meaningfully, call it out. Where the spec itself seems questionable or improvable, say so.
 
 2. **`backend_info.md`** — how the backend works: what each endpoint does, what the scoring engine produces, what the session/reslice model means, what dtypes exist. This tells you what constraints are real (can't be changed in the frontend) vs. what's a design choice.
 
 3. **`src/backend_solution/json_types.py`** — the exact shape of every API request and response. Use this to verify that the frontend is correctly constructing requests and interpreting responses. Mismatches between the UI and the actual API contract are always P1 findings.
+
+4. **`frontend/src/`** — the actual React source code. Read the key component files before the browser walkthrough so you understand *how* things are implemented, not just *what* they look like. At minimum read: `App.jsx`, `reducer.js`, `api.js`, `components/ResultsTable.jsx`, `components/ResultsView.jsx`, `components/SpecRow.jsx`, `components/ScopeSection.jsx`, `components/FilterPanel.jsx`, `components/ui/ScoreBar.jsx`, `components/ui/ScoreChip.jsx`. This source knowledge is essential for distinguishing real bugs from screenshot artifacts.
 
 ---
 
@@ -37,6 +39,17 @@ When evaluating, ask:
 - Is it clear what each action costs (network request vs. cached)?
 - Are there confusing, broken, or missing pieces?
 - Is there anything the spec left out that would meaningfully improve the tool?
+
+### Three rules to avoid false positives
+
+**Rule 1 — Check the source before flagging transient states as missing.**
+Screenshots are point-in-time captures. Loading spinners, skeleton loaders, and other brief animations may have already finished by the time the screenshot is taken — especially against a local dev server where API calls resolve in milliseconds. Before filing a "loading indicator missing" finding, read the relevant component source (e.g. `ScopeSection.jsx` for the system-loading spinner) to confirm whether the state is actually implemented. If it's in the code, do not file it as a finding. If it's genuinely absent from the source, note that it's a code gap, not a screenshot artifact.
+
+**Rule 2 — Use DOM snapshots, not just screenshots, to evaluate off-screen content.**
+The results table scrolls horizontally. Content that is not visible in a viewport screenshot is not necessarily missing — it may simply be off-screen. Before concluding that a column, value, or UI element is absent, take a `browser_snapshot` and check the accessibility tree. If the element appears in the DOM with content, it exists; the issue (if any) is a layout or visibility concern, not a missing feature. Only flag content as broken or missing if it is absent from the DOM snapshot itself, or if the snapshot shows it rendered at zero size / clipped in a way that makes it permanently inaccessible.
+
+**Rule 3 — Distinguish frontend-hardcoded strings from API/DB-derived data.**
+Many strings the UI displays are passed directly from the API: column names, schema names, option values, unit labels. These originate in the database and are not hardcoded in the frontend. Before flagging a display string as a frontend bug (e.g. wrong capitalization), read the relevant source component to check whether it is: (a) hardcoded in JSX/JS — a genuine frontend bug, or (b) derived from an API response field — a data-quality concern that may warrant a frontend workaround but is not a frontend code error. Label these accurately in your findings. Do not file a P1 for a string that the frontend cannot control without adding a mapping layer.
 
 ---
 
@@ -89,7 +102,7 @@ Take a screenshot. Note anything that looks off.
 Find and select the first non-empty option in the solution type dropdown.
 
 Wait for the system dropdown to enable. Take a screenshot. Evaluate:
-- **Loading feedback:** Was there any indication the system list was loading?
+- **Loading feedback:** Was there any indication the system list was loading? Note: against a local dev server, the loading state may resolve before the screenshot is taken. Before filing a "missing loading indicator" finding, read `ScopeSection.jsx` to confirm whether the loading state is implemented in code. Only flag it as missing if it is absent from the source.
 - **System dropdown:** Is it now enabled and populated?
 - **State reset:** Does selecting a new solution correctly clear any previously selected system?
 - **Compact state:** Does the scope section adapt once a selection is made?
@@ -143,14 +156,17 @@ Take a screenshot.
 
 Click the Search button. Wait for results (snapshot up to 3 times until results or error appear). If the search returns an error, capture it and continue — error handling is part of the review.
 
-Take a screenshot. Evaluate:
+Take a screenshot. Then take a DOM snapshot and read it carefully — the snapshot shows the full table structure including off-screen columns that are scrolled out of the viewport. Use the snapshot (not just the screenshot) to evaluate column presence and content. Also use `browser_evaluate` or scroll the table horizontally to inspect columns that are off-screen before concluding anything is missing.
+
+Evaluate:
 - **Results header:** Is it clear what was searched and how many results were found?
 - **"Modify Search" affordance:** Is there a clear path back to refining the search?
 - **Toolbar:** Is the toolbar well-organized? Are the controls for fast reslice operations (sort, filter, paginate) clearly separated from the slow re-search action?
 - **Apply vs Search distinction:** Can a user clearly tell which button re-scores (slow, expensive) vs. which just re-slices (fast, cheap)? This is a critical UX distinction for an engineering tool.
-- **Results table:** Is the overall score prominent and sticky? Are per-column scores coupled with their data columns?
-- **Score visualization:** Are score colors meaningful and consistent? Is the score bar readable?
-- **Column headers:** Are score columns labeled in a user-friendly way (not raw underscore names)?
+- **Results table:** Is the overall score prominent and sticky? Are per-column scores coupled with their data columns? Read the full column list from the DOM snapshot — do not conclude a column is absent just because it is off-screen in the screenshot.
+- **Score visualization:** Are score colors meaningful and consistent? Is the overall score shown as a proportional progress bar (check `ScoreBar.jsx` source for implementation)?
+- **Per-column score chips:** Do `*_score` columns render with the tier-colored chip treatment? Check the DOM snapshot for their cell structure and cross-reference with `ScoreChip.jsx`.
+- **Column headers:** Are score columns labeled in a user-friendly way (not raw underscore names)? Check `ResultsTable.jsx` to understand how labels are generated — note that column names come from the API (derived from DB column names), so casing issues in those names originate in the data pipeline, not hardcoded frontend strings.
 - **Error handling:** If the search failed, was there clear feedback? Was the error message actionable?
 
 ---
@@ -186,14 +202,17 @@ Take a screenshot. Close the filter panel.
 
 Click the first result row in the results table.
 
-Take a snapshot. Evaluate the score breakdown panel:
-- **Breakdown content:** For each spec, is it clear what was requested vs. what the candidate has?
-- **Labels:** Are "Requested" and "Candidate" values explicitly labeled as visible text?
+Take a snapshot and a screenshot. The breakdown row is inside the horizontally-scrollable table — its content may extend beyond the visible viewport even though it logically should span only the main content area width. Before filing any findings about the breakdown:
+
+1. **Read the DOM snapshot** to confirm which elements exist (Parameter label, Requested value, Candidate value, Score chip). If elements are in the DOM, they are rendered — evaluate whether they are *visually accessible* without horizontal scrolling, not whether they "exist."
+2. **Scroll the table horizontally** if needed to see the breakdown content, or use `browser_evaluate` to measure the breakdown container's bounding rect relative to the viewport. This tells you whether the content is genuinely off-screen vs. zero-size vs. hidden.
+3. **Cross-reference `ResultsTable.jsx`** to understand how the breakdown row is implemented (colspan, position, layout) before judging it as broken.
+
+Evaluate:
+- **Breakdown content:** For each spec, is it clear what was requested vs. what the candidate has? Are "Requested" and "Candidate" values both present in the DOM (check snapshot) AND visible without horizontal scrolling (check screenshot / measure bounding rect)?
 - **Score visualization:** Are scores in the breakdown color-coded and easy to read?
 - **Usability:** Does the expanded row help a user understand *why* a component scored the way it did?
-- **Layout:** Is the breakdown panel well-proportioned and readable at various screen widths?
-
-Take a screenshot.
+- **Layout:** Is the breakdown panel well-proportioned and readable without requiring the user to scroll right?
 
 ---
 

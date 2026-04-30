@@ -6,21 +6,21 @@ function fmt(s) {
 }
 
 function scoreColLabel(col) {
-  return col.replace(/_score$/, '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  const base = col.replace(/_score$/, '').replace(/_/g, ' ');
+  const parenIdx = base.indexOf('(');
+  if (parenIdx === -1) return base.replace(/\b\w/g, c => c.toUpperCase());
+  const prefix = base.slice(0, parenIdx).trim();
+  const paren = base.slice(parenIdx);
+  return prefix.replace(/\b\w/g, c => c.toUpperCase()) + ' ' + paren;
 }
 
 export default function ResultsView({ state, dispatch, onApply }) {
-  const { solution, system, totalResults, specs, sort, filters, pagination, showFilters, applying, columnOrder } = state;
+  const { solution, system, totalResults, searchedSpecs, sort, filters, pagination, showFilters, applying, columnOrder } = state;
   const totalPages = Math.ceil((totalResults || 0) / pagination.perPage);
   const activeFilterCount = filters.filter(f => f.name).length;
 
   const scoreColumns = (columnOrder || []).filter(c => c.endsWith('_score') || c === 'overall_score');
   const dataColumns = (columnOrder || []).filter(c => !c.endsWith('_score') && c !== 'overall_score');
-
-  function handleModifySearch() {
-    const firstInput = document.querySelector('.sidebar select, .sidebar input');
-    firstInput?.focus();
-  }
 
   function handleApply(overrides = {}) {
     const merged = {
@@ -40,27 +40,21 @@ export default function ResultsView({ state, dispatch, onApply }) {
     onApply({ pagination: { ...pagination, page: p } });
   }
 
-  const specSummary = specs.filter(s => s.column)
+  const frozenSpecs = searchedSpecs || [];
+  const specSummary = frozenSpecs
     .map(s => `${s.column} ×${s.weight % 1 === 0 ? s.weight.toFixed(0) : s.weight}`)
     .join(', ');
 
   return (
     <div>
       <div className="results-header">
-        <div className="results-header-top">
-          <div>
-            <div className="results-breadcrumb">
-              <strong>{fmt(solution)}</strong>
-              <span className="results-breadcrumb-sep">/</span>
-              <span>{fmt(system)}</span>
-            </div>
-            <div className="results-count">
-              <strong>{totalResults ?? 0}</strong> components scored against {specs.filter(s => s.column).length} specification{specs.filter(s => s.column).length !== 1 ? 's' : ''}
-            </div>
-          </div>
-          <button className="modify-search-link" type="button" onClick={handleModifySearch}>
-            ▶ Modify Search
-          </button>
+        <div className="results-breadcrumb">
+          <strong>{fmt(solution)}</strong>
+          <span className="results-breadcrumb-sep">/</span>
+          <span>{fmt(system)}</span>
+        </div>
+        <div className="results-count">
+          <strong>{totalResults ?? 0}</strong> components scored against {frozenSpecs.length} specification{frozenSpecs.length !== 1 ? 's' : ''}
         </div>
         {specSummary && <div className="results-spec-summary">Scored on: {specSummary}</div>}
       </div>

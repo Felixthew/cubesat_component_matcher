@@ -13,7 +13,7 @@ export default function SpecBuilder({ state, dispatch }) {
   const allUsed = usedColumns.length >= availableCount && availableCount > 0;
 
   return (
-    <div className="sidebar-section">
+    <div className="sidebar-section spec-section">
       <div className="section-title">Match Specifications</div>
       <div className="section-hint">
         Define the parameters and target values to score against. Adjust weight to control each parameter's contribution to the overall score.
@@ -25,7 +25,7 @@ export default function SpecBuilder({ state, dispatch }) {
         <>
           {specs.length === 0 && (
             <div className="spec-empty-hint">
-              Add at least one specification above to enable search.
+              Add at least one specification to enable search.
             </div>
           )}
           <div className="spec-list">
