@@ -15,5 +15,12 @@
       <jdbc-url>jdbc:postgresql://turntable.proxy.rlwy.net:46609/railway</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="cubesat@localhost" uuid="e1d35bd3-f4c8-49f4-9168-d98d8186e29b">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/cubesat</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
