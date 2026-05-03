@@ -8,7 +8,7 @@ export default function WeightSlider({ value, onChange }) {
 
   function commitDraft() {
     const n = parseFloat(draft);
-    if (!isNaN(n) && n > 0) onChange(Math.round(n * 10) / 10);
+    if (!isNaN(n) && n > 0) onChange(Math.max(0.1, Math.min(5.0, n)));
     setEditing(false);
   }
 

@@ -6,6 +6,9 @@ const FRIENDLY_NAMES = {
   use_global_extrema: 'Use dataset extrema',
   product_scoring: 'Product scoring',
   normalize_to_max: 'Normalize to max',
+  threshold: 'Fuzzy match threshold',
+  match_mode: 'Match mode',
+  decay_factor: 'Out-of-range decay factor',
 };
 
 export default function KwargField({ kwarg, value, onChange }) {

@@ -306,26 +306,29 @@ Sticks to the top of the main content area when scrolling down. Background match
 
 **Sort by:**
 - Dropdown. Pre-populate with `overall_score` selected.
-- Options grouped with `<optgroup>`: **Score Columns** at the top with friendly labels (e.g. "Company %" not "company_score"), then **Data Columns** below. Use `<optgroup>` — not a disabled separator option.
-- On change: do not auto-apply. User clicks Apply.
+- Options grouped with `<optgroup>`: **Score Columns** at the top with friendly labels (e.g. "Company score" not "company_score"), then **Data Columns** below. Use `<optgroup>` — not a disabled separator option.
+- On change: **auto-applies immediately** — no separate Apply click needed. *This deviates from the original spec's implied separate Apply step; auto-apply was chosen to match the behavior of column header clicks, keeping both sort paths consistent.*
 
 **Sort direction:**
 - Simple two-option select: "Descending" / "Ascending". Default: Descending.
+- On change: auto-applies immediately, same as Sort by.
 
 **Per-page:**
 - Select: 10 / 25 / 50 / 100. Default: 10.
+- On change: **auto-applies immediately**, consistent with page navigation behavior. *This deviates from the original spec's implied separate Apply step.*
 
 **Pagination:**
 - Left arrow (disabled on page 1), current page as an editable number input, "of N" (N = total_pages, computed from total results ÷ per_page), right arrow.
 
 **Filters button:**
 - Toggles the filter panel below the toolbar.
-- Shows count of active filters: "Filters (2)" when filters are applied.
+- When filters are active, shows a numeric badge on the button. The badge is the sole count indicator — no text suffix is appended to the button label.
 
 **Apply button:**
 - Triggers `POST /search/{session_id}` with current sort, filters, and pagination state.
 - Shows a brief "Updating…" loading state inline (don't replace the whole table, just show a subtle progress bar above it).
 - Label: "Apply" — not "Search". This distinction matters — Apply is fast, Search is slow.
+- **Includes a small refresh icon** (circular arrows SVG at 14px) and a tooltip: "Re-fetches sorted/filtered view from cached results — no re-scoring." This makes the two-speed model legible without adding a separate label.
 - **Style: secondary/outlined** (`transparent` background, `border: 1px solid rgba(255,255,255,0.22)`). The Search button keeps the filled blue primary style. This visual separation is required to communicate the two-speed workflow.
 - **Stays on the same toolbar row** as Sort / Direction / Per-page / Pagination / Filters. The toolbar row uses `flex-wrap: nowrap` to prevent Apply from wrapping to a second line, which would visually disconnect it from the controls it acts upon. If items feel crowded, reduce internal padding on selects rather than allowing wrapping.
 
@@ -341,7 +344,7 @@ FILTERS
 ```
 
 The column dropdown has two optgroups:
-- **Score Columns** — `overall_score` ("Overall Score") plus all `*_score` columns shown with friendly labels (e.g. "Company %"). Deduplicate: `overall_score` must appear exactly once. Min/max inputs constrained 0–1, step 0.01.
+- **Score Columns** — `overall_score` ("Overall Score") plus all `*_score` columns shown with friendly labels (e.g. "Company score"). Deduplicate: `overall_score` must appear exactly once. Min/max inputs constrained 0–1, step 0.01.
 - **Data Columns** — all columns with dtype `number` or `range`. Min/max inputs unconstrained (`step="any"`), no 0/1 bounds. Changing the selected column resets min/max to avoid carrying over stale bounds.
 
 Both `min` and `max` are optional. Leaving a field blank omits that bound from the filter.
@@ -370,7 +373,7 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
 - Fixed width ~64px.
 - Round to 3 decimal places.
 - Null scores: display "—" in muted text.
-- **Column header:** strip the `_score` suffix, title-case only the portion before the first `(`, then re-append the parenthesized unit verbatim — e.g. `company_score` → "Company %", `specific_power_(w/kg)_score` → "Specific Power (w/kg) %". Never title-case content inside parentheses (SI unit notation like "W/kg" must not become "W/Kg"). Never show the raw underscore name.
+- **Column header:** strip the `_score` suffix, title-case only the portion before the first `(`, then re-append the parenthesized unit verbatim — e.g. `company_score` → "Company score", `specific_power_(w/kg)_score` → "Specific Power (w/kg) score". Use "score" (not "%") for consistency with dropdowns where `<option>` elements cannot render styled HTML. Never title-case content inside parentheses (SI unit notation like "W/kg" must not become "W/Kg"). Never show the raw underscore name.
 
 **Data columns:**
 - Regular cell, no special treatment.
@@ -385,7 +388,7 @@ overall_score | col1 | col1_score | col2 | col2_score | ...
 
 **Table headers:**
 - Clicking a header sorts by that column (same as changing the Sort By dropdown + clicking Apply).
-- Score column headers get the friendly `%` label format described above.
+- Score column headers use the friendly "score" label format described above (e.g. "Company score").
 - Data column headers get a tooltip on hover showing dtype (e.g., "Type: number").
 
 **Row interaction:**

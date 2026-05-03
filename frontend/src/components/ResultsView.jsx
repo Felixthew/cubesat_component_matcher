@@ -65,12 +65,12 @@ export default function ResultsView({ state, dispatch, onApply }) {
             <span className="toolbar-label">Sort by:</span>
             <select
               value={sort.by}
-              onChange={e => dispatch({ type: 'SET_SORT', patch: { by: e.target.value } })}
+              onChange={e => handleApply({ sort: { by: e.target.value } })}
             >
               <optgroup label="Score Columns">
                 {scoreColumns.map(c => (
                   <option key={c} value={c}>
-                    {c === 'overall_score' ? 'Overall Score' : `${scoreColLabel(c)} %`}
+                    {c === 'overall_score' ? 'Overall Score' : `${scoreColLabel(c)} score`}
                   </option>
                 ))}
               </optgroup>
@@ -82,7 +82,7 @@ export default function ResultsView({ state, dispatch, onApply }) {
             </select>
             <select
               value={sort.asc ? 'asc' : 'desc'}
-              onChange={e => dispatch({ type: 'SET_SORT', patch: { asc: e.target.value === 'asc' } })}
+              onChange={e => handleApply({ sort: { asc: e.target.value === 'asc' } })}
             >
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
@@ -93,7 +93,7 @@ export default function ResultsView({ state, dispatch, onApply }) {
             <span className="toolbar-label">Per page:</span>
             <select
               value={pagination.perPage}
-              onChange={e => dispatch({ type: 'SET_PAGINATION', patch: { perPage: parseInt(e.target.value), page: 1 } })}
+              onChange={e => handleApply({ pagination: { perPage: parseInt(e.target.value), page: 1 } })}
             >
               {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -122,7 +122,7 @@ export default function ResultsView({ state, dispatch, onApply }) {
 
           <div className="toolbar-group toolbar-filters-btn">
             <button className="btn btn-secondary" type="button" onClick={() => dispatch({ type: 'TOGGLE_FILTERS' })}>
-              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+              Filters
               {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
             </button>
           </div>
@@ -131,9 +131,17 @@ export default function ResultsView({ state, dispatch, onApply }) {
             className="btn btn-secondary"
             type="button"
             disabled={applying}
+            title="Re-fetches sorted/filtered view from cached results — no re-scoring."
             onClick={() => handleApply()}
           >
-            {applying ? <><span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Updating…</> : 'Apply'}
+            {applying ? (
+              <><span className="spinner" style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }} /> Updating…</>
+            ) : (
+              <>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                Apply
+              </>
+            )}
           </button>
         </div>
 

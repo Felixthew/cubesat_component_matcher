@@ -3,10 +3,10 @@ const NUMERIC_DTYPES = new Set(['number', 'range']);
 function scoreColLabel(col) {
   const base = col.replace(/_score$/, '').replace(/_/g, ' ');
   const parenIdx = base.indexOf('(');
-  if (parenIdx === -1) return base.replace(/\b\w/g, c => c.toUpperCase()) + ' %';
+  if (parenIdx === -1) return base.replace(/\b\w/g, c => c.toUpperCase()) + ' score';
   const prefix = base.slice(0, parenIdx).trim();
   const paren = base.slice(parenIdx);
-  return prefix.replace(/\b\w/g, c => c.toUpperCase()) + ' ' + paren + ' %';
+  return prefix.replace(/\b\w/g, c => c.toUpperCase()) + ' ' + paren + ' score';
 }
 
 export default function FilterPanel({ state, dispatch }) {
@@ -27,7 +27,7 @@ export default function FilterPanel({ state, dispatch }) {
     .sort();
 
   function isScoreCol(name) {
-    return !name || scoreColSet.has(name);
+    return name ? scoreColSet.has(name) : false;
   }
 
   return (

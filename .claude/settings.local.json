@@ -13,7 +13,11 @@
       "mcp__playwright__browser_console_messages",
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_evaluate",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_tabs",
+      "Bash(curl -s http://localhost:8000/options)",
+      "mcp__playwright__browser_fill_form"
     ]
   }
 }
