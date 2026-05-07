@@ -1,81 +1,75 @@
-1# CLAUDE.md
+# CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repo.
 
 ## Project Overview
 
-CubeSat Component Matcher is a FastAPI web application for NASA Ames Research Center that helps users find optimal satellite components. Users submit component specifications, and the system scores/ranks candidates from a PostgreSQL database using configurable similarity algorithms.
+CubeSat Component Matcher is a FastAPI + React tool for NASA Ames Research Center. Users specify desired component parameters; the backend scores candidate rows from a PostgreSQL database using type-specific similarity algorithms and returns ranked results. A second "reslice" endpoint re-sorts/filters/paginates cached results without re-scoring.
+
+## Layout
+
+```
+src/backend_solution/   FastAPI app, scoring engine, DB access, session storage
+src/upload_data/        Excel → PostgreSQL ingestion (upload_table.py)
+frontend/               React + Vite SPA; builds into static/
+static/                 Built frontend served by FastAPI at /static and / (redirects)
+tests/                  pytest suites + JSON fixtures + sample Excel data
+```
+
+Long-form references live in `backend_info.md`, `frontend_info.md`, `frontend_design.md`, and `upload_table_instuctions.md` — read them when working on the corresponding subsystem.
 
 ## Commands
 
 ```bash
-# Install dependencies
+# Backend
 pip install -r requirements.txt
-
-# Run the API server
 uvicorn src.backend_solution.api:app --host 127.0.0.1 --port 8000
 
-# Run tests
-pytest tests/api_test.py       # API integration tests (requires live DB)
-pytest tests/scorer_test.py    # Scorer unit tests (no DB needed)
+# Frontend (from frontend/)
+npm install
+npm run dev     # Vite dev server (proxy to backend)
+npm run build   # Outputs to ../static — FastAPI serves this in production
 
-# Upload Excel data to the database
-# Edit function calls at bottom of the file, then run:
-python src/upload_data/upload_table.py
+# Tests
+pytest tests/scorer_test.py    # pure unit tests, no DB
+pytest tests/api_test.py       # integration tests, requires live DB
 ```
+
+The full app is reachable at `http://localhost:8000/` (redirects to the built frontend); FastAPI auto-docs are at `/docs`.
 
 ## Environment
 
-**Required environment variable**:
-- `DB_URL` — PostgreSQL connection string (default: `postgresql://felix:postgres@localhost:5432/cubesat`)
-
-FastAPI auto-docs are available at `/docs` when the server is running.
+- `DB_URL` — PostgreSQL connection string. Default: `postgresql://felix:postgres@localhost:5432/cubesat`. Read on import in `database.py`, so the app fails fast if the DB is unreachable.
 
 ## Architecture
 
-The system has four main subsystems that interact through a clean layered design:
+### API (`api.py`, `json_types.py`)
+- `GET /options`, `/options/{solution}`, `/options/{solution}/{system}`, `/kwargs` — populate the request-builder UI.
+- `POST /search` — runs the scoring engine, caches the full scored DataFrame in `metadata.session_data`, returns the unsorted/unfiltered result plus a `session_id`.
+- `POST /search/{session_id}` — cheap reslice: filters, sorts, paginates the cached DataFrame. The frontend always issues a `/search` immediately followed by a `/search/{id}` to get the first page.
 
-### 1. API Layer (`src/backend_solution/api.py`, `json_types.py`)
-REST endpoints split into two phases:
-- **Options phase** (`GET /options`, `/options/{solution}`, `/options/{solution}/{system}`) — builds the hierarchical parameter selector UI
-- **Search phase** (`POST /search`) — runs scoring, stores results in session cache, returns paginated results
-- **Reslice phase** (`POST /search/{session_id}`) — re-filters/sorts cached results without re-scoring (cheap)
+### Scoring (`engine.py`, `scorer.py`)
+`ScoringEngine.__init__` builds `extended_df` by dispatching each cell to a type-specific scorer (`number`, `string`, `tuple`, `list`, `boolean`, `range`). Scorers live in `SCORING_REGISTRY`; defaults in `SCORING_CONFIG`; user-facing kwarg metadata in `SCORING_KWARGS`. The header comments in `scorer.py` document how to add a new scorer or kwarg.
 
-### 2. Data Layer (`src/backend_solution/data_loader.py`, `database.py`)
-- `database.py` wraps raw SQLAlchemy execution; reads `DB_URL` from environment
-- `data_loader.py` provides higher-level queries with `@lru_cache(maxsize=16)` — **cache is not invalidated between requests**, so new data requires a server restart
+### Data access (`data_loader.py`, `database.py`)
+`Database.execute` runs raw SQL strings against a single module-level engine. `data_loader` wraps queries with `@lru_cache(maxsize=16)` on `get_dtypes` — **the cache is never invalidated, so re-uploading data requires a server restart.**
 
-### 3. Scoring Engine (`src/backend_solution/engine.py`, `scorer.py`)
-`ScoringEngine` iterates candidate rows and dispatches each column to a type-specific scorer:
-- `NumberScorer` — normalized distance
-- `StringScorer` — Levenshtein fuzzy matching (via `rapidfuzz`)
-- `TupleScorer` — comma-separated numeric tuples
-- `ListScorer` — set-based matching (overlap/jaccard/contains modes)
-- `BooleanScorer` — exact equality
-- `RangeScorer` — exponential decay outside bounds
+### Session storage (`storage.py`)
+JSONB cache keyed by `session_id` in `metadata.session_data`. Sessions live for 168h; `prune_expired_sessions` runs lazily inside each `POST /search`.
 
-Scorers are registered in `SCORING_REGISTRY` and configured via `SCORING_CONFIG` in `scorer.py`. Per-column kwargs override type-wide defaults and are passed in from the API request.
-
-### 4. Session Storage (`src/backend_solution/storage.py`)
-Caches scored DataFrames as JSONB in `metadata.session_data`. Sessions expire after 168 hours; pruning runs lazily inside each `POST /search` call (not on a schedule).
-
-### Database Structure
+### Database structure
 ```
-PostgreSQL
-├── Schema: solutions (e.g., propulsion, thermal, power)
-│   └── Tables: component systems (rows = products)
-└── Schema: metadata
-    ├── data_types   — column name → dtype mappings for all tables
-    └── session_data — session_id (PK), request_data (JSONB), results_data (JSONB), created_at
+solutions schemas (e.g. propulsion, power)  →  system tables (rows = products)
+metadata schema:
+  data_types     column_name → dtype, drives all type dispatch
+  session_data   session_id PK, request_data + results_data JSONB, created_at
 ```
+`upload_table.py` populates `metadata.data_types` automatically. A column with no row in `data_types` cannot be scored.
 
-The `metadata.data_types` table drives all type dispatch; a column's dtype must be registered here for scoring to work. `upload_table.py` populates this automatically during upload.
+### Frontend (`frontend/`)
+React 19 + Vite, single `useReducer` state in `reducer.js`. `App.jsx` orchestrates load/search/apply; `frontend_design.md` is the canonical UI spec and contains the trickiest backend quirks the frontend must work around (notably: derive column display order from `Object.keys(values[0])`, not `response.order` — the `order` field doesn't reflect score-coupled column reordering). `npm run build` writes into `../static/` which FastAPI serves directly.
 
-### Adding a New Scorer
-1. Subclass the base scorer in `scorer.py`
-2. Add a config entry to `SCORING_CONFIG`
-3. Register it in `SCORING_REGISTRY`
-4. Add a dtype string to `data_loader.get_dtypes()` if needed
+## Notes
 
-## General Notes
-- The database is currently incomplete, and it causes internal server errors (500) occasionally to be thrown by the API on certain solutions. If this happens in testing, just try another solution (example: avionics won't work right now but power will).
+- The production database is incomplete; some solutions return 500 (avionics is a known one — power works). When testing, fall back to a different solution rather than chasing the error.
+- `upload_table.py` executes its example call (`upload_all(...)`) at module load. Edit or guard the bottom of the file before running it; importing it as a module will trigger uploads.
