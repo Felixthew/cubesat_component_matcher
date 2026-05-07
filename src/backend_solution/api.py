@@ -10,7 +10,6 @@ import src.backend_solution.json_types as jt
 from src.backend_solution.engine import ScoringEngine
 import src.backend_solution.storage as storage
 import src.backend_solution.data_loader as dl
-import json
 
 app = FastAPI(title="Component Matcher")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -76,9 +75,12 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
 
     # create and run the engine. let it do the heavy lifting on computing extended_df
     engine = ScoringEngine(engine_request, engine_candidates_df, engine_dtypes, engine_scoring_config)
-    # I changed this to Json to get rid of the NaNs, hopefully that is all good
-    json_str = engine.extended_df.to_json(orient='records', date_format='iso', force_ascii=False)
-    scored_table = json.loads(json_str) # BOOM
+
+    # convert NaN/NaT to None so the result is JSON-serializable for the response and JSONB cache
+    scored_table = [
+        {k: (None if pd.isna(v) else v) for k, v in row.items()}
+        for row in engine.extended_df.to_dict(orient="records")
+    ]
     original_columns = engine.extended_df.columns.tolist()
 
     # identify/generate session id for the recall then cache session data
@@ -91,15 +93,7 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
     # package and store results then return
     results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)
     storage.save_results_bm(results)
-    # storage.save_results_bm(results)
     return results
-
-    # storage.save_results(sid, {
-    #     'data': scored_table,
-    #     'column_order': original_columns
-    # })
-    #
-    # return jt.SearchResponse(session_id=sid, values=scored_table)
 
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
@@ -145,7 +139,7 @@ def _order_cols(query: jt.RetrieveRequest, raw_results: dict):
                 score_columns.remove(score_col)
         df_inter = pd.DataFrame(raw_results["values"])[column_order]
     else:
-        df_inter = pd.DataFrame(raw_results["values"])[raw_results['column_order']]
+        df_inter = pd.DataFrame(raw_results["values"])[raw_results["order"]]
     return df_inter
 
 

@@ -42,8 +42,8 @@ class NumberScorer(Scorer):
         if request_val is None or candidate_val is None:
             return 0.0
 
-        max_val = max_val if use_global_extrema and max_val else max(request_val, candidate_val)
-        min_val = min_val if use_global_extrema and min_val else min(request_val, candidate_val)
+        max_val = max_val if use_global_extrema and max_val is not None else max(request_val, candidate_val)
+        min_val = min_val if use_global_extrema and min_val is not None else min(request_val, candidate_val)
         request_val, candidate_val, max_val = _normalize_negatives(request_val, candidate_val, max_val, min_val)
 
         diff = abs(request_val - candidate_val)

@@ -39,25 +39,6 @@ def save_request(session_id: str, request_data: dict):
         }
     )
 
-def save_results(session_id: str, results_data: dict):
-    """
-    Saves returned data after a request in metadata.session_data table
-    :param session_id: previously-generated session id
-    :param results_data: dict of the results json as a DB retrieval
-    """
-    db.execute(
-        """
-        UPDATE metadata.session_data
-        SET results_data = :data
-        WHERE session_id = :sid
-        """,
-        {
-            "sid": session_id,
-            "data": Json(results_data)
-         }
-    )
-
-
 def save_results_bm(results: jt.SearchResponse):
     db.execute(
         """
@@ -97,10 +78,7 @@ def _load_data(session_id: str, data_name: str) -> dict | list[dict]:
         FROM metadata.session_data
         WHERE session_id = :sid
         """,
-        {
-            "sid": session_id,
-            "data": data_name
-        }
+        {"sid": session_id}
     )
     return result[0][0] if result else None
 
@@ -112,7 +90,7 @@ def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
     db.execute(
         """
         DELETE FROM metadata.session_data
-         WHERE created_at < now() - interval ':hours hours'
+         WHERE created_at < now() - make_interval(hours => :hours)
         """,
         {"hours": lifetime_hours}
     )

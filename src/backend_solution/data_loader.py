@@ -67,9 +67,10 @@ def list_schema() -> list[str]:
         SELECT schema_name
         FROM information_schema.schemata
         WHERE schema_name NOT IN :blacklist_schema
-        ORDER BY schema_name;  
+        ORDER BY schema_name
         """,
-        {"blacklist_schema": tuple(db.BLACKLIST_SCHEMA)}
+        {"blacklist_schema": list(db.BLACKLIST_SCHEMA)},
+        expanding=["blacklist_schema"]
     )
     return [s[0] for s in schema]
 
