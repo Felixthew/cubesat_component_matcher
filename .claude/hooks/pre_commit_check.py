@@ -22,6 +22,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 GIT_COMMIT_RE = re.compile(r"^\s*git\s+commit\b")
 FRONTEND_PREFIX = "frontend/"
+# Project targets Python 3.12; pin the test runner to it so the hook isn't
+# affected by whichever interpreter Claude Code happens to launch with.
+PYTEST_PYTHON = ["py", "-3.12"]
 
 
 def read_event() -> dict:
@@ -53,7 +56,7 @@ def staged_files() -> list[str]:
 
 def run_scorer_tests() -> tuple[bool, str]:
     proc = subprocess.run(
-        [sys.executable, "-m", "pytest", "tests/scorer_test.py", "-q"],
+        [*PYTEST_PYTHON, "-m", "pytest", "tests/scorer_test.py", "-q"],
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
