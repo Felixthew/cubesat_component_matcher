@@ -4,7 +4,7 @@ from typing import Any
 
 from psycopg2.extras import Json
 
-from src.backend_solution.database import db
+from src.backend_solution.database import Database
 from src.backend_solution import json_types as jt
 
 # sessions stay cached for a week by default
@@ -20,9 +20,10 @@ def generate_session_id() -> str:
     """
     return str(uuid.uuid4())
 
-def save_request(session_id: str, request_data: dict):
+def save_request(db: Database, session_id: str, request_data: dict):
     """
     Saves request data in metadata.session_data table
+    :param db: the Database to write to
     :param session_id: previously-generated session id
     :param request_data: dict of the request json, including schema/table, specs, weights, filters, sorts, and pages
     """
@@ -39,7 +40,7 @@ def save_request(session_id: str, request_data: dict):
         }
     )
 
-def save_results_bm(results: jt.SearchResponse):
+def save_results_bm(db: Database, results: jt.SearchResponse):
     db.execute(
         """
         UPDATE metadata.session_data
@@ -50,23 +51,25 @@ def save_results_bm(results: jt.SearchResponse):
          "data": Json({"values": results.values, "order": results.order})}
     )
 
-def load_request(session_id: str) -> dict:
+def load_request(db: Database, session_id: str) -> dict:
     """
     Retrieves request data from initial DB query given a session id
+    :param db: the Database to read from
     :param session_id: session id
     :return: dict of request data, including schema/table, specs, weights, filters, sorts, and pages
     """
-    return _load_data(session_id, "request_data")
+    return _load_data(db, session_id, "request_data")
 
-def load_results(session_id: str) -> dict[str, Any]:
+def load_results(db: Database, session_id: str) -> dict[str, Any]:
     """
     Retrieves results data from initial DB query given a session id
+    :param db: the Database to read from
     :param session_id: session id
     :return: dict of all results data
     """
-    return _load_data(session_id, "results_data")
+    return _load_data(db, session_id, "results_data")
 
-def _load_data(session_id: str, data_name: str) -> dict | list[dict]:
+def _load_data(db: Database, session_id: str, data_name: str) -> dict | list[dict]:
     if session_id is None:
         raise ValueError("No session ID")
 
@@ -86,7 +89,7 @@ def _validate_input(input: str):
     if input not in _ALLOWED_DATA:
         raise ValueError("Invalid data input")
 
-def prune_expired_sessions(lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
+def prune_expired_sessions(db: Database, lifetime_hours: int = DEFAULT_EXPIRATION_TIME_HOURS):
     db.execute(
         """
         DELETE FROM metadata.session_data

@@ -1,8 +1,7 @@
-from functools import lru_cache
 from sqlalchemy import MetaData, Table, select, distinct
 
 from src.backend_solution.json_types import Location, ColumnSpec
-from src.backend_solution.database import db
+from src.backend_solution.database import Database
 import pandas as pd
 
 EXPOSABLE_DTYPES = {
@@ -10,19 +9,23 @@ EXPOSABLE_DTYPES = {
     "list"
 }
 
-# can't use location cause it has to be hashable
-@lru_cache(maxsize=16)
-def get_dtypes(schema: str, table: str) -> dict[str, str]:
+def get_dtypes(db: Database, schema: str, table: str) -> dict[str, str]:
     """
-    Retrieves and caches the dtypes by column given a schema and table. {maxsize} retrievals will be cached before auto-eviction begins
+    Retrieves and caches the dtypes by column given a schema and table. The cache lives on the
+    Database instance, so swapping in a test db (via FastAPI dependency override) does not share
+    cached entries with the production db.
+    :param db: the Database to query
     :param schema: the schema to query to
     :param table: the table to query to
     :return: dict of col -> dtype
     """
-    location = Location(schema=schema, table=table)
-    return _load_dtypes(location)
+    key = (schema, table)
+    if key not in db.dtype_cache:
+        location = Location(schema=schema, table=table)
+        db.dtype_cache[key] = _load_dtypes(db, location)
+    return db.dtype_cache[key]
 
-def _load_dtypes(location: Location) -> dict[str, str]:
+def _load_dtypes(db: Database, location: Location) -> dict[str, str]:
     result = db.execute(
         """
         SELECT column_name, dtype
@@ -38,9 +41,10 @@ def _load_dtypes(location: Location) -> dict[str, str]:
         for col, dtype in result
     }
 
-def load_candidates(location: Location) -> pd.DataFrame:
+def load_candidates(db: Database, location: Location) -> pd.DataFrame:
     """
     Retrieves a dataframe of the candidate table, given a schema and table
+    :param db: the Database to query
     :param location: the schema and table to retrieve from
     :return: Pandas dataframe of the specified table
     """
@@ -57,9 +61,10 @@ def load_request(specs: list[ColumnSpec]) -> dict[str, dict[str, str | int | flo
         for col in specs
     }
 
-def list_schema() -> list[str]:
+def list_schema(db: Database) -> list[str]:
     """
     Retrieve all data schema. Excludes defaults seen in database.BLACKLIST_SCHEMA
+    :param db: the Database to query
     :return: list of working schema names
     """
     schema = db.execute(
@@ -74,9 +79,10 @@ def list_schema() -> list[str]:
     )
     return [s[0] for s in schema]
 
-def list_tables(schema: str) -> list[str]:
+def list_tables(db: Database, schema: str) -> list[str]:
     """
     List all tables (systems) in a given schema
+    :param db: the Database to query
     :param schema: the schema name to query from
     :return: List of all table names in schema
     """
@@ -91,13 +97,14 @@ def list_tables(schema: str) -> list[str]:
     )
     return [t[0] for t in tables]
 
-def list_choices(location: Location, col_name: str, dtype: str) -> list[str] | None:
+def list_choices(db: Database, location: Location, col_name: str, dtype: str) -> list[str] | None:
     """
     Retrieves all possible single values from a column of an eligible type (as seen in EXPOSABLE_TYPES). This is
     intended to be a way to create efficient options for an end-user via dropdown menus. Example:
     A column containing list values of "LEO, MEO", "LEO", and "MEO, GEO, LLO" will return ["LEO", "MEO", "GEO", "LLO"].
     A column containing string values of "USA", "Japan", "Sweden", and "USA" will return ["USA", "Japan", "Sweden"].
     If a new datatype is made exposable, its logic must be added into a new conditional statement below.
+    :param db: the Database to query
     :param location: the schema and table to query from
     :param col_name: the name of the column to collect results from
     :param dtype: the datatype of the column

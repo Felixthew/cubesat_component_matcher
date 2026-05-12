@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
@@ -10,6 +10,7 @@ import src.backend_solution.json_types as jt
 from src.backend_solution.engine import ScoringEngine
 import src.backend_solution.storage as storage
 import src.backend_solution.data_loader as dl
+from src.backend_solution.database import Database, get_db
 
 app = FastAPI(title="Component Matcher")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -28,22 +29,22 @@ def root_redirect():
 
 @app.get("/options", response_model=jt.SchemaList,
          summary="Lists all solution types to choose from, e.g. propulsion")
-def get_solutions() -> jt.SchemaList:
-    return jt.SchemaList(schemas=dl.list_schema())
+def get_solutions(db: Database = Depends(get_db)) -> jt.SchemaList:
+    return jt.SchemaList(schemas=dl.list_schema(db))
 
 @app.get("/options/{solution}", response_model=jt.TableList,
          summary="Lists all system types to choose from, e.g. chemical propulsion")
-def get_systems(solution: str) -> jt.TableList:
-    tables = dl.list_tables(solution)
+def get_systems(solution: str, db: Database = Depends(get_db)) -> jt.TableList:
+    tables = dl.list_tables(db, solution)
     if not tables:
         raise HTTPException(404, "No existing systems in request solution category")
     return jt.TableList(schema=solution, tables=tables)
 
 @app.get("/options/{solution}/{system}", response_model=jt.ColumnList,
          summary="Lists all parameters of a given system, e.g. thrust")
-def get_params(solution: str, system: str) -> jt.ColumnList:
+def get_params(solution: str, system: str, db: Database = Depends(get_db)) -> jt.ColumnList:
     # retrieves cached dtype data
-    dtype_rows = dl.get_dtypes(solution, system)
+    dtype_rows = dl.get_dtypes(db, solution, system)
     location = jt.Location(schema=solution, table=system)
 
     # except if null result
@@ -54,7 +55,7 @@ def get_params(solution: str, system: str) -> jt.ColumnList:
     param_list = [
         jt.ColumnProfile(name=name,
                          dtype=dtype,
-                         options=dl.list_choices(location, name, dtype),
+                         options=dl.list_choices(db, location, name, dtype),
                          kwargs=SCORING_KWARGS[dtype])
         for name, dtype in dtype_rows.items()
     ]
@@ -66,11 +67,11 @@ def get_params() -> dict[str, list[KwargProfile]]:
     return SCORING_KWARGS
 
 @app.post("/search", response_model=jt.SearchResponse, summary="Retrieve scored results given new spec requests")
-def search(query: jt.SearchRequest) -> jt.SearchResponse:
+def search(query: jt.SearchRequest, db: Database = Depends(get_db)) -> jt.SearchResponse:
     # prepare engine parameters
     engine_request = dl.load_request(query.specs)
-    engine_candidates_df = dl.load_candidates(query.location)
-    engine_dtypes = dl.get_dtypes(query.location.schema, query.location.table)
+    engine_candidates_df = dl.load_candidates(db, query.location)
+    engine_dtypes = dl.get_dtypes(db, query.location.schema, query.location.table)
     engine_scoring_config = query.kwargs if query.kwargs else None
 
     # create and run the engine. let it do the heavy lifting on computing extended_df
@@ -85,25 +86,25 @@ def search(query: jt.SearchRequest) -> jt.SearchResponse:
 
     # identify/generate session id for the recall then cache session data
     sid = query.session_id or storage.generate_session_id()
-    storage.save_request(sid, query.model_dump())
+    storage.save_request(db, sid, query.model_dump())
 
     # prune old session data
-    storage.prune_expired_sessions()
+    storage.prune_expired_sessions(db)
 
     # package and store results then return
     results = jt.SearchResponse(session_id=sid, values=scored_table, order=original_columns)
-    storage.save_results_bm(results)
+    storage.save_results_bm(db, results)
     return results
 
 
 @app.post("/search/{session_id}", response_model=jt.SearchResponse,
          summary="Retrieve scored results from preexisting session, with optional filtering, sorting, and pagination")
-def retrieve(session_id: str, query: jt.RetrieveRequest) -> jt.SearchResponse:
+def retrieve(session_id: str, query: jt.RetrieveRequest, db: Database = Depends(get_db)) -> jt.SearchResponse:
     sid = session_id
 
     # check for faulty inputs or storage
     try:
-        raw_results = storage.load_results(sid)
+        raw_results = storage.load_results(db, sid)
     except ValueError:
         raise HTTPException(404, "Session not found")
     if raw_results is None:

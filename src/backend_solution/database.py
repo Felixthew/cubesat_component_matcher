@@ -1,19 +1,22 @@
 import os
+from functools import lru_cache
 from sqlalchemy import create_engine, text, bindparam, Engine
 
-DB_URL = os.getenv("DB_URL", "postgresql://felix:postgres@localhost:5432/cubesat")
-db_engine = create_engine(DB_URL)
+DEFAULT_DB_URL = "postgresql://felix:postgres@localhost:5432/cubesat"
 
 class Database:
-    def __init__(self, engine: Engine):
-        self.db_engine = engine
-
     BLACKLIST_SCHEMA = {
         "information_schema",
         "pg_catalog",
         "pg_toast",
         "public"
     }
+
+    def __init__(self, engine: Engine):
+        self.db_engine = engine
+        # per-instance dtype cache, populated by data_loader.get_dtypes.
+        # scoped to the Database so swapping in a test db doesn't share entries with prod.
+        self.dtype_cache: dict[tuple[str, str], dict[str, str]] = {}
 
     def execute(self, sql_str: str, params: dict = None, expanding: list[str] = None):
         """
@@ -36,4 +39,14 @@ class Database:
             else:
                 return result.rowcount
 
-db = Database(db_engine)
+
+@lru_cache(maxsize=1)
+def _default_db() -> Database:
+    url = os.getenv("DB_URL", DEFAULT_DB_URL)
+    return Database(create_engine(url))
+
+
+def get_db() -> Database:
+    """FastAPI dependency returning the process-wide default Database.
+    Tests can swap the live db by setting app.dependency_overrides[get_db]."""
+    return _default_db()
