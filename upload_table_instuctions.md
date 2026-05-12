@@ -24,14 +24,50 @@ Note: these are also in the requirements.txt.
 
 ## Running the program
 
-Open the **upload_table.py** file in your chosen ide (notepad works too), look through the pydoc,
-and then add/edit what method calls you want at the end of the file, all that matters is it's on
-indentation level 0.
-Then run the file and all should work. If no errors are thrown then it has most likely worked, but
-the only way to know for sure is to check the database (**Note**: the database UI only shows the "
-public" schema).
-The database connection string ("DB_URL") can be found in src\backend_solution\database.py. Edit the string there to
-upload the database to your intended location.
+`upload_table.py` is now a proper CLI — you do **not** need to edit the file to add method calls.
+Run it from the project root with the directory you want to upload and the database connection
+string:
+
+### Windows (PowerShell)
+
+```
+py -m src.upload_data.upload_table "C:\path\to\xlsx_directory" --db-url "postgresql://user:pass@host:5432/dbname" --verbose
+```
+
+### Mac (Terminal)
+
+```
+python3 -m src.upload_data.upload_table "/path/to/xlsx_directory" --db-url "postgresql://user:pass@host:5432/dbname" --verbose
+```
+
+### Flags
+
+* `directory` (positional, required): the folder containing the `.xlsx` files. Every `.xlsx` under
+  it is uploaded; one PostgreSQL table is created per sheet.
+* `--db-url` (required): the PostgreSQL connection string. There is **no default fallback** — this
+  is intentional so the production database is never hit by accident. You can find a working
+  connection string in `src/backend_solution/database.py` (the `DB_URL` variable), or set your own.
+* `--has-schema` (optional): treat each immediate subdirectory of `directory` as a target schema
+  name. Files placed directly in `directory` (no subfolder) go to the `public` schema. Only one
+  level of nesting is supported — deeper subdirectories will be skipped with a warning.
+* `--verbose` (optional): print per-sheet progress and column type-conversion info.
+
+If no errors are thrown the upload most likely worked, but the only way to be sure is to check the
+database (**Note**: the database UI only shows the `public` schema by default — switch schemas in
+your client to see others).
+
+### Uploading a single file
+
+The CLI only handles directories. If you have a single `.xlsx`, either drop it into a directory
+and point the CLI at that directory, or call the Python API directly:
+
+```python
+from sqlalchemy import create_engine
+from src.upload_data.upload_table import upload_excel
+
+engine = create_engine("postgresql://user:pass@host:5432/dbname")
+upload_excel(engine, "path/to/file.xlsx", schema="public", verbose=True)
+```
 
 ### **Common Errors**
 
@@ -46,6 +82,9 @@ this problem all the time, and it comes down to the fact that the pip is install
 location the where the script is checking for libraries. One easy fix if you use pycharm is to pip
 install from the ide window with your project.
 
+If the script complains about `--db-url` being missing, you forgot to pass it. There is no default
+on purpose.
+
 ## Accessing the database
 
 At this point you would need to create your own posgresql database which you can easily do locally,
@@ -54,7 +93,8 @@ like I later did with oracle cloud. However you make it though, [this tutorial](
 will show you how to access that database through pycharm, all you need is the url.
 
 **Note**: After uploading data, if you want to view your changes in an ide, make sure you refresh
-the database in the ide.
+the database in the ide. You will also need to restart the FastAPI server before the new data is
+visible to the app — `data_loader.get_dtypes` caches its result for the lifetime of the process.
 
 ## Excel Formatting
 

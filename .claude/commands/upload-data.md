@@ -3,62 +3,58 @@
 Run the project's Excel-to-PostgreSQL ingestion against a file or directory without editing `src/upload_data/upload_table.py`. Always remind the user to restart the API server afterward (the `lru_cache` on `get_dtypes` does not invalidate).
 
 **Ingestion module:** `src/upload_data/upload_table.py`
-- `upload_excel(file_path, schema="public", verbose=False)` — single .xlsx file
-- `upload_all(directory_path, has_schema=False, verbose=False)` — directory tree
+- `upload_excel(engine, file_path, schema="public", verbose=False)` — single .xlsx file
+- `upload_all(engine, directory_path, has_schema=False, verbose=False)` — directory tree
+- CLI: `python -m src.upload_data.upload_table <directory> --db-url <url> [--has-schema] [--verbose]` — directory only
+
+Both the CLI and the Python API now require an explicit DB URL — there is no default fallback, so the prod DB is never hit by accident.
 
 ---
 
 ## Arguments
 
-The user invokes this as `/upload-data <path> [--schema <name>] [--has-schema]`.
+The user invokes this as `/upload-data <path> [--schema <name>] [--has-schema] [--db-url <url>]`.
 
 - `<path>` (required): a file path (.xlsx) or a directory path.
 - `--schema <name>` (optional, file mode only): target schema name. Defaults to `public` if omitted.
 - `--has-schema` (optional, directory mode only): treats subdirectory names as schema names. See the upload module's docstring for the directory layout it expects.
+- `--db-url <url>` (optional): PostgreSQL connection string. If omitted, fall back to `$env:DB_URL`, and if that is also unset, fall back to the local-dev default `postgresql://felix:postgres@localhost:5432/cubesat` (mirrors `src/backend_solution/database.py`). Surface which URL was used in the final summary so the user can confirm they hit the right DB.
 
 If `<path>` is missing, ask the user for it and stop.
 
 ---
 
-## Step 1 — Sanity-check `upload_table.py`
-
-Before running anything, confirm that the bottom of `src/upload_data/upload_table.py` is **not** auto-executing an example call. If you find a bare top-level `upload_all(...)` or `upload_excel(...)` (currently around line 183), do the following:
-
-1. Wrap it under `if __name__ == "__main__":` so importing the module doesn't trigger an upload.
-2. Mention this fix to the user in the final summary so they know the file was edited.
-
-This step is one-time hardening — once it's done, future runs of this command will skip past it cleanly.
-
-## Step 2 — Decide file vs. directory mode
+## Step 1 — Decide file vs. directory mode
 
 Use a quick `python -c "import os; print('file' if os.path.isfile(r'<path>') else 'dir' if os.path.isdir(r'<path>') else 'missing')"` (or check via the Read tool / Glob) to determine which function to call.
 
-- File path → `upload_excel`
-- Directory path → `upload_all`
+- File path → `upload_excel` (via `python -c`, since the CLI only handles directories)
+- Directory path → `python -m src.upload_data.upload_table ...`
 - Neither → stop, tell the user the path doesn't exist
 
 If the user passed `--schema` with a directory, or `--has-schema` with a file, warn that the flag is being ignored.
 
-## Step 3 — Run the upload
+## Step 2 — Run the upload
 
-Run the appropriate command. Always pass `verbose=True` so the user sees per-row progress and any conversion warnings. Do not use the Bash heredoc form — keep it on one line so PowerShell handles it cleanly.
+Run the appropriate command. Always pass verbose so the user sees per-sheet progress and any conversion warnings. Keep both forms on one line so PowerShell handles them cleanly.
 
-**File mode:**
+**File mode** (no CLI for this — instantiate the engine inline):
 ```
-python -c "from src.upload_data.upload_table import upload_excel; upload_excel(r'<path>', schema='<schema>', verbose=True)"
+python -c "from sqlalchemy import create_engine; from src.upload_data.upload_table import upload_excel; upload_excel(create_engine(r'<db-url>'), r'<path>', schema='<schema>', verbose=True)"
 ```
 
-**Directory mode:**
+**Directory mode** (use the module CLI):
 ```
-python -c "from src.upload_data.upload_table import upload_all; upload_all(r'<path>', has_schema=<True|False>, verbose=True)"
+python -m src.upload_data.upload_table "<path>" --db-url "<db-url>" --verbose [--has-schema]
 ```
 
 Run from the project root (`C:\Users\felix\PycharmProjects\cubesat_component_matcher`) so the `src.upload_data...` import resolves.
 
-## Step 4 — Report and remind
+## Step 3 — Report and remind
 
 Print a short summary:
 - What was uploaded (file name or directory) and into which schema(s)
+- Which DB URL was used (especially important when falling back to `$env:DB_URL` or the local default)
 - Any warnings you saw (numeric conversion failures, skipped sheets)
 - A clear note: **"Restart the FastAPI server (`uvicorn src.backend_solution.api:app ...`) before testing — `data_loader.get_dtypes` is cached for the lifetime of the process."**
 

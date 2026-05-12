@@ -45,4 +45,24 @@ requirements.txt                    list of all library dependencies
 upload_table_instructions.md        directions on spreadsheet formatting and instructions for proper upload to database
 ```
 
+## Claude
+This is specifically the claude branch where I've been experimenting with calude code by having it work
+on a real project mostly as a way for me to learn how claude code works and get exposure to its various tools.
+Besides just generally improving the code and UI, I have also made various tools like commands, and hooks
+with claude that are detailed below.
 
+### Commands
+* db-status -- meant to diagnose which tables in an uploaded database have formatting issues or diagnose any database connection issues
+* ui-check -- Make sure the UI matches the spec laid out in frontend_design.md
+* ui-review -- Uses playwright to load the website and walk through the UI, criticizing the layout and design and makes improvement suggestions that can be implemented.
+* ui-implement -- Implements the changes suggested by ui-review
+* upload-data -- a more user-friendly way to upload data to the database without having to call upload_table.py directly
+
+### Hooks
+* pre-commit -- checks bash commands to see if they are commits and if so runs all the tests and only allows the commit if all tests pass
+
+### misc
+* No skills or subagents, couldn't really think of anything particularly useful to this project
+* frontend_design got added as a sort of UI design outline to guide and structure frontend design for claude. It ended up becoming a bit overly technical compared to what I wanted, 
+* but it's good for organization and consistency when claude implements and reviews the UI.
+* CLAUDE.md on project level for essential knowledge

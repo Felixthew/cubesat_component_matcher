@@ -2,32 +2,27 @@
 # Claude Sonnet 4 was used to advise what to use and for writing
 # individual sections of code. I (Felix) the put everything together
 # edited and documented the code.
+import argparse
 import os
 import re
 import pandas as pd
 from sqlalchemy import create_engine, text, inspect, Engine
 from sqlalchemy.exc import SQLAlchemyError
-from src.backend_solution.database import DB_URL
-
-# The database public url for the railway server
-connection_string = DB_URL
 
 
-def upload_excel(file_path, schema="public", verbose=False):
+def upload_excel(engine: Engine, file_path, schema="public", verbose=False):
     """
     Uploads each sheet of an Excel spreadsheet file to the postgresql database as a table.
 
-    :param verbose: will print progress messages and useful info to the console if true.
+    :param engine: SQLAlchemy engine pointing at the target database.
     :param file_path: the file path of the Excel file to upload.
     :param schema: The schema for the table to be added. Defaults to public, which is the default schema in SQL.
+    :param verbose: will print progress messages and useful info to the console if true.
     """
     try:
         excel_file = pd.ExcelFile(file_path)
         filename = re.split("[/\\\\]", file_path)[-1]
         sheet_names = excel_file.sheet_names
-
-        # Connects to the server
-        engine = create_engine(connection_string)
 
         _create_metadata_schema(engine)
         if schema != "public":
@@ -55,15 +50,14 @@ def upload_excel(file_path, schema="public", verbose=False):
         print(f"Unexpected error for file {file_path}: {e}")
 
 
-def remove_table(table_name):
+def remove_table(engine: Engine, table_name):
     """
     Removes a table from the postgresql database.
 
+    :param engine: SQLAlchemy engine pointing at the target database.
     :param table_name: the name of the table to remove i.e. "table" or "schema.table".
     """
     try:
-        engine = create_engine(connection_string)
-
         inspector = inspect(engine)
         existing_tables = inspector.get_table_names()
 
@@ -81,12 +75,14 @@ def remove_table(table_name):
         print(f"Unexpected error: {e}")
 
 
-def upload_all(directory_path, has_schema=False, verbose=False):
+def upload_all(engine: Engine, directory_path, has_schema=False, verbose=False):
     """
     Uploads all xlsx files in a directory as tables to the postgresql database.
 
+    :param engine: SQLAlchemy engine pointing at the target database.
     :param directory_path: the directory path of the directory to upload.
     :param has_schema: If true, will treat any subdirectory as schema.
+    :param verbose: will print progress messages and useful info to the console if true.
     """
     # all Excel files must end with .xlsx
     xlsx_files = [os.path.join(root, file)
@@ -106,21 +102,21 @@ def upload_all(directory_path, has_schema=False, verbose=False):
                       .removeprefix(directory_path + "/"))
             # Split by / or \ and remove the filename so that only the subdirectory is left
             schema = re.split("[/\\\\]", schema)[:-1]
-            if len(schema) > 1:  # in case of multiple subdirectories
+            if len(schema) > 1 and verbose:  # in case of multiple subdirectories
                 # This is a quirk of SQL
-                print(f"creation of schema {'.'.join(schema)} failed; schema may only be one layer deep. "
-                      f"file {xlsx_file} not uploaded")
-            else:
-                schema = schema[0] if schema else "public"
-                upload_excel(xlsx_file, schema=schema, verbose=verbose)
+                print(f"WARNING: Multi-layer schema not allowed, trimming schema {'.'.join(schema)} to {schema[-1]} for file {xlsx_file}")
+
+            # take parent dir of file as schema
+            schema = schema[-1] if schema else "public"
+            upload_excel(engine, xlsx_file, schema=schema, verbose=verbose)
         else:
-            upload_excel(xlsx_file, verbose=verbose)
+            upload_excel(engine, xlsx_file, verbose=verbose)
     if verbose:
         print(f"Finished directory upload of {directory_path}.")
 
 
 def _create_metadata_schema(engine: Engine):
-    query = f"""
+    query = """
         CREATE SCHEMA IF NOT EXISTS "metadata";
         CREATE TABLE IF NOT EXISTS metadata.data_types (
         schema_name TEXT NOT NULL,
@@ -179,5 +175,22 @@ def _convert_numeric(df, verbose=False):
     return df
 
 
-# call whatever method you want to run here, below is an example:
-upload_all("../../tests/component_data_TEST", has_schema=True, verbose=True)
+def _parse_args():
+    parser = argparse.ArgumentParser(
+        description="Upload Excel data into a PostgreSQL database. "
+                    "--db-url is required so the prod DB is never hit by accident."
+    )
+    parser.add_argument("directory", help="Directory containing .xlsx files to upload.")
+    parser.add_argument("--db-url", required=True,
+                        help="PostgreSQL connection string for the target database. "
+                             "Be explicit — there is no default fallback.")
+    parser.add_argument("--has-schema", action="store_true",
+                        help="Treat subdirectories of <directory> as target schemas.")
+    parser.add_argument("--verbose", action="store_true")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = _parse_args()
+    engine = create_engine(args.db_url)
+    upload_all(engine, args.directory, has_schema=args.has_schema, verbose=args.verbose)

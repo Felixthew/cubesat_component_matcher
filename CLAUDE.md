@@ -72,4 +72,4 @@ React 19 + Vite, single `useReducer` state in `reducer.js`. `App.jsx` orchestrat
 ## Notes
 
 - The production database is incomplete; some solutions return 500 (avionics is a known one — power works). When testing, fall back to a different solution rather than chasing the error.
-- `upload_table.py` executes its example call (`upload_all(...)`) at module load. Edit or guard the bottom of the file before running it; importing it as a module will trigger uploads.
+- The default python installation on Felix's computer does not have the requirements installed, you must explicitly use python3.12 

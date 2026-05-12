@@ -19,7 +19,8 @@
       "Bash(curl -s http://localhost:8000/options)",
       "mcp__playwright__browser_fill_form",
       "Bash(curl *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(C:\\\\Users\\\\felix\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python312\\\\python.exe *)"
     ]
   },
   "hooks": {
